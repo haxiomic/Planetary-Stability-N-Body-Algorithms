@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	
+	<meta title="NBodyHX" package="com.gcorney.nbodyhx" version="1.0.0" company="George Corney" />
+	<app main="Main" path="Export" file="NBodyHX" />
+	<window background="0x000000" fps="120" />
+	
+	<source path="Source" />
+	
+	<haxelib name="openfl" />
+	<haxelib name="polygonal-core" />
+	
+	<assets path="Assets" rename="assets"/>
+	<icon path="Icons/openfl.svg" />
+	
+</project>
