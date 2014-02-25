@@ -8,9 +8,9 @@
 	<source path="Source" />
 	
 	<haxelib name="openfl" />
-	<haxelib name="polygonal-core" />
+	<haxelib name="openfl-bitfive" if="html5" />
+	<!--<haxelib name="polygonal-core" />-->
 	
 	<assets path="Assets" rename="assets"/>
-	<icon path="Icons/openfl.svg" />
 	
 </project>

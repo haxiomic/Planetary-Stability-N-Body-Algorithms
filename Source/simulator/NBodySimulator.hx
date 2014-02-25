@@ -2,7 +2,7 @@ package simulator;
 
 import geom.Vec3;
 import simulator.Body;
-import simulator.Constants;
+import Constants;
 
 class NBodySimulator {
 
@@ -21,7 +21,8 @@ class NBodySimulator {
 	}
 
 	public inline function step(dt:Float){
-
+		var fc:Float;var d:Float;var dSq:Float;
+		
 		for(i in 0...bodies.length){
 			A = bodies[i];
 
@@ -39,7 +40,7 @@ class NBodySimulator {
 				rNorm.y = r.y/d;
 				rNorm.z = r.z/d;
 
-				if(d<1)continue;
+				if(d<5)continue;
 				
 				// ---- Attraction ---- 
 				//Force constant
@@ -54,7 +55,7 @@ class NBodySimulator {
 				B.vz -= rNorm.z*fc*A.m*dt;
 
 				// ---- Repulsion ----
-				fc = - 2 * 100000 / (dSq*dSq);
+				fc = - 2 * 100 / (dSq*d);
 				//Apply acceleration
 				A.vx += rNorm.x*fc*B.m*dt;
 				A.vy += rNorm.y*fc*B.m*dt;
@@ -73,7 +74,7 @@ class NBodySimulator {
 
 	//Variable pool
 	var A:Body;var B:Body;
-	var fc:Float;var d:Float;var dSq:Float;var r:Vec3;var rNorm:Vec3;
+	var r:Vec3;var rNorm:Vec3;
 	private function poolInitialization(){
 		r = new Vec3();
 		rNorm = new Vec3();
