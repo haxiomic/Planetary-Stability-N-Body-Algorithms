@@ -1,4 +1,4 @@
-Various n-body techniques for studying planetary systems
+Experimenting with different n-body techniques for studying planetary systems
 ==============================
 
 ### Renderer Dependencies
