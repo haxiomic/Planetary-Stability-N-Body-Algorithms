@@ -21,7 +21,7 @@ class NBodySimulator {
 	}
 
 	public inline function step(dt:Float){
-		var fc:Float;var d:Float;var dSq:Float;
+		var fc:Float, d:Float, dSq:Float, aA:Float, aB:Float;
 		
 		for(i in 0...bodies.length){
 			A = bodies[i];
@@ -40,35 +40,40 @@ class NBodySimulator {
 				rNorm.y = r.y/d;
 				rNorm.z = r.z/d;
 
-				if(d<5)continue;
+				if(d<5)continue;//ignore tiny distances
 				
 				// ---- Attraction ---- 
 				//Force constant
 				fc = 2 * Constants.G / dSq; //2 since each pair is visited just once
 
-				//Apply acceleration
-				A.vx += rNorm.x*fc*B.m*dt;
-				A.vy += rNorm.y*fc*B.m*dt;
-				A.vz += rNorm.z*fc*B.m*dt;
-				B.vx -= rNorm.x*fc*A.m*dt;
-				B.vy -= rNorm.y*fc*A.m*dt;
-				B.vz -= rNorm.z*fc*A.m*dt;
+				// ---- Repulsion ---- 
+				fc += - 2 * 500000 / (dSq*dSq);
 
-				// ---- Repulsion ----
-				fc = - 2 * 100 / (dSq*d);
+				//Acceleration 
+				aA = fc*B.m*dt;
+				aB = -fc*A.m*dt;
+
+				//exit if acceleration is too large
+				if(Math.abs( aA )>10)continue;
+				if(Math.abs( aB )>10)continue;
+
 				//Apply acceleration
-				A.vx += rNorm.x*fc*B.m*dt;
-				A.vy += rNorm.y*fc*B.m*dt;
-				A.vz += rNorm.z*fc*B.m*dt;
-				B.vx -= rNorm.x*fc*A.m*dt;
-				B.vy -= rNorm.y*fc*A.m*dt;
-				B.vz -= rNorm.z*fc*A.m*dt;
+				A.vx += rNorm.x*aA;
+				A.vy += rNorm.y*aA;
+				A.vz += rNorm.z*aA;
+				B.vx += rNorm.x*aB;
+				B.vy += rNorm.y*aB;
+				B.vz += rNorm.z*aB;
 			}
 
 			//Apply velocity
 			A.x += A.vx;
 			A.y += A.vy;
 			A.z += A.vz;
+
+			A.x *= 0.999;
+			A.y *= 0.999;
+			A.z *= 0.999;
 		}
 	}
 

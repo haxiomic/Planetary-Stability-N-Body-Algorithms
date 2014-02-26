@@ -1,66 +1,218 @@
 package renderer;
 
+import away3d.cameras.Camera3D;
+import away3d.containers.View3D;
+import away3d.controllers.HoverController;
+import away3d.entities.Mesh;
+import away3d.lights.DirectionalLight;
+import away3d.materials.ColorMaterial;
+import away3d.materials.lightpickers.StaticLightPicker;
+import away3d.materials.TextureMaterial;
+import away3d.primitives.PlaneGeometry;
+import away3d.utils.Cast;
 import flash.display.Sprite;
+import flash.display.Stage;
+import flash.display.StageAlign;
+import flash.display.StageScaleMode;
 import flash.events.Event;
+import flash.events.MouseEvent;
+import flash.geom.Vector3D;
+
 import simulator.Body;
 import simulator.NBodySimulator;
 
 class NBodyRenderer {
 	public var beforeDraw:Void->Void = null;
 	public var afterDraw:Void->Void = null;
-	public var stage:Sprite;
-	public var display:Sprite;
+
+	public var stage:Stage;
+
 	public var simulator:NBodySimulator;
 
+	private var renderBodies:Array<IRenderableBody>;
 
-	public function new(simulator:NBodySimulator, stage:Sprite){
-		this.simulator = simulator;
+	//3D engine
+	private var view:View3D;
+	private var camera:Camera3D;
+	private var cameraController:HoverController;
+	//	camera navigation
+	private var move:Bool = false;
+	private var lastPanAngle:Float;
+	private var lastTiltAngle:Float;
+	private var lastMouseX:Float;
+	private var lastMouseY:Float;
+	//Scene
+	private var plane:Mesh;
+	private var lightPicker:StaticLightPicker;
+
+	public function new(stage:Stage){
 		this.stage = stage;
+		stage.scaleMode = StageScaleMode.NO_SCALE;
+		stage.align = StageAlign.TOP_LEFT;
 
-		this.display = new Sprite();
-		this.stage.addChild(this.display);
+		initClassVariables();
 
-		//Render loop
-		this.stage.addEventListener(Event.ENTER_FRAME, draw);
+		//3d engine
+		initEngine();
+		initScene();
+		initListeners();
+
+		onResize();//set view size to window size
+
+		var fps = new openfl.display.FPS(0, 0, 0xffffff);
+		stage.addChild(fps);
+	}
+
+	/**
+	/* ---------- Public Methods ----------
+	*/
+	public function addSphericalBody(body:Body, radius:Float = 50, color:Int = 0x00FF00):IRenderableBody{
+		var rb:IRenderableBody = new SphericalBody(body, radius, color);
+		//set lights
+		rb.mesh.material.lightPicker = lightPicker;
+
+		view.scene.addChild(rb.mesh);
+		renderBodies.push(rb);
+		return rb;
+	}
+
+	/**
+	/* ---------- Private Methods ----------
+	*/
+	private function initClassVariables(){
+		renderBodies = new Array<IRenderableBody>();
+	}
+
+	private function initEngine(){
+		//Away 3D setup
+		view = new View3D();
+		view.antiAlias = 0;
+
+		camera = new Camera3D();
+		view.camera = camera;
+
+		cameraController = new HoverController(camera);
+		cameraController.distance = 1000;
+		cameraController.minTiltAngle = 0;
+		cameraController.maxTiltAngle = 90;
+		cameraController.panAngle = 45;
+		cameraController.tiltAngle = 20;
+	}
+
+	private function initScene(){
+		//setup lights
+		var light = new DirectionalLight();
+		light.direction = new Vector3D(0, -1, 0);
+		light.ambient = 0.6;
+		light.diffuse = 0.7;
+
+		view.scene.addChild(light);
+
+		//light picker for materials
+		lightPicker = new StaticLightPicker([light]);
+
+		//Setup plane
+		plane = new Mesh(new PlaneGeometry(700,700));
+		plane.material = new ColorMaterial(0x1C1D1F,1);
+		plane.material.lightPicker = lightPicker;
+
+		view.scene.addChild(plane);
+	}
+
+	private function initListeners(){
+		//render loop
+		view.stage3DProxy.setRenderCallback(render);
+
+		//mouse events
+		stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+		stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+
+		//window resize
+		stage.addEventListener(Event.RESIZE, onResize);
 	}
 	
-	public function draw(?e:Event){
+	private function render(?e:Event){
 		if(beforeDraw != null)beforeDraw();
 
-		display.graphics.clear();
-
-		var red:Float, green:Float, blue:Float, depth:Float;
-		for(b in simulator.bodies){
-			depth = Math.atan(1000/(5*b.z+1000));
-
-			red = green = blue = Std.int( 0xFF*1*depth );
-			//red *= red*.1;
-			//green *= green*10;
-			if(red>0xFF)red = 0xFF;if(red<0x00) red = 0x00;
-			if(green>0xFF)green = 0xFF;if(green<0x00) green = 0x00;
-			if(blue>0xFF)blue = 0xFF;if(blue<0x00) blue = 0x00;
-
-			display.graphics.beginFill(Std.int( red*0x10000 + green*0x100 + blue ), 1);
-			display.graphics.drawCircle(b.x, b.y, 10*depth );
-			display.graphics.endFill();
+		//Camera control
+		if (move) {
+		 	cameraController.panAngle = 0.3*(Math.isNaN(stage.mouseX)?0:stage.mouseX - lastMouseX) + lastPanAngle;
+		 	cameraController.tiltAngle = 0.3*(Math.isNaN(stage.mouseY)?0:stage.mouseY - lastMouseY) + lastTiltAngle;
 		}
+
+		for(rb in renderBodies){
+			//update positions
+			rb.update();
+		}
+
+		view.render();
 
 		if(afterDraw != null)afterDraw();
 	}
+
+
+	/**
+	/* ---------- Event Listeners ----------
+	*/
+	private function onResize(?event:Event):Void{
+		view.width = stage.stageWidth;
+		view.height = stage.stageHeight;
+	}
+
+	private function onMouseDown(event:MouseEvent):Void{
+		lastPanAngle = cameraController.panAngle;
+		lastTiltAngle = cameraController.tiltAngle;
+		lastMouseX = Math.isNaN(stage.mouseX)?0:stage.mouseX ;
+		lastMouseY = Math.isNaN(stage.mouseY)?0:stage.mouseY ;
+		move = true;
+		stage.addEventListener(Event.MOUSE_LEAVE, onStageMouseLeave);
+	}
+	
+	private function onMouseUp(event:MouseEvent):Void{
+		move = false;
+		stage.removeEventListener(Event.MOUSE_LEAVE, onStageMouseLeave);
+	}
+
+	private function onStageMouseLeave(event:Event):Void{
+		move = false;
+		stage.removeEventListener(Event.MOUSE_LEAVE, onStageMouseLeave);
+	}
 }
 
-/*class RendererBody{
+interface IRenderableBody{
 	public var body:Body;
-	public var spr:Sprite;
+	public var mesh:Mesh;
+	public function update():Void;
+}
 
-	public function new(b:Body){
+class RenderableBody implements IRenderableBody{
+	public var body:Body;
+	public var mesh:Mesh;
+
+	public function new(b:Body, mesh:Mesh){
 		this.body = b;
-		spr = new Sprite();
+		this.mesh = mesh;
 	}
 
-	private function draw(){
-		spr.graphics.beginFill(0xFFFFFF, 1);
-		spr.graphics.drawCircle(0,0,10);
-		spr.graphics.endFill();
+	public inline function update(){}
+}
+
+class SphericalBody implements IRenderableBody{
+	public var body:Body;
+	public var mesh:Mesh;
+
+	public function new(b:Body, radius:Float, color:Int){
+		this.body = b;
+
+		var sphere = new Mesh(new away3d.primitives.SphereGeometry(radius));
+		sphere.material = new ColorMaterial(color, 1);
+
+		this.mesh = sphere;
 	}
-}*/
+
+	public inline function update(){
+		this.mesh.x = body.x;
+		this.mesh.y = body.y;
+		this.mesh.z = body.z;
+	}
+}

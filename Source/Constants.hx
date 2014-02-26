@@ -2,7 +2,7 @@ package;
 
 class Constants{
 	//Physical Laws
-	static public var G:Float       	= 5;
+	static public var G:Float       	= 100;
 	
 	//Solar Bodies
 	static public var MSun:Float    	= 1;
