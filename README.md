@@ -1,4 +1,5 @@
-## Various n-body techniques for studying planetary systems
+Various n-body techniques for studying planetary systems
+==============================
 
 ### Renderer Dependencies
 * openfl
