@@ -86,7 +86,7 @@ class NBodyRenderer {
 	private function initEngine(){
 		//Away 3D setup
 		view = new View3D();
-		view.antiAlias = 0;
+		view.antiAlias = 4;
 
 		camera = new Camera3D();
 		view.camera = camera;
@@ -113,7 +113,7 @@ class NBodyRenderer {
 
 		//Setup plane
 		plane = new Mesh(new PlaneGeometry(700,700));
-		plane.material = new ColorMaterial(0x1C1D1F,1);
+		plane.material = new ColorMaterial(0x1C1D1F,0.7);
 		plane.material.lightPicker = lightPicker;
 
 		view.scene.addChild(plane);
@@ -126,6 +126,7 @@ class NBodyRenderer {
 		//mouse events
 		stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
 		stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+		stage.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
 
 		//window resize
 		stage.addEventListener(Event.RESIZE, onResize);
@@ -176,6 +177,10 @@ class NBodyRenderer {
 	private function onStageMouseLeave(event:Event):Void{
 		move = false;
 		stage.removeEventListener(Event.MOUSE_LEAVE, onStageMouseLeave);
+	}
+
+	private function onMouseWheel(event:MouseEvent):Void{
+		cameraController.distance += event.delta*10;
 	}
 }
 

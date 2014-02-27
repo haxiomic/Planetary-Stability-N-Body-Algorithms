@@ -71,9 +71,9 @@ class NBodySimulator {
 			A.y += A.vy;
 			A.z += A.vz;
 
-			A.x *= 0.999;
-			A.y *= 0.999;
-			A.z *= 0.999;
+			A.x *= 0.995;
+			A.y *= 0.995;
+			A.z *= 0.995;
 		}
 	}
 

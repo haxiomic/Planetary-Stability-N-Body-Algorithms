@@ -29,9 +29,6 @@ class Main {
 		stepTimer.run = function():Void{
 			simulator.step(1);
 		};
-		/*renderer.beforeDraw = function(){
-			simulator.step(1);
-		}*/
 	}
 
 }
