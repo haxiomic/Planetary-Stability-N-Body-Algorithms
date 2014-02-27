@@ -10,7 +10,6 @@ import away3d.materials.lightpickers.StaticLightPicker;
 import away3d.materials.TextureMaterial;
 import away3d.primitives.PlaneGeometry;
 import away3d.utils.Cast;
-import flash.display.Sprite;
 import flash.display.Stage;
 import flash.display.StageAlign;
 import flash.display.StageScaleMode;
@@ -47,8 +46,8 @@ class NBodyRenderer {
 
 	public function new(stage:Stage){
 		this.stage = stage;
-		stage.scaleMode = StageScaleMode.NO_SCALE;
-		stage.align = StageAlign.TOP_LEFT;
+		//stage.scaleMode = StageScaleMode.NO_SCALE;
+		//stage.align = StageAlign.TOP_LEFT;
 
 		initClassVariables();
 

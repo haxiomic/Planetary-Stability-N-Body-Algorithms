@@ -1,26 +1,26 @@
 package simulator;
 
+import Constants;
 import geom.Vec3;
 import simulator.Body;
-import Constants;
 
 class NBodySimulator {
 
 	public var bodies:Array<Body>;
 	public var onBodyAdded:Body->Void;
 
-	public function new(){
+	@:noStack public function new(){
 		poolInitialization();
 		bodies = new Array<Body>();
 	}
 
-	public inline function addBody(b:Body):Body{
+	@:noStack public inline function addBody(b:Body):Body{
 		bodies.push(b);
 		if(onBodyAdded != null)onBodyAdded(b);
 		return b;
 	}
 
-	public inline function step(dt:Float){
+	@:noStack public inline function step(dt:Float){
 		var fc:Float, d:Float, dSq:Float, aA:Float, aB:Float;
 		
 		for(i in 0...bodies.length){
@@ -47,7 +47,7 @@ class NBodySimulator {
 				fc = 2 * Constants.G / dSq; //2 since each pair is visited just once
 
 				// ---- Repulsion ---- 
-				fc += - 2 * 500000 / (dSq*dSq);
+				fc += - 2 * 10000 / (dSq*dSq);
 
 				//Acceleration 
 				aA = fc*B.m*dt;
@@ -58,29 +58,29 @@ class NBodySimulator {
 				if(Math.abs( aB )>10)continue;
 
 				//Apply acceleration
-				A.vx += rNorm.x*aA;
-				A.vy += rNorm.y*aA;
-				A.vz += rNorm.z*aA;
-				B.vx += rNorm.x*aB;
-				B.vy += rNorm.y*aB;
-				B.vz += rNorm.z*aB;
+				A.v.x += rNorm.x*aA;
+				A.v.y += rNorm.y*aA;
+				A.v.z += rNorm.z*aA;
+				B.v.x += rNorm.x*aB;
+				B.v.y += rNorm.y*aB;
+				B.v.z += rNorm.z*aB;
 			}
 
 			//Apply velocity
-			A.x += A.vx;
-			A.y += A.vy;
-			A.z += A.vz;
-
-			A.x *= 0.995;
-			A.y *= 0.995;
-			A.z *= 0.995;
+			A.x += A.v.x;
+			A.y += A.v.y;
+			A.z += A.v.z;
+			//dampen
+			A.x *= 0.997;
+			A.y *= 0.997;
+			A.z *= 0.997;
 		}
 	}
 
 	//Variable pool
 	var A:Body;var B:Body;
 	var r:Vec3;var rNorm:Vec3;
-	private function poolInitialization(){
+	@:noStack private function poolInitialization(){
 		r = new Vec3();
 		rNorm = new Vec3();
 	}
