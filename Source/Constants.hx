@@ -1,29 +1,14 @@
 package;
 
 class Constants{
-	//Physical Law Constants
-	static public var G:Float       	= 6.673840;
-	
-	//Solar Bodies SI
-	//	Mass kg
-	static public var MSun:Float    	= 1.988435E30;
-	static public var MMercury:Float 	= 3.301040E23;
-	static public var MVenus:Float  	= 4.867320E24;
-	static public var MEarth:Float  	= 5.972186E24;
-	static public var MMars:Float   	= 6.416930E23;
-	static public var MJupiter:Float 	= 1.898130E27;
-	static public var MSaturn:Float 	= 5.683190E26;
-	static public var MUranus:Float 	= 8.681030E25;
-	static public var MNeptune:Float 	= 1.024100E26;
+	//Physical Law Constants in SI units
+	static public var G:Float       	= 6.673840E-11;	//m^3 kg^-1 s^-2
 
-	/*//	Velocities (averages) m/s
-	static public var VSun:Float    	= 0;//#!
-	static public var VMercury:Float 	= 47400;
-	static public var VVenus:Float  	= 35000;
-	static public var VEarth:Float  	= 29800;
-	static public var VMars:Float   	= 24100;
-	static public var VJupiter:Float 	= 13000;
-	static public var VSaturn:Float 	= 9640;
-	static public var VUranus:Float 	= 6800;
-	static public var VNeptune:Float 	= 5430;*/
+	//Conversions from wolfram eg: 'newtons gravitational constant in AU^3 per earth mass per days^2'
+	static public var G_AU_kg_s:Float   = 1.993E-44;	//1.488×10^-34 au^3/(kg day^2)  	(astronomical units cubed per kilogram day squared)
+	static public var G_AU_kg_D:Float   = 1.488E-34;	//1.488×10^-34 au^3/(kg day^2)  	(astronomical units cubed per kilogram day squared)
+	static public var G_AU_ME_D:Float   = 8.890E-10;	//8.89×10^-10 au^3/(M_(+) day^2)  	(astronomical units cubed per Earth mass day squared)
+
+	//Length Constants
+	static public var AU:Float 			= 1.495978707E11;
 }

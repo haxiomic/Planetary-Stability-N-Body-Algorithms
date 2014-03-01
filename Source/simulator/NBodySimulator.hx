@@ -40,14 +40,14 @@ class NBodySimulator {
 				rNorm.y = r.y/d;
 				rNorm.z = r.z/d;
 
-				if(d<5)continue;//ignore tiny distances
+				//if(d<5)continue;//ignore tiny distances
 				
 				// ---- Attraction ---- 
 				//Force constant
-				fc = 2 * Constants.G / dSq; //2 since each pair is visited just once
+				fc = 1 * Constants.G_AU_kg_D / dSq; //2 since each pair is visited just once
 
 				// ---- Repulsion ---- 
-				fc += - 2 * 10000 / (dSq*dSq);
+				//fc += - 1 * 10000 / (dSq*dSq);
 
 				//Acceleration 
 				aA = fc*B.m*dt;
@@ -67,13 +67,9 @@ class NBodySimulator {
 			}
 
 			//Apply velocity
-			A.x += A.v.x;
-			A.y += A.v.y;
-			A.z += A.v.z;
-			//dampen
-			A.x *= 0.997;
-			A.y *= 0.997;
-			A.z *= 0.997;
+			A.x += A.v.x*dt;
+			A.y += A.v.y*dt;
+			A.z += A.v.z*dt;
 		}
 	}
 

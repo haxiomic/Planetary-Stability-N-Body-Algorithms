@@ -215,8 +215,8 @@ class SphericalBody implements IRenderableBody{
 	}
 
 	public inline function update(){
-		this.mesh.x = body.x;
-		this.mesh.y = body.y;
-		this.mesh.z = body.z;
+		this.mesh.x = this.body.x*300; //conversion factor = units per AU (or what ever unit length is being used)
+		this.mesh.y = this.body.y*300;
+		this.mesh.z = this.body.z*300;
 	}
 }

@@ -3,6 +3,12 @@ package simulator;
 import geom.Vec3;
 
 class Body{
+
+	public var m:Float;
+	public var p:Vec3;
+	public var v:Vec3;
+
+	//For convenience:
 	//Position
 	public var x(get, set):Float;
 	public var y(get, set):Float;
@@ -11,10 +17,6 @@ class Body{
 	public var vx(get, set):Float;
 	public var vy(get, set):Float;
 	public var vz(get, set):Float;
-
-	public var m:Float;
-	public var p:Vec3;
-	public var v:Vec3;
 
 	public function new(?position:Vec3, ?velocity:Vec3, mass:Float = 1){
 		if(position == null)position = new Vec3(0,0,0);
