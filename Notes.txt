@@ -2,6 +2,7 @@ Notes
 
 - Need data for sun's velocity about solar system's center of mass for initial conditions
 - AVec3 shouldn't be creating new objects, but I can't see how to avoid this.
+- Segment not yet supported! Must use planes
 
 
 HAXE BUGS
