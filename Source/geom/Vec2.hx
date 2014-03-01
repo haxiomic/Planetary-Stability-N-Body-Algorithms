@@ -32,6 +32,10 @@ class Vec2{
 		this.y = 0;
 	}
 
+	public inline function toString() {
+	    return "Vec2("+x+","+y+")";
+	}
+
 	// Static Functions
 	static public inline function add(a:Vec2, b:Vec2, r:Vec2):Vec2{//store result in r
 		r.x = b.x + a.x;

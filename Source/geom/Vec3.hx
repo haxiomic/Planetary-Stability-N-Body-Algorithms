@@ -1,7 +1,20 @@
 package geom;
 
-//typedef Vec3 = de.polygonal.core.math.Vec3;
+//AVec3 is a flexible Vec3 
+//	it'll automatically assign a Vec3 from anything that supports the fields x,y,z. However, it'll create a new object in doing so! So it's not complete
+abstract AVec3(Vec3) from Vec3{
+	inline function new(x:Float, y:Float, z:Float){
+		this = new Vec3(x,y,z);
+	}
 
+	@:from static public inline function fromTVec3(v:{x:Dynamic,y:Dynamic,z:Dynamic}){
+		return new Vec3(v.x,v.y,v.z);
+	}
+
+	@:to public inline function toVec3():Vec3{
+		return this;
+	}
+}
 
 class Vec3{
 	public var x:Float;
@@ -33,6 +46,10 @@ class Vec3{
 		this.x = 0;
 		this.y = 0;
 		this.z = 0;
+	}
+
+	public inline function toString() {
+	    return "Vec3("+x+","+y+","+z+")";
 	}
 	
 	// Static Functions
