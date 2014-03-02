@@ -3,6 +3,7 @@ package renderer;
 import away3d.cameras.Camera3D;
 import away3d.containers.View3D;
 import away3d.controllers.HoverController;
+import away3d.core.base.CompactSubGeometry;
 import away3d.core.base.Geometry;
 import away3d.core.base.SubGeometry;
 import away3d.entities.Mesh;
@@ -292,6 +293,7 @@ class Trail implements IRenderableBody{
 
 			subGeometry.updateVertexData(verticies);
 			subGeometry.updateIndexData(indicies);
+			//subGeometry.fromVectors(verticies, null, null, null);
 			geometry.addSubGeometry(subGeometry);
 
 			subGeoms.push(subGeometry);

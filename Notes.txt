@@ -1,9 +1,13 @@
 Notes
 
-- Need data for sun's velocity about solar system's center of mass for initial conditions
-- AVec3 shouldn't be creating new objects, but I can't see how to avoid this.
-- Segment not yet supported! Must use planes
+Current implementation of Trails is slow due to repeated uploading of vertices's to GPU every frame (despite there has been no change)
 
+Slow down mainly caused by getUniformLocation being call too many times (instead of stored location lookups). Called by:
+	flash.display3D.Context3D.setGLSLProgramConstantsFromVector4
+And less so by
+	flash.display3D.AGLSLContext3D.$extend.drawTriangles
+
+This has been fixed in local version of away3d-openfl
 
 HAXE BUGS
 - Order matters for abstract type '@:from's - ie, switch dynamic and TVec3 in AVec and you'll find all TVec3s are registered as dynamics not TVec3
