@@ -4,8 +4,9 @@
 	<meta title="NBodyHX" package="com.gcorney.nbodyhx" version="1.0.0" company="George Corney" />
 	<app main="Main" path="Export" file="NBodyHX" />
 
-	<window width="1024" height="700" background="0x000000" fps="60" vsync="false" />
-	<window width="" height="700" if="html5" />
+	<window width="1024" height="768" background="0x000000" fps="60" vsync="false" />
+	<window orientation="landscape" />
+	<window width="" height="768" if="html5" />
 	
 	<source path="Source" />
 	
