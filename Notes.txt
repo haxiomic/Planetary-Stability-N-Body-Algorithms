@@ -1,5 +1,8 @@
 Notes
 
+Solar systems slowly moves because the more massive planets have yet to be added!!
+
+
 Slow down mainly caused by getUniformLocation being call too many times (instead of stored location lookups). Called by:
 	flash.display3D.Context3D.setGLSLProgramConstantsFromVector4
 And less so by
