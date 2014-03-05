@@ -7,5 +7,3 @@ Experimenting with different n-body techniques for studying planetary systems
 * away3d-core-openfl (building using a [fork](https://github.com/haxiomic/away3d-core-openfl))
 
 *Builds with haxe 3.0.1*
-
-![](http://imgur.com/vZjZqMx)
