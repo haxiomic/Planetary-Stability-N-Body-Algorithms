@@ -1,6 +1,19 @@
 ---- Notes ----
+TODO
+- Better constants
+- Improve Vec3 implementation with inspiration from https://github.com/fponticelli/chad/blob/master/src/chad/geom/Vector3D.hx
 
-Entire solar systems slowly translates because the more massive planets have yet to be added!!
+- Check energy conservation
+	- Fork, plot graphs, store data
+- Kick drift kick implementation 
+	- http://www.physics.udel.edu/~jim/PHYS460_660_13S/Ordinary%20Differential%20Equations/KDK_method.pdf
+	- store data
+- Adaptive Timesteps
+
+
+
+
+ -- BUGS --
 
 Slow down mainly caused by getUniformLocation being call too many times (instead of stored location lookups). Called by:
 	flash.display3D.Context3D.setGLSLProgramConstantsFromVector4
