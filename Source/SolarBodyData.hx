@@ -3,8 +3,8 @@ package;
 import geom.Vec3;
 
 typedef BodyDatum = {
-	var position:AVec3;
-	var velocity:AVec3;
+	var position:Vec3;
+	var velocity:Vec3;
 	var mass:Float;
 	var radius:Float;
 }
