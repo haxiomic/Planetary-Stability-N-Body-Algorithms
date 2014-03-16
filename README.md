@@ -1,6 +1,8 @@
 Experimenting with different n-body techniques for studying planetary systems
 ==============================
 
+![](/Output%20Images/screenshot%20v0.1.png)
+
 ### Renderer Dependencies
 * openfl
 * openfl-stage3d
