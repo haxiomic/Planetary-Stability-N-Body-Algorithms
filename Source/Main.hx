@@ -1,52 +1,58 @@
 package;
 
 import geom.Vec3;
-import renderer.NBodyRenderer;
+import renderer.Away3DNBodyRenderer;
 import simulator.Body;
 import simulator.NBodySimulator;
 import SolarBodyData.BodyDatum;
 
 class Main {
 
-	var renderer:NBodyRenderer;
+	var renderer:Away3DNBodyRenderer;
 	var simulator:NBodySimulator;
 
 	public function new () {
 		simulator = new NBodySimulator();
-		renderer = new NBodyRenderer(flash.Lib.current.stage);
-
+		renderer = new Away3DNBodyRenderer(flash.Lib.current.stage);
 
 		//currently using length: AU 	time: days 		mass: kg
-		var rCV = .000001; //radiusConversionFactor
-		addBodyFromDatum(SolarBodyData.sun, 20, 0xFFA21F);
-		var merucy = addBodyFromDatum(SolarBodyData.mercury, SolarBodyData.mercury.radius*rCV, 0xFFE26E);
-		renderer.addTrail(merucy, 22, 2, 0xFFE26E, 4);
-		//renderer.addTrail(merucy, 2000, 1, 0xFFE26E, 4);
-		
-		var venus = addBodyFromDatum(SolarBodyData.venus, SolarBodyData.venus.radius*rCV, 0xB55D16);
-		renderer.addTrail(venus, 38, 2, 0xB55D16, 6);
+		var rCV = 0.0000006; //radiusConversionFactor
 
-		var earth = addBodyFromDatum(SolarBodyData.earth, SolarBodyData.earth.radius*rCV, 0x13B3F2);
-		renderer.addTrail(earth, 92, 6, 0x13B3F2, 4);
+		var sun = addBodyFromDatum(SolarBodyData.sun, 15, 0xFFA21F);
+		addBodyFromDatum(SolarBodyData.earth, SolarBodyData.earth.radius*rCV, 0xBB1111);
 
-		var mars = addBodyFromDatum(SolarBodyData.mars, SolarBodyData.mars.radius*rCV, 0xBB1111);
-		renderer.addTrail(mars, 86, 2, 0xBB1111, 8);
+		//var jupiter = addBodyFromDatum(SolarBodyData.jupiter, SolarBodyData.jupiter.radius*rCV, 0xBB1111);
+		//var saturn = addBodyFromDatum(SolarBodyData.saturn, SolarBodyData.saturn.radius*rCV, 0xFFE26E);
+		//var uranus = addBodyFromDatum(SolarBodyData.uranus, SolarBodyData.uranus.radius*rCV, 0xA7D6DC);
+		//var neptune = addBodyFromDatum(SolarBodyData.neptune, SolarBodyData.neptune.radius*rCV, 0x2A45FD);
 
+		//run simulation
+		//1 day = 86400 seconds
+		var dt = 1/24;
+		var time:Float = 0;
+		var endTime = 1000;
+		var i:Int = 0;
+		while(time<=endTime){
+			simulator.step(dt);
+			if(i%100 == 0)trace(simulator.computeTotalEnergy());
 
-		//var stepTimer:haxe.Timer = new haxe.Timer(10);
-		//stepTimer.run = function():Void{
-		//	simulator.step(1);
-		//};
-
-		renderer.beforeRender = function():Void{
-			simulator.step(1);
+			time+=dt;
+			i++;
 		}
+
+		var stepTimer:haxe.Timer = new haxe.Timer(10);
+		stepTimer.run = function():Void{
+			simulator.step(dt);
+		};
 	}
 
-	inline function addBodyFromDatum(bd:BodyDatum, displayRadius:Float = 10, displayColor:Int = 0xFF0000):Body{
-		var b = simulator.addBody(new Body(bd.position, bd.velocity, bd.mass));
+	function addBodyFromDatum(bd:BodyDatum, displayRadius:Float = 10, displayColor:Int = 0xFF0000):Body{
+		var b = addBodyToSimulation(bd);
 		renderer.addSphericalBody(b, displayRadius, displayColor);
 		return b;
 	}
 
+	inline function addBodyToSimulation(bd:BodyDatum){
+		return simulator.addBody(new Body(bd.position, bd.velocity, bd.mass));
+	}
 }

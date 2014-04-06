@@ -22,7 +22,8 @@ class NBodySimulator {
 
 	@:noStack public inline function step(dt:Float){
 		var fc:Float, d:Float, dSq:Float, aA:Float, aB:Float;
-		
+		var E:Float = 0;
+
 		for(i in 0...bodies.length){
 			A = bodies[i];
 
@@ -32,30 +33,21 @@ class NBodySimulator {
 				//Distance vector
 				Vec3.difference(A.p, B.p, r);
 				
-				dSq = r.lengthSqr();
+				dSq = r.lengthSquared();
 				d = Math.sqrt(dSq);
 
 				//Normalize r
 				rNorm.x = r.x/d;
 				rNorm.y = r.y/d;
 				rNorm.z = r.z/d;
-
-				//if(d<5)continue;//ignore tiny distances
 				
 				// ---- Attraction ---- 
 				//Force constant
-				fc = 1 * Constants.G_AU_kg_D / dSq; //2 since each pair is visited just once
-
-				// ---- Repulsion ---- 
-				//fc += - 1 * 10000 / (dSq*dSq);
+				fc = 1 * G / dSq; //2 since each pair is visited just once
 
 				//Acceleration 
 				aA = fc*B.m*dt;
 				aB = -fc*A.m*dt;
-
-				//exit if acceleration is too large
-				if(Math.abs( aA )>10)continue;
-				if(Math.abs( aB )>10)continue;
 
 				//Apply acceleration
 				A.v.x += rNorm.x*aA;
@@ -73,6 +65,27 @@ class NBodySimulator {
 		}
 	}
 
+	public inline function computeTotalEnergy():Float{
+		var E:Float = 0, d:Float;
+		var k:Float = 0;
+		var p:Float = 0;
+		for(i in 0...bodies.length){
+			A = bodies[i];
+			E += 0.5*A.m*A.v.lengthSquared();
+
+			for(j in i+1...bodies.length){
+				B = bodies[j];	
+
+				Vec3.difference(A.p, B.p, r);
+				d = r.length();
+				
+				E -= G*A.m*B.m/d;
+			}
+
+		}
+		return E;
+	}
+
 	//Variable pool
 	var A:Body;var B:Body;
 	var r:Vec3;var rNorm:Vec3;
@@ -80,5 +93,7 @@ class NBodySimulator {
 		r = new Vec3();
 		rNorm = new Vec3();
 	}
+
+	static inline public var G = Constants.G_AU_kg_D;
 
 }

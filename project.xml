@@ -11,9 +11,10 @@
 	<source path="Source" />
 	
 	<haxelib name="openfl" />
-	<!--<haxelib name="openfl-bitfive" if="html5" />-->
+	<haxelib name="openfl-html5-dom" if="html5" />
+	<!-- <haxelib name="openfl-bitfive" if="html5" /> -->
 	<!-- library order is important! (Overrides involved) -->
-	<haxelib name="openfl-stage3d" />
+	<!--<haxelib name="openfl-stage3d" />-->
 	<haxelib name="away3d-core-openfl" />
 	<!--<haxelib name="polygonal-core" />-->
 	
@@ -24,6 +25,6 @@
 
 	<!-- Template Overrides -->
 	<template path="Templates" />
-	<template path="Templates/html5/index.html" rename="index.html" />
+	<!--<template path="Templates/html5/index.html" rename="index.html" />-->
 	
 </project>

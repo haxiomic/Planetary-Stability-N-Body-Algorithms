@@ -1,7 +1,5 @@
 package geom;
 
-import geom.Vec3;
-
 abstract Vec3(Array<Float>) from Array<Float> to Array<Float>{
 	public inline function new(x:Float = 0, y:Float = 0, z:Float = 0) {
 		this = [x,y,z];
@@ -50,16 +48,16 @@ abstract Vec3(Array<Float>) from Array<Float> to Array<Float>{
 
 	public inline function normalize():Vec3{
 		var d:Float = length();
-		this[0] /= d;
-		this[1] /= d;
-		this[2] /= d;
+		x /= d;
+		y /= d;
+		z /= d;
 		return this;
 	}
 
 	public inline function zero():Vec3{
-		this[0] = 0;
-		this[1] = 0;
-		this[2] = 0;
+		x = 0;
+		y = 0;
+		z = 0;
 		return this;
 	}
 
@@ -149,7 +147,7 @@ abstract Vec3(Array<Float>) from Array<Float> to Array<Float>{
 	}
 
 	static public inline function distance(a:Vec3, b:Vec3):Float{
-		return Math.sqrt(distance(a,b));
+		return Math.sqrt(distanceSquared(a,b));
 	}
 
 	static public inline function distanceSquared(a:Vec3, b:Vec3):Float{
