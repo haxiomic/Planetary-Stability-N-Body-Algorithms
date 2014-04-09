@@ -3,7 +3,6 @@ package simulator;
 import geom.Vec3;
 
 class Body{
-
 	public var m:Float;
 	public var p:Vec3;
 	public var v:Vec3;

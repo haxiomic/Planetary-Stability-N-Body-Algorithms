@@ -6,17 +6,12 @@
 
 	<window width="1024" height="768" background="0x000000" fps="60" vsync="false" />
 	<window orientation="landscape" />
-	<window width="" height="768" if="html5" />
+	<window width="" height="0" if="html5" />
 	
 	<source path="Source" />
-	
+
 	<haxelib name="openfl" />
-	<haxelib name="openfl-html5-dom" if="html5" />
-	<!-- <haxelib name="openfl-bitfive" if="html5" /> -->
-	<!-- library order is important! (Overrides involved) -->
-	<!--<haxelib name="openfl-stage3d" />-->
-	<haxelib name="away3d-core-openfl" />
-	<!--<haxelib name="polygonal-core" />-->
+	<haxelib name="openfl-bitfive" if="html5" />
 	
 	<assets path="Assets" rename="assets"/>
 
@@ -25,6 +20,5 @@
 
 	<!-- Template Overrides -->
 	<template path="Templates" />
-	<!--<template path="Templates/html5/index.html" rename="index.html" />-->
 	
 </project>
