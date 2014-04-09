@@ -14,13 +14,9 @@ class BasicRenderer {
 
 	var lengthConversion:Float = 100; //how many pixels for each sim unit
 
-	var _initalLengthConversion:Float;
-
 	public function new(){
 		this.stage = flash.Lib.current.stage;
 		bodyData = new Map<Body, BodyRenderData>();
-
-		_initalLengthConversion = lengthConversion;
 
 		stage.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
 	}
@@ -46,7 +42,8 @@ class BasicRenderer {
 		var r:Float = data.radius;
 		var c:Int = data.color;
 
-		r/=_initalLengthConversion/lengthConversion;
+		var baseLengthConversion = 100;
+		r/= baseLengthConversion/lengthConversion;
 		if(r<2)r=2;
 
 		s.graphics.clear();

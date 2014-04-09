@@ -5,6 +5,7 @@ import geom.Vec3;
 import simulator.Body;
 
 class NBodySimulator {
+	static inline public var G = Constants.G_AU_kg_D;
 
 	public var bodies:Array<Body>;
 	public var onBodyAdded:Body->Void;
@@ -71,7 +72,7 @@ class NBodySimulator {
 		var p:Float = 0;
 		for(i in 0...bodies.length){
 			A = bodies[i];
-			E += 0.5*A.m*A.v.lengthSquared();
+			E += 0.5*A.m*A.v.lengthSquared();//kinetic energy
 
 			for(j in i+1...bodies.length){
 				B = bodies[j];	
@@ -79,7 +80,7 @@ class NBodySimulator {
 				Vec3.difference(A.p, B.p, r);
 				d = r.length();
 				
-				E -= G*A.m*B.m/d;
+				E -= G*A.m*B.m/d;//potential energy
 			}
 
 		}
@@ -93,7 +94,5 @@ class NBodySimulator {
 		r = new Vec3();
 		rNorm = new Vec3();
 	}
-
-	static inline public var G = Constants.G_AU_kg_D;
 
 }
