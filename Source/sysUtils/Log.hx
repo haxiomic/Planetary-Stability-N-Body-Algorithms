@@ -1,36 +1,55 @@
 package sysUtils;
 
-class Log 
-{
-	static public function print(v:Dynamic){
-		Sys.println(v);
-	}
-
+class Log {
 	static public function printRaw(v:Dynamic){
 		Sys.print(v);
 	}
 
-	static public function newLine(){
-		printRaw('\n')
+	static public function newLine() printRaw('\n');
+
+	static public function print(v:Dynamic, newLine:Bool = true){
+		var str:String = v;
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
 	}
 
-	static public function printTitle(v:Dynamic){
-		Sys.println(BLUE+BOLD+'\t-- '+v+' --'+RESET+'\n');
+	static public function printStatement(v:Dynamic, newLine:Bool = true){
+		var str:String = BRIGHT_WHITE+BOLD+v+RESET;
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
 	}
 
-	static public function printError(v:Dynamic){
-		Sys.println(RED+BOLD+"Error"+RESET+": "+v+RESET);
+	static public function printTitle(v:Dynamic, newLine:Bool = true){
+		var str:String = BLUE+BOLD+'\t-- '+v+' --'+RESET+'\n';
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
 	}
 
-	static public function printResult(v:Dynamic){
-		Sys.println(BRIGHT_GREEN+BOLD+v+RESET);
+	static public function printError(v:Dynamic, newLine:Bool = true){
+		var str:String = RED+BOLD+"Error"+RESET+": "+v+RESET;
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
 	}
 
-	static public function printQuestion(v:Dynamic){
-		Sys.println(BRIGHT_WHITE+BOLD+v+RESET);
+	static public function printConcern(v:Dynamic, newLine:Bool = true){
+		var str:String = YELLOW+BOLD+v+RESET;
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
 	}
 
+	static public function printSuccess(v:Dynamic, newLine:Bool = true){
+		var str:String = BRIGHT_GREEN+BOLD+v+RESET;
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
+	}
 
+	static public function printQuestion(v:Dynamic, newLine:Bool = true){
+		var str:String = BRIGHT_WHITE+BOLD+v+RESET;
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
+	}
+
+	//Console format escape strings
 	static public var BLACK_CODE = 0;
 	static public var RED_CODE = 1;
 	static public var GREEN_CODE = 2;

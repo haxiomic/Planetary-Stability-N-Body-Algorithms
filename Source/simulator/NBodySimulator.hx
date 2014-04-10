@@ -5,6 +5,9 @@ import geom.Vec3;
 import simulator.Body;
 
 class NBodySimulator {
+	public var algorithmName:String = "first-pass";
+	public var algorithmDescription:String = "First pass. No optimizations. G = G_AU_kg_D to 3 d.p.";
+
 	static inline public var G = Constants.G_AU_kg_D;
 
 	public var bodies:Array<Body>;
