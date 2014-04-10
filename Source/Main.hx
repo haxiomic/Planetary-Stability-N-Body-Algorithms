@@ -28,7 +28,7 @@ class Main {
 
 		//currently using length: AU 	time: days 		mass: kg
 		units = {
-			time: "Days",
+			time: "days",
 			length: "AU",
 			mass: "kg"
 		}
@@ -58,13 +58,13 @@ class Main {
 		//run simulation
 		//1 day = 86400 seconds
 		var dt = 1;
-		var runtime = 1;//years
+		var runtime = 10000;//years
 		var outputCount = 20;
 
 		var time:Float = 0;
 		var endTime = runtime*365;//days
-		var requiredItterations:Float = endTime/dt;
-		var outputDivisions = Math.round(requiredItterations/outputCount);
+		var requiredIterations:Float = endTime/dt;
+		var outputDivisions = Math.round(requiredIterations/outputCount);
 		var i:Int = 0;
 		while(time<=endTime){
 			//step simulation
@@ -75,33 +75,35 @@ class Main {
 			//output progress
 			if(i%outputDivisions==0){
 				f = updateEnergy();
-				Log.print(100*(i/requiredItterations)+"% total energy: "+currentEnergy+" error: "+f+" itteration: "+i);
+				Log.print(100*(i/requiredIterations)+"% total energy: "+currentEnergy+" error: "+f+" itteration: "+i);
 			}
 		}
 
 		var systemWallTime = timeStamp() - systemStartTime;
-		var megaIterationTime = 1000*1000*(systemWallTime/requiredItterations);
+		var megaIterationTime = 1000*1000*(systemWallTime/requiredIterations);
 
 		Log.newLine();
-		Log.print("Walltime: "+systemWallTime+"  |  1M iterations: "+megaIterationTime);
+		Log.print("Walltime: "+systemWallTime+" s  |  1M iterations: "+megaIterationTime+" s");
 
 		//Construct object to save
 		var fileSaveData = {
 			date: CompileTime.buildDate(),
 			algorithmName: simulator.algorithmName,
 			algorithmDescription: simulator.algorithmDescription,
-			walltime_s: systemWallTime,
-			millionIterationTime_s: megaIterationTime,
-			iterations: requiredItterations,
+			walltime: systemWallTime+" s",
+			millionIterationTime: megaIterationTime+" s",
+			iterations: requiredIterations,
 			boddies: addedBoddies,
-			units: units
+			units: units,
+			git: sysUtils.GitTools.lastCommit(),
 		};
 
 		//Create filename
-		var filename = "["+simulator.algorithmName+"]"+"-dt="+dt+".json";//simid-
+		var filename = "dt="+dt+" "+units.time+", iterations="+requiredIterations+", runtime="+runtime+" years"+".json";
+		var fileDir = CompileTime.buildDir()+"/"+dataOutDirectory+"/"+simulator.algorithmName;
 
 		try{
-			if(saveAsJSON(fileSaveData, CompileTime.buildDir()+"/"+dataOutDirectory+"/"+filename)){
+			if(saveAsJSON(fileSaveData, fileDir+"/"+filename)){
 				exit(0);
 			}
 		}catch(msg:String){
