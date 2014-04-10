@@ -22,6 +22,10 @@ class Main {
 	var units:Dynamic;
 	var addedBoddies:Array<BodyDatum>;
 
+	/* --- Config --- */
+	var dataOutDirectory = CompileTime.buildDir()+"/Output Data/";
+	/* -------------- */
+
 	public function new () {
 		simulator = new NBodySimulator();
 		renderer = new BasicRenderer();
@@ -33,6 +37,62 @@ class Main {
 			mass: "kg"
 		}
 
+		setupSimulation();
+
+		var systemStartTime:Float = timeStamp();
+
+		var dt = 1;
+		var runtime = 1;
+		var iterationCount = performSimulation(dt, runtime);
+
+		//Results
+		var systemWallTime = timeStamp() - systemStartTime;
+		var megaIterationTime = 1000*1000*(systemWallTime/iterationCount);
+
+		//Handle results
+		Log.newLine();
+		Log.print("Walltime: "+systemWallTime+" s  |  1M iterations: "+megaIterationTime+" s");
+
+		//Construct object to save
+		var fileSaveData = {
+			date: CompileTime.buildDate(),
+			algorithmName: simulator.algorithmName,
+			algorithmDescription: simulator.algorithmDescription,
+			walltime: systemWallTime+" s",
+			millionIterationTime: megaIterationTime+" s",
+			iterations: iterationCount,
+			boddies: addedBoddies,
+			units: units,
+			git: sysUtils.GitTools.lastCommit(),
+		};
+
+		//Create filename
+		var filename = "dt="+dt+" "+units.time+", iterations="+iterationCount+", runtime="+runtime+" years"+".json";
+		var fileDir = dataOutDirectory+"/"+simulator.algorithmName;
+
+		try{
+			saveAsJSON(fileSaveData, fileDir+"/"+filename);
+		}catch(msg:String){
+			Log.printError(msg);
+			Log.newLine();
+
+			Log.printTitle("Dumping data to console");
+			Log.newLine();
+			Log.print(haxe.Json.stringify(fileSaveData));
+			Log.newLine();
+		}
+
+
+		Log.newLine();
+		Log.printStatement("Press any key to close");
+		Sys.getChar(false);
+		Log.newLine();
+
+		// exit(0);
+		steadyStep();
+	}
+
+	function setupSimulation(){
 		addedBoddies = new Array<BodyDatum>();
 		function addBodyFromDatum(bd:BodyDatum, displayRadius:Float = 10, displayColor:Int = 0xFF0000):Body{
 			var b = simulator.addBody(new Body(bd.position, bd.velocity, bd.mass));
@@ -42,29 +102,31 @@ class Main {
 			return b;
 		}
 
-		var rCV = 0.0000006; //radiusConversionFactor
+		var rCV = 0.0000006; //radiusConversionFactor for display
 		var sun = addBodyFromDatum(SolarBodyData.sun, 15, 0xFFA21F);
 		var earth = addBodyFromDatum(SolarBodyData.earth, SolarBodyData.earth.radius*rCV, 0xBB1111);
 		var jupiter = addBodyFromDatum(SolarBodyData.jupiter, SolarBodyData.jupiter.radius*rCV, 0xBB1111);
 		var saturn = addBodyFromDatum(SolarBodyData.saturn, SolarBodyData.saturn.radius*rCV, 0xFFE26E);
 		var uranus = addBodyFromDatum(SolarBodyData.uranus, SolarBodyData.uranus.radius*rCV, 0xA7D6DC);
 		var neptune = addBodyFromDatum(SolarBodyData.neptune, SolarBodyData.neptune.radius*rCV, 0x2A45FD);
+	}
 
+	@:noStack
+	function performSimulation(dt:Float = 1, runtime:Float = 1):Int{
+		//Compute energy
 		initalEnergy = simulator.computeTotalEnergy();
 		currentEnergy = initalEnergy;
 		lastEnergy = currentEnergy;
 
-		var systemStartTime:Float = timeStamp();
 		//run simulation
 		//1 day = 86400 seconds
-		var dt = 1;
-		var runtime = 10000;//years
-		var outputCount = 20;
-
 		var time:Float = 0;
 		var endTime = runtime*365;//days
 		var requiredIterations:Float = endTime/dt;
+
+		var outputCount = 20;
 		var outputDivisions = Math.round(requiredIterations/outputCount);
+
 		var i:Int = 0;
 		while(time<=endTime){
 			//step simulation
@@ -78,50 +140,7 @@ class Main {
 				Log.print(100*(i/requiredIterations)+"% total energy: "+currentEnergy+" error: "+f+" itteration: "+i);
 			}
 		}
-
-		var systemWallTime = timeStamp() - systemStartTime;
-		var megaIterationTime = 1000*1000*(systemWallTime/requiredIterations);
-
-		Log.newLine();
-		Log.print("Walltime: "+systemWallTime+" s  |  1M iterations: "+megaIterationTime+" s");
-
-		//Construct object to save
-		var fileSaveData = {
-			date: CompileTime.buildDate(),
-			algorithmName: simulator.algorithmName,
-			algorithmDescription: simulator.algorithmDescription,
-			walltime: systemWallTime+" s",
-			millionIterationTime: megaIterationTime+" s",
-			iterations: requiredIterations,
-			boddies: addedBoddies,
-			units: units,
-			git: sysUtils.GitTools.lastCommit(),
-		};
-
-		//Create filename
-		var filename = "dt="+dt+" "+units.time+", iterations="+requiredIterations+", runtime="+runtime+" years"+".json";
-		var fileDir = CompileTime.buildDir()+"/"+dataOutDirectory+"/"+simulator.algorithmName;
-
-		try{
-			if(saveAsJSON(fileSaveData, fileDir+"/"+filename)){
-				exit(0);
-			}
-		}catch(msg:String){
-			Log.printError(msg);
-			Log.newLine();
-
-			Log.printTitle("Dumping data to console");
-			Log.newLine();
-			Log.print(haxe.Json.stringify(fileSaveData));
-			Log.newLine();
-		}
-
-		steadyStep();
-
-		Log.printStatement("Press any key to close");
-		Sys.getChar(false);
-		Log.newLine();
-		exit(1);
+		return i;
 	}
 
 	var f:Float;
@@ -145,20 +164,6 @@ class Main {
 
 			renderer.render();
 		};
-	}
-
-	/* --- Config --- */
-	var dataOutDirectory = "./Output Data/";
-	/* -------------- */
-
-	function exportParentDir(?dir:String):String{
-		if(dir==null)dir = Sys.getCwd();
-		var regex = ~/\/(Export)/i;
-		var m = regex.match(dir);
-		if(m)
-			return regex.matchedLeft() + "/";
-		Log.printError("export parent directory not found. Cwd: "+dir);
-		return "";
 	}
 
 	/* -------------------------*/
@@ -190,7 +195,7 @@ class Main {
 
 		//Check the file doesn't already exist, if it does, find a free suffix -xx
 		var filePath = FileTools.findFreeFile(hxPath.toString());
-		//filePath = haxe.io.Path.normalize(filePath);//normalize path
+		filePath = haxe.io.Path.normalize(filePath);//normalize path
 
 		sys.io.File.saveContent(filePath, haxe.Json.stringify(data));
 
@@ -198,7 +203,6 @@ class Main {
 
 		return true;
 	}
-
 
 	inline function exit(?code:Int){
 		if(code==null)code=0;//successful 

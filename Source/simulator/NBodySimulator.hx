@@ -13,18 +13,21 @@ class NBodySimulator {
 	public var bodies:Array<Body>;
 	public var onBodyAdded:Body->Void;
 
-	@:noStack public function new(){
+	@:noStack
+	public function new(){
 		poolInitialization();
 		bodies = new Array<Body>();
 	}
 
-	@:noStack public inline function addBody(b:Body):Body{
+	@:noStack
+	public inline function addBody(b:Body):Body{
 		bodies.push(b);
 		if(onBodyAdded != null)onBodyAdded(b);
 		return b;
 	}
 
-	@:noStack public inline function step(dt:Float){
+	@:noStack
+	public inline function step(dt:Float){
 		var fc:Float, d:Float, dSq:Float, aA:Float, aB:Float;
 		var E:Float = 0;
 
@@ -69,6 +72,7 @@ class NBodySimulator {
 		}
 	}
 
+	@:noStack
 	public inline function computeTotalEnergy():Float{
 		var E:Float = 0, d:Float;
 		var k:Float = 0;
