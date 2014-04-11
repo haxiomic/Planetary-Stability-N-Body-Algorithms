@@ -5,24 +5,34 @@ import simulator.Body;
 import simulator.NBodySimulator;
 import SolarBodyData.BodyDatum;
 
-import renderer.BasicRenderer;
-
 import sysUtils.CompileTime;
 import sysUtils.Log;
 import sysUtils.FileTools;
+
+import renderer.BasicRenderer;
+
+typedef SimulationResults = {
+	var totalIterations:Int;
+	var cpuTime:Float;
+	var energyChange:Array<Float>;
+}
+
+typedef SimulationSetup = {
+	var dt:Float;
+	var timescale:Float;
+	var analysisInterval:Float;
+	var boddies:Array<BodyDatum>;
+	var units:Dynamic;
+}
 
 class Main {
 	var renderer:BasicRenderer;
 	var simulator:NBodySimulator;
 
-	var initalEnergy:Float;
-	var currentEnergy:Float;
-	var lastEnergy:Float;
-
 	var units:Dynamic;
 	var addedBoddies:Array<BodyDatum>;
 
-	/* --- Config --- */
+	/* --- File Config --- */
 	var dataOutDirectory = CompileTime.buildDir()+"/Output Data/";
 	/* -------------- */
 
@@ -30,75 +40,21 @@ class Main {
 		simulator = new NBodySimulator();
 		renderer = new BasicRenderer();
 
-		//currently using length: AU 	time: days 		mass: kg
 		units = {
 			time: "days",
 			length: "AU",
 			mass: "kg"
 		}
 
-		setupSimulation();
-
-		var systemStartTime:Float = timeStamp();
-
-		var dt = 1;
-		var runtime = 1;
-		var iterationCount = performSimulation(dt, runtime);
-
-		//Results
-		var systemWallTime = timeStamp() - systemStartTime;
-		var megaIterationTime = 1000*1000*(systemWallTime/iterationCount);
-
-		//Handle results
-		Log.newLine();
-		Log.print("Walltime: "+systemWallTime+" s  |  1M iterations: "+megaIterationTime+" s");
-
-		//Construct object to save
-		var fileSaveData = {
-			date: CompileTime.buildDate(),
-			algorithmName: simulator.algorithmName,
-			algorithmDescription: simulator.algorithmDescription,
-			walltime: systemWallTime+" s",
-			millionIterationTime: megaIterationTime+" s",
-			iterations: iterationCount,
-			boddies: addedBoddies,
-			units: units,
-			git: sysUtils.GitTools.lastCommit(),
-		};
-
-		//Create filename
-		var filename = "dt="+dt+" "+units.time+", iterations="+iterationCount+", runtime="+runtime+" years"+".json";
-		var fileDir = dataOutDirectory+"/"+simulator.algorithmName;
-
-		try{
-			saveAsJSON(fileSaveData, fileDir+"/"+filename);
-		}catch(msg:String){
-			Log.printError(msg);
-			Log.newLine();
-
-			Log.printTitle("Dumping data to console");
-			Log.newLine();
-			Log.print(haxe.Json.stringify(fileSaveData));
-			Log.newLine();
-		}
-
-
-		Log.newLine();
-		Log.printStatement("Press any key to close");
-		Sys.getChar(false);
-		Log.newLine();
-
-		// exit(0);
-		steadyStep();
-	}
-
-	function setupSimulation(){
+		// --- Setup Simulation ---
+		simulator.clear();
 		addedBoddies = new Array<BodyDatum>();
+
 		function addBodyFromDatum(bd:BodyDatum, displayRadius:Float = 10, displayColor:Int = 0xFF0000):Body{
 			var b = simulator.addBody(new Body(bd.position, bd.velocity, bd.mass));
-			renderer.addBody(b, displayRadius, displayColor);
-
 			addedBoddies.push(bd);
+
+			renderer.addBody(b, displayRadius, displayColor); //add to renderer
 			return b;
 		}
 
@@ -109,50 +65,91 @@ class Main {
 		var saturn = addBodyFromDatum(SolarBodyData.saturn, SolarBodyData.saturn.radius*rCV, 0xFFE26E);
 		var uranus = addBodyFromDatum(SolarBodyData.uranus, SolarBodyData.uranus.radius*rCV, 0xA7D6DC);
 		var neptune = addBodyFromDatum(SolarBodyData.neptune, SolarBodyData.neptune.radius*rCV, 0x2A45FD);
+
+
+		// --- Perform Simulation ---
+		var dt = 1;//days
+		var timescale = 10000;//years
+		var analysisInterval = Math.round((timescale*365/dt)/100);
+
+		var r:SimulationResults = performSimulation(simulator, dt, timescale*365, analysisInterval);
+
+		//#! progress logging should be parallel operation
+		// Log.print(100*(i/requiredIterations)+"% total energy: "+currentEnergy+" error: "+energyChange+" itteration: "+i+"\r", false);
+
+		// --- Handle Results ---
+		var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
+
+		Log.newLine();
+		Log.print("Cpu Time: "+r.cpuTime+" s  |  1M iterations: "+millionIterationTime+" s");
+		Log.newLine();
+
+		// --- Save Results ---
+		var setup:SimulationSetup = {
+			dt: dt,
+			timescale: timescale,
+			analysisInterval: analysisInterval,
+			boddies: addedBoddies,
+			units: units,
+		}
+		saveResults(simulator, setup, r);
+
+		Log.newLine();
+		Log.printStatement("Press any key to continue");
+		Sys.getChar(false);
+		Log.newLine();
+
+		// exit(0);
+		steadyStep();
 	}
 
-	@:noStack
-	function performSimulation(dt:Float = 1, runtime:Float = 1):Int{
-		//Compute energy
-		initalEnergy = simulator.computeTotalEnergy();
-		currentEnergy = initalEnergy;
-		lastEnergy = currentEnergy;
+	//@:noStack
+	function performSimulation(simulation:NBodySimulator, dt:Float = 1, timescale:Float = 1, analysisInterval:Float = 100):SimulationResults{
+		//Data
+		var energyChangeArray:Array<Float> = new Array<Float>();
+
+		//Algorithm runtime
+		var algorithmStartTime:Float, algorithmEndTime:Float;
+
+		//System Energy
+		var initalEnergy:Float = simulator.computeTotalEnergy();
+		var currentEnergy:Float = initalEnergy;
+		var energyChange:Float = 0;
 
 		//run simulation
 		//1 day = 86400 seconds
 		var time:Float = 0;
-		var endTime = runtime*365;//days
-		var requiredIterations:Float = endTime/dt;
+		var requiredIterations:Float = timescale/dt;
 
-		var outputCount = 20;
-		var outputDivisions = Math.round(requiredIterations/outputCount);
+		var i:Int = 0;//iteration
 
-		var i:Int = 0;
-		while(time<=endTime){
-			//step simulation
+		algorithmStartTime = cpuTime();
+		while(time<=timescale){
+			//Step simulation
 			simulator.step(dt);	
+
+			//Analyze system
+			if(i%analysisInterval==0){
+				//update energy
+				currentEnergy = simulator.computeTotalEnergy();
+				energyChange = Math.abs((currentEnergy - initalEnergy))/initalEnergy;
+
+				energyChangeArray.push(energyChange);
+			}
+
+			//Progress loop
 			time+=dt;
 			i++;
-
-			//output progress
-			if(i%outputDivisions==0){
-				f = updateEnergy();
-				Log.print(100*(i/requiredIterations)+"% total energy: "+currentEnergy+" error: "+f+" itteration: "+i);
-			}
 		}
-		return i;
-	}
+		algorithmEndTime = cpuTime();
 
-	var f:Float;
-	function updateEnergy():Float{
-		currentEnergy = simulator.computeTotalEnergy();
-		f = fractionalError();
-		lastEnergy = currentEnergy;
-		return Math.abs(f);
-	}
+		var totalIterations = i-1;
 
-	function fractionalError():Float{
-		return (currentEnergy-lastEnergy)/initalEnergy;
+		return {
+			totalIterations: totalIterations,
+			cpuTime: (algorithmEndTime - algorithmStartTime),
+			energyChange: energyChangeArray,
+		};
 	}
 
 	function steadyStep(){
@@ -160,10 +157,47 @@ class Main {
 		stepTimer.run = function():Void{
 			simulator.step(1);
 
-			updateEnergy();
-
 			renderer.render();
 		};
+	}
+
+	function saveResults(simulator:NBodySimulator, setup:SimulationSetup, results:SimulationResults){
+		var r = results;
+		//Construct object to save
+		var fileSaveData = {
+			metadata:{
+				date: CompileTime.buildDate(),
+				algorithmName: simulator.algorithmName,
+				algorithmDescription: simulator.algorithmDescription,
+				git: sysUtils.GitTools.lastCommit(),
+				gitHash: sysUtils.GitTools.lastCommitHash(),
+				units: units,
+			},
+			setup: setup,
+			results:{
+				energyChange: r.energyChange,
+				totalIterations: r.totalIterations,
+				cpuTime: r.cpuTime+" s",
+				millionIterationTime: 1000*1000*(r.cpuTime/r.totalIterations)+" s",
+			},
+		}
+
+		try{
+			//Create filename
+			var filename = "dt="+setup.dt+" "+setup.units.time+", iterations="+r.totalIterations+", timescale="+setup.timescale+" years"+".json";
+			var fileDir = dataOutDirectory+"/"+simulator.algorithmName;
+			var path = fileDir+"/"+filename;
+
+			saveAsJSON(fileSaveData, path);
+		}catch(msg:String){
+			Log.printError(msg);
+			Log.newLine();
+
+			Log.printTitle("Dumping data to console");
+			Log.newLine();
+			Log.print(haxe.Json.stringify(fileSaveData));
+			Log.newLine();
+		}
 	}
 
 	/* -------------------------*/
@@ -174,8 +208,7 @@ class Main {
 
 		var filename = hxPath.file;
 		//Assess file out directory
-		var outDir = hxPath.dir;
-		// outDir = haxe.io.Path.normalize(outDir);
+		var outDir = haxe.io.Path.normalize(hxPath.dir);
 
 		//Check if out directory exists
 		if(!sys.FileSystem.exists(outDir)){
@@ -195,7 +228,7 @@ class Main {
 
 		//Check the file doesn't already exist, if it does, find a free suffix -xx
 		var filePath = FileTools.findFreeFile(hxPath.toString());
-		filePath = haxe.io.Path.normalize(filePath);//normalize path
+		filePath = haxe.io.Path.normalize(filePath);//normalize path for readability
 
 		sys.io.File.saveContent(filePath, haxe.Json.stringify(data));
 
@@ -211,8 +244,8 @@ class Main {
 		#end
 	}
 
-	inline function timeStamp():Float{
-		//return Sys.cpuTime()*1000;
-		return haxe.Timer.stamp();
+	inline function cpuTime():Float{
+		return Sys.cpuTime();
+		//return haxe.Timer.stamp();
 	}
 }

@@ -13,17 +13,18 @@ class NBodySimulator {
 	public var bodies:Array<Body>;
 	public var onBodyAdded:Body->Void;
 
-	@:noStack
 	public function new(){
-		poolInitialization();
-		bodies = new Array<Body>();
+		initalize();
 	}
 
-	@:noStack
-	public inline function addBody(b:Body):Body{
+	public function addBody(b:Body):Body{
 		bodies.push(b);
 		if(onBodyAdded != null)onBodyAdded(b);
 		return b;
+	}
+
+	public function clear(){
+		initalize();
 	}
 
 	@:noStack
@@ -94,10 +95,16 @@ class NBodySimulator {
 		return E;
 	}
 
+
+	private function initalize(){
+		poolInitialization();
+		bodies = new Array<Body>();
+	}
+
 	//Variable pool
 	var A:Body;var B:Body;
 	var r:Vec3;var rNorm:Vec3;
-	@:noStack private function poolInitialization(){
+	private function poolInitialization(){
 		r = new Vec3();
 		rNorm = new Vec3();
 	}

@@ -1,7 +1,8 @@
 ---- Notes ----
 TODO
 - Better constants
-- Improve Vec3 implementation with inspiration from https://github.com/fponticelli/chad/blob/master/src/chad/geom/Vector3D.hx
+- Improve Vec3 memory implementation
+- Rewrite path manipulation to use haxe.io.Path to be cross-platform
 
 - Check energy conservation
 	- Fork, plot graphs, store data
