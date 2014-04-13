@@ -1,8 +1,17 @@
 package geom;
 
-abstract Vec3(Array<Float>) from Array<Float> to Array<Float>{
+import haxe.ds.Vector;
+
+typedef Data = Vector<Float>;
+
+abstract Vec3(Data) from Data to Data{
 	public inline function new(x:Float = 0, y:Float = 0, z:Float = 0) {
-		this = [x,y,z];
+		this = new Vector<Float>(3);
+		//this = new Data();
+
+		this[0] = x;
+		this[1] = y;
+		this[2] = z;
 	}
 
 	public var x(get, set):Float;
@@ -12,9 +21,10 @@ abstract Vec3(Array<Float>) from Array<Float> to Array<Float>{
 	public inline function get_x():Float return this[0];
 	public inline function get_y():Float return this[1];
 	public inline function get_z():Float return this[2];
-	public inline function set_x(v:Float):Float return this[0] = v;
-	public inline function set_y(v:Float):Float return this[1] = v;
-	public inline function set_z(v:Float):Float return this[2] = v;
+	public inline function set_x(v:Float):Float return  this[0] = v;
+	public inline function set_y(v:Float):Float return  this[1] = v;
+	public inline function set_z(v:Float):Float return  this[2] = v;
+
 
 	@:from inline static public function fromFloat(v:Float) {
 		return new Vec3(v,v,v);
@@ -22,18 +32,15 @@ abstract Vec3(Array<Float>) from Array<Float> to Array<Float>{
 
 	@:from inline static public function fromArray(arr:Array<Null<Float>>) {
 		return new Vec3(
-			null == arr[0] ? 0:arr[0],
-			null == arr[1] ? 0:arr[1],
-			null == arr[2] ? 0:arr[2]
+			null == arr[0] ? 0 : arr[0],
+			null == arr[1] ? 0 : arr[1],
+			null == arr[2] ? 0 : arr[2]
 		);
 	}
 
 	@:from inline static public function fromTypedef(o:{x:Dynamic, y:Dynamic, z:Dynamic}) {
 		return new Vec3(o.x, o.y, o.z);
 	}
-
-	@:to public inline function toArray():Array<Float>
-		return this.copy();
 
 
 	//------- Class Methods -------//

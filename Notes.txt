@@ -4,6 +4,7 @@ TODO
 - Improve Vec3 memory implementation
 - Rewrite path manipulation to use haxe.io.Path to be cross-platform
 
+- Git should be CompileTime
 - Check energy conservation
 	- Fork, plot graphs, store data
 - Kick drift kick implementation 

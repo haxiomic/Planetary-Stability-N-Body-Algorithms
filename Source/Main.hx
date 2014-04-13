@@ -1,5 +1,7 @@
 package;
 
+import haxe.ds.Vector;
+
 import geom.Vec3;
 import simulator.Body;
 import simulator.NBodySimulator;
@@ -9,24 +11,11 @@ import sysUtils.CompileTime;
 import sysUtils.Log;
 import sysUtils.FileTools;
 
-import renderer.BasicRenderer;
-
-typedef SimulationResults = {
-	var totalIterations:Int;
-	var cpuTime:Float;
-	var energyChange:Array<Float>;
-}
-
-typedef SimulationSetup = {
-	var dt:Float;
-	var timescale:Float;
-	var analysisInterval:Float;
-	var boddies:Array<BodyDatum>;
-	var units:Dynamic;
-}
+// import renderer.BasicRenderer;
+// import hxcpp.StaticRegexp;
 
 class Main {
-	var renderer:BasicRenderer;
+	// var renderer:BasicRenderer;
 	var simulator:NBodySimulator;
 
 	var units:Dynamic;
@@ -38,7 +27,7 @@ class Main {
 
 	public function new () {
 		simulator = new NBodySimulator();
-		renderer = new BasicRenderer();
+		// renderer = new BasicRenderer();
 
 		units = {
 			time: "days",
@@ -54,7 +43,7 @@ class Main {
 			var b = simulator.addBody(new Body(bd.position, bd.velocity, bd.mass));
 			addedBoddies.push(bd);
 
-			renderer.addBody(b, displayRadius, displayColor); //add to renderer
+			// renderer.addBody(b, displayRadius, displayColor); //add to renderer
 			return b;
 		}
 
@@ -65,48 +54,41 @@ class Main {
 		var saturn = addBodyFromDatum(SolarBodyData.saturn, SolarBodyData.saturn.radius*rCV, 0xFFE26E);
 		var uranus = addBodyFromDatum(SolarBodyData.uranus, SolarBodyData.uranus.radius*rCV, 0xA7D6DC);
 		var neptune = addBodyFromDatum(SolarBodyData.neptune, SolarBodyData.neptune.radius*rCV, 0x2A45FD);
-
-
 		// --- Perform Simulation ---
-		var dt = 1;//days
-		var timescale = 10000;//years
-		var analysisInterval = Math.round((timescale*365/dt)/100);
+		var experimentSetup:SimulationSetup = {
+			dt: 1,	//days
+			timescale: 10000 *365, //days
+			analysisInterval: 100, //iterations, as total interval count: (timescale)
+			boddies: addedBoddies,
+			units: units,
+		}var s = experimentSetup;
 
-		var r:SimulationResults = performSimulation(simulator, dt, timescale*365, analysisInterval);
-
-		//#! progress logging should be parallel operation
-		// Log.print(100*(i/requiredIterations)+"% total energy: "+currentEnergy+" error: "+energyChange+" itteration: "+i+"\r", false);
+		var r:SimulationResults = performSimulation(simulator, s.dt, s.timescale, s.analysisInterval);
 
 		// --- Handle Results ---
 		var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
 
 		Log.newLine();
-		Log.print("Cpu Time: "+r.cpuTime+" s  |  1M iterations: "+millionIterationTime+" s");
+		Log.print("CPU Time: "+r.cpuTime+" s  |  1M iterations: "+millionIterationTime+" s");
 		Log.newLine();
 
 		// --- Save Results ---
-		var setup:SimulationSetup = {
-			dt: dt,
-			timescale: timescale,
-			analysisInterval: analysisInterval,
-			boddies: addedBoddies,
-			units: units,
-		}
-		saveResults(simulator, setup, r);
+		saveResults(simulator, s, r);
+
+		//steadyStep();
 
 		Log.newLine();
 		Log.printStatement("Press any key to continue");
 		Sys.getChar(false);
 		Log.newLine();
 
-		// exit(0);
-		steadyStep();
+		exit(0);
 	}
 
-	//@:noStack
+	@:noStack
 	function performSimulation(simulation:NBodySimulator, dt:Float = 1, timescale:Float = 1, analysisInterval:Float = 100):SimulationResults{
 		//Data
-		var energyChangeArray:Array<Float> = new Array<Float>();
+		var energyChangeArray:Array<SimulationDataPoint> = new Array<SimulationDataPoint>();
 
 		//Algorithm runtime
 		var algorithmStartTime:Float, algorithmEndTime:Float;
@@ -119,9 +101,9 @@ class Main {
 		//run simulation
 		//1 day = 86400 seconds
 		var time:Float = 0;
-		var requiredIterations:Float = timescale/dt;
+		var requiredIterations:Int = Math.ceil(timescale/dt);
 
-		var i:Int = 0;//iteration
+		var i:UInt = 0;//iteration
 
 		algorithmStartTime = cpuTime();
 		while(time<=timescale){
@@ -134,7 +116,13 @@ class Main {
 				currentEnergy = simulator.computeTotalEnergy();
 				energyChange = Math.abs((currentEnergy - initalEnergy))/initalEnergy;
 
-				energyChangeArray.push(energyChange);
+				energyChangeArray.push(new SimulationDataPoint(energyChange, time, i));
+			}
+
+			//Report progress
+			if(i%300000==0){
+				var millionIterationTime = 1000*1000*(cpuTime() - algorithmStartTime)/(i+1);
+				Log.print(100*(i/requiredIterations)+"% error: "+energyChange+" iteration: "+i+" 1M Iteration Time: "+millionIterationTime+" s \r", false);
 			}
 
 			//Progress loop
@@ -143,7 +131,7 @@ class Main {
 		}
 		algorithmEndTime = cpuTime();
 
-		var totalIterations = i-1;
+		var totalIterations = i;
 
 		return {
 			totalIterations: totalIterations,
@@ -153,16 +141,17 @@ class Main {
 	}
 
 	function steadyStep(){
-		var stepTimer:haxe.Timer = new haxe.Timer(10);
-		stepTimer.run = function():Void{
-			simulator.step(1);
+		// var stepTimer:haxe.Timer = new haxe.Timer(10);
+		// stepTimer.run = function():Void{
+		// 	simulator.step(1);
 
-			renderer.render();
-		};
+		// 	// renderer.render();
+		// };
 	}
 
 	function saveResults(simulator:NBodySimulator, setup:SimulationSetup, results:SimulationResults){
-		var r = results;
+		var r:Dynamic = Reflect.copy(results);
+		r.millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations)+" s";
 		//Construct object to save
 		var fileSaveData = {
 			metadata:{
@@ -174,21 +163,16 @@ class Main {
 				units: units,
 			},
 			setup: setup,
-			results:{
-				energyChange: r.energyChange,
-				totalIterations: r.totalIterations,
-				cpuTime: r.cpuTime+" s",
-				millionIterationTime: 1000*1000*(r.cpuTime/r.totalIterations)+" s",
-			},
+			results: results,
 		}
 
 		try{
 			//Create filename
-			var filename = "dt="+setup.dt+" "+setup.units.time+", iterations="+r.totalIterations+", timescale="+setup.timescale+" years"+".json";
+			var filename = "dt="+setup.dt+" "+setup.units.time+", iterations="+r.totalIterations+", timescale="+setup.timescale/365+" years"+".json";
 			var fileDir = dataOutDirectory+"/"+simulator.algorithmName;
 			var path = fileDir+"/"+filename;
 
-			saveAsJSON(fileSaveData, path);
+			saveAsJSON(fileSaveData, path, false);
 		}catch(msg:String){
 			Log.printError(msg);
 			Log.newLine();
@@ -203,7 +187,7 @@ class Main {
 	/* -------------------------*/
 	/* --- System Functions --- */
 
-	static public function saveAsJSON(data:Dynamic, path:String):Bool{
+	static public function saveAsJSON(data:Dynamic, path:String, autoCreateDirectory:Bool = true):Bool{
 		var hxPath = new haxe.io.Path(path);
 
 		var filename = hxPath.file;
@@ -212,17 +196,21 @@ class Main {
 
 		//Check if out directory exists
 		if(!sys.FileSystem.exists(outDir)){
-			//create out directory
-			Log.printQuestion("Directory "+outDir+" doesn't exist, create it? (y/n)\n-> ", false);
-			var char:Int = Sys.getChar(true);
-			Log.newLine();
-			Log.newLine();
-			if(String.fromCharCode(char).toLowerCase() == "y"){
+			if(autoCreateDirectory){
 				sys.FileSystem.createDirectory(outDir);
-				Log.printSuccess("Directory created");
 			}else{
-				throw "cannot save data";
-				return false;
+				//create out directory
+				Log.printQuestion("Directory "+outDir+" doesn't exist, create it? (y/n)\n-> ", false);
+				var char:Int = Sys.getChar(true);
+				Log.newLine();
+				Log.newLine();
+				if(String.fromCharCode(char).toLowerCase() == "y"){
+					sys.FileSystem.createDirectory(outDir);
+					Log.printSuccess("Directory created");
+				}else{
+					throw "cannot save data";
+					return false;
+				}
 			}
 		}
 
@@ -247,5 +235,48 @@ class Main {
 	inline function cpuTime():Float{
 		return Sys.cpuTime();
 		//return haxe.Timer.stamp();
+	}
+
+	static function main(){
+		new Main();
+	}
+}
+
+
+typedef SimulationResults = {
+	var totalIterations:UInt;
+	var cpuTime:Float;
+	var energyChange:Array<SimulationDataPoint>;
+}
+
+typedef SimulationSetup = {
+	var dt:Float;
+	var timescale:Float;
+	var analysisInterval:Float;
+	var boddies:Array<BodyDatum>;
+	var units:Dynamic;
+}
+
+abstract SimulationDataPoint(Vector<Float>) from Vector<Float> to Vector<Float>{
+	public inline function new(value:Float, time:Float, iteration:UInt){
+		this = new Vector<Float>(3);
+		this[0] = value;
+		this[1] = time;
+		this[2] = iteration;
+	}
+
+	public var value(get, set):Float;
+	public var time(get, set):Float;
+	public var iteration(get, set):UInt;
+
+	public inline function get_value():Float return this[0];
+	public inline function get_time():Float return this[1];
+	public inline function get_iteration():UInt return Std.int(this[2]);
+	public inline function set_value(v:Float):Float return this[0] = v;
+	public inline function set_time(v:Float):Float return this[1] = v;
+	public inline function set_iteration(v:UInt):UInt return Std.int(this[2] = v);
+
+	public inline function toString() {
+	    return "SimulationDataPoint(value: "+value+", time: "+time+", iteration: "+iteration+")";
 	}
 }
