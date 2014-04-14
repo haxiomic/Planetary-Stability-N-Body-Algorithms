@@ -1,177 +1,156 @@
 package;
 
-import haxe.ds.Vector;
-
 import geom.Vec3;
-import simulator.Body;
-import simulator.NBodySimulator;
-import SolarBodyData.BodyDatum;
+import simulator.*;
+import renderer.*;
+import Experiment.SimulationResults;
+import Experiment.ExperimentInformation;
 
 import sysUtils.CompileTime;
 import sysUtils.Log;
 import sysUtils.FileTools;
 
-// import renderer.BasicRenderer;
-// import hxcpp.StaticRegexp;
-
 class Main {
-	// var renderer:BasicRenderer;
-	var simulator:NBodySimulator;
+	var renderer:BasicRenderer;
 
-	var units:Dynamic;
-	var addedBoddies:Array<BodyDatum>;
+	var units:Dynamic = {
+		time: "days",
+		length: "AU",
+		mass: "kg"
+	};
 
 	/* --- File Config --- */
 	var dataOutDirectory = CompileTime.buildDir()+"/Output Data/";
 	/* -------------- */
 
 	public function new () {
-		simulator = new NBodySimulator();
-		// renderer = new BasicRenderer();
+		renderer = new BasicRenderer();
 
-		units = {
-			time: "days",
-			length: "AU",
-			mass: "kg"
+		{
+			var dt = 1;
+			var eulerTest = new Experiment(EulersMethod, [Constants.G_AU_kg_D, dt], "Euler Algorithm Test");
+
+			var sun = eulerTest.addBody({
+				name: "Sun",
+				position: {x:0, y:0, z:0},
+				velocity: {x:0, y:0, z:0},
+				mass: 1.988544E30,
+			});renderer.addBody(sun, 5, 0xFFFF00);
+			var planet = eulerTest.addBody({
+				name: "Test Planet",
+				position: {x:1, y:0, z:0},
+				velocity: {x:0, y:0, z:0.01},
+				mass: 5.97219E24,
+			});renderer.addBody(planet, 2.5, 0x2288CC);
+
+
+			//set experiment conditions
+			eulerTest.timescale = 100;
+			var analysisCount = 100;
+			eulerTest.analysisInterval = Math.ceil((eulerTest.timescale/dt)/analysisCount);
+
+			//enable logging
+			eulerTest.runtimeCallback = function(e){
+				renderer.render();
+			}
+			eulerTest.runtimeCallbackInterval = 1;
+
+			//perform experiment
+			var r:SimulationResults = eulerTest.perform();
+
+			var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
+
+			Log.newLine();
+			Log.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
+			Log.newLine();
+
+			//saveExperiment(eulerTest, eulerTest.name);
+			renderer.preRenderCallback = function(){
+				eulerTest.simulator.step();	
+			}
+			renderer.startAutoRender();
 		}
 
-		// --- Setup Simulation ---
-		simulator.clear();
-		addedBoddies = new Array<BodyDatum>();
+		//Euler's Method Solar System Test
+		if(false){
+			var dt:Float = 1;
+			var eulerTest = new Experiment(EulersMethod, [Constants.G_AU_kg_D, dt]);
 
-		function addBodyFromDatum(bd:BodyDatum, displayRadius:Float = 10, displayColor:Int = 0xFF0000):Body{
-			var b = simulator.addBody(new Body(bd.position, bd.velocity, bd.mass));
-			addedBoddies.push(bd);
+			//add bodies
+			var sun:Body = eulerTest.addBody(SolarBodyData.sun); renderer.addBody(sun);
+			var earth:Body = eulerTest.addBody(SolarBodyData.earth); renderer.addBody(earth);
+			var jupiter:Body = eulerTest.addBody(SolarBodyData.jupiter); renderer.addBody(jupiter);
+			var saturn:Body = eulerTest.addBody(SolarBodyData.saturn); renderer.addBody(saturn);
+			var uranus:Body = eulerTest.addBody(SolarBodyData.uranus); renderer.addBody(uranus);
+			var neptune:Body = eulerTest.addBody(SolarBodyData.neptune); renderer.addBody(neptune);
 
-			// renderer.addBody(b, displayRadius, displayColor); //add to renderer
-			return b;
+			//set experiment conditions
+			eulerTest.timescale = 10000*365; //days
+			var analysisCount = 100;
+			eulerTest.analysisInterval = Math.ceil((eulerTest.timescale/dt)/analysisCount);
+
+			//enable logging
+			eulerTest.runtimeCallback = runtimeLog;
+			eulerTest.runtimeCallbackInterval = 1;
+
+			//perform experiment
+			var r:SimulationResults = eulerTest.perform();
+
+			//experiment completed
+			var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
+
+			Log.newLine();
+			Log.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
+			Log.newLine();
+
+			//save results
+			saveExperiment(eulerTest, eulerTest.name);
 		}
 
-		var rCV = 0.0000006; //radiusConversionFactor for display
-		var sun = addBodyFromDatum(SolarBodyData.sun, 15, 0xFFA21F);
-		var earth = addBodyFromDatum(SolarBodyData.earth, SolarBodyData.earth.radius*rCV, 0xBB1111);
-		var jupiter = addBodyFromDatum(SolarBodyData.jupiter, SolarBodyData.jupiter.radius*rCV, 0xBB1111);
-		var saturn = addBodyFromDatum(SolarBodyData.saturn, SolarBodyData.saturn.radius*rCV, 0xFFE26E);
-		var uranus = addBodyFromDatum(SolarBodyData.uranus, SolarBodyData.uranus.radius*rCV, 0xA7D6DC);
-		var neptune = addBodyFromDatum(SolarBodyData.neptune, SolarBodyData.neptune.radius*rCV, 0x2A45FD);
-		// --- Perform Simulation ---
-		var experimentSetup:SimulationSetup = {
-			dt: 1,	//days
-			timescale: 10000 *365, //days
-			analysisInterval: 100, //iterations, as total interval count: (timescale)
-			boddies: addedBoddies,
-			units: units,
-		}var s = experimentSetup;
-
-		var r:SimulationResults = performSimulation(simulator, s.dt, s.timescale, s.analysisInterval);
-
-		// --- Handle Results ---
-		var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
-
-		Log.newLine();
-		Log.print("CPU Time: "+r.cpuTime+" s  |  1M iterations: "+millionIterationTime+" s");
-		Log.newLine();
-
-		// --- Save Results ---
-		saveResults(simulator, s, r);
-
-		//steadyStep();
-
-		Log.newLine();
+		//Finish program
+		/*Log.newLine();
 		Log.printStatement("Press any key to continue");
 		Sys.getChar(false);
 		Log.newLine();
 
-		exit(0);
+		exit(0);*/
 	}
 
-	@:noStack
-	function performSimulation(simulation:NBodySimulator, dt:Float = 1, timescale:Float = 1, analysisInterval:Float = 100):SimulationResults{
-		//Data
-		var energyChangeArray:Array<SimulationDataPoint> = new Array<SimulationDataPoint>();
-
-		//Algorithm runtime
-		var algorithmStartTime:Float, algorithmEndTime:Float;
-
-		//System Energy
-		var initalEnergy:Float = simulator.computeTotalEnergy();
-		var currentEnergy:Float = initalEnergy;
-		var energyChange:Float = 0;
-
-		//run simulation
-		//1 day = 86400 seconds
-		var time:Float = 0;
-		var requiredIterations:Int = Math.ceil(timescale/dt);
-
-		var i:UInt = 0;//iteration
-
-		algorithmStartTime = cpuTime();
-		while(time<=timescale){
-			//Step simulation
-			simulator.step(dt);	
-
-			//Analyze system
-			if(i%analysisInterval==0){
-				//update energy
-				currentEnergy = simulator.computeTotalEnergy();
-				energyChange = Math.abs((currentEnergy - initalEnergy))/initalEnergy;
-
-				energyChangeArray.push(new SimulationDataPoint(energyChange, time, i));
-			}
-
-			//Report progress
-			if(i%300000==0){
-				var millionIterationTime = 1000*1000*(cpuTime() - algorithmStartTime)/(i+1);
-				Log.print(100*(i/requiredIterations)+"% error: "+energyChange+" iteration: "+i+" 1M Iteration Time: "+millionIterationTime+" s \r", false);
-			}
-
-			//Progress loop
-			time+=dt;
-			i++;
+	var lastLogTime:Float = 0;
+	function runtimeLog(e:Experiment){
+		if((Sys.time()-lastLogTime) > 1){
+			var progress = 100*(e.time-e.timeStart)/e.timescale;
+			Log.print(progress+"% "+Sys.time()+"\r", false);
+			lastLogTime = Sys.time();
 		}
-		algorithmEndTime = cpuTime();
-
-		var totalIterations = i;
-
-		return {
-			totalIterations: totalIterations,
-			cpuTime: (algorithmEndTime - algorithmStartTime),
-			energyChange: energyChangeArray,
-		};
 	}
 
-	function steadyStep(){
-		// var stepTimer:haxe.Timer = new haxe.Timer(10);
-		// stepTimer.run = function():Void{
-		// 	simulator.step(1);
-
-		// 	// renderer.render();
-		// };
-	}
-
-	function saveResults(simulator:NBodySimulator, setup:SimulationSetup, results:SimulationResults){
+	function saveExperiment(e:Experiment, filePrefix:String = ""){
+		var info = e.information;
+		var results = e.results;
 		var r:Dynamic = Reflect.copy(results);
-		r.millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations)+" s";
+		r.millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations)+" s";//add extra field
 		//Construct object to save
 		var fileSaveData = {
 			metadata:{
 				date: CompileTime.buildDate(),
-				algorithmName: simulator.algorithmName,
-				algorithmDescription: simulator.algorithmDescription,
 				git: sysUtils.GitTools.lastCommit(),
 				gitHash: sysUtils.GitTools.lastCommitHash(),
 				units: units,
 			},
-			setup: setup,
+			info: info,
 			results: results,
 		}
 
+		filePrefix = (new haxe.io.Path(filePrefix)).file;//parse filePrefix to make it safe
+		if(filePrefix!="")filePrefix+=" - ";
+
+		var parsedAlgorithmName = (new haxe.io.Path(info.algorithmName)).file;
+		var filename = filePrefix+info.bodies.length+" bodies, timescale="+Math.round(info.timescale/365)+" years"+".json";
+		var fileDir = haxe.io.Path.join([dataOutDirectory, parsedAlgorithmName]);//dataOutDir/parsedAlgorithmName
+		var path = haxe.io.Path.join([fileDir, filename]);
 		try{
 			//Create filename
-			var filename = "dt="+setup.dt+" "+setup.units.time+", iterations="+r.totalIterations+", timescale="+setup.timescale/365+" years"+".json";
-			var fileDir = dataOutDirectory+"/"+simulator.algorithmName;
-			var path = fileDir+"/"+filename;
-
 			saveAsJSON(fileSaveData, path, false);
 		}catch(msg:String){
 			Log.printError(msg);
@@ -239,44 +218,5 @@ class Main {
 
 	static function main(){
 		new Main();
-	}
-}
-
-
-typedef SimulationResults = {
-	var totalIterations:UInt;
-	var cpuTime:Float;
-	var energyChange:Array<SimulationDataPoint>;
-}
-
-typedef SimulationSetup = {
-	var dt:Float;
-	var timescale:Float;
-	var analysisInterval:Float;
-	var boddies:Array<BodyDatum>;
-	var units:Dynamic;
-}
-
-abstract SimulationDataPoint(Vector<Float>) from Vector<Float> to Vector<Float>{
-	public inline function new(value:Float, time:Float, iteration:UInt){
-		this = new Vector<Float>(3);
-		this[0] = value;
-		this[1] = time;
-		this[2] = iteration;
-	}
-
-	public var value(get, set):Float;
-	public var time(get, set):Float;
-	public var iteration(get, set):UInt;
-
-	public inline function get_value():Float return this[0];
-	public inline function get_time():Float return this[1];
-	public inline function get_iteration():UInt return Std.int(this[2]);
-	public inline function set_value(v:Float):Float return this[0] = v;
-	public inline function set_time(v:Float):Float return this[1] = v;
-	public inline function set_iteration(v:UInt):UInt return Std.int(this[2] = v);
-
-	public inline function toString() {
-	    return "SimulationDataPoint(value: "+value+", time: "+time+", iteration: "+iteration+")";
 	}
 }

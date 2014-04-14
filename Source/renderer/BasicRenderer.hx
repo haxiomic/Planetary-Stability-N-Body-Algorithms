@@ -1,5 +1,6 @@
 package renderer;
 
+import flash.events.Event;
 import flash.events.MouseEvent;
 import simulator.Body;
 
@@ -14,14 +15,23 @@ class BasicRenderer {
 
 	var lengthConversion:Float = 100; //how many pixels for each sim unit
 
-	public function new(){
-		this.stage = flash.Lib.current.stage;
-		bodyData = new Map<Body, BodyRenderData>();
+	public var preRenderCallback:Void->Void;
 
+	public function new(){
+		initalize();
+		this.stage = flash.Lib.current.stage;
 		stage.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
 	}
 
-	public function addBody(b:Body, drawRadius:Float, drawColor:Int){
+	public function startAutoRender(){
+		stage.addEventListener(Event.ENTER_FRAME, render);
+	}
+
+	public function stopAutoRender(){
+		stage.removeEventListener(Event.ENTER_FRAME, render);
+	}
+
+	public function addBody(b:Body, drawRadius:Float=5 /*pixels*/, drawColor:Int=0xFFFFFF){
 		var s:Sprite = new Sprite();
 		var data = new BodyRenderData(s, drawRadius, drawColor);
 		bodyData.set(b, data);
@@ -29,7 +39,13 @@ class BasicRenderer {
 		stage.addChild(s);
 	}
 
-	public function render(){
+	public function reset(){
+		initalize();
+	}
+
+	public function render(?e){
+		if(preRenderCallback!=null)preRenderCallback();
+
 		var s:Sprite;
 		for(b in bodyData.keys()){
 			drawBody(b);
@@ -55,7 +71,6 @@ class BasicRenderer {
 		s.y = screenY(b);
 	}
 
-
 	// Events
  	function onMouseWheel(event:MouseEvent):Void{
 		lengthConversion += event.delta*5;
@@ -80,6 +95,10 @@ class BasicRenderer {
 	inline function s2rY(v:Float)return simulationToRendererCoordY(v);
 	inline function simulationToRendererCoordY(v:Float)
 		return simulationLengthToRenderLength(v)+stage.stageHeight*.5;
+
+	private function initalize(){
+		bodyData = new Map<Body, BodyRenderData>();
+	}
 }
 
 class BodyRenderData{

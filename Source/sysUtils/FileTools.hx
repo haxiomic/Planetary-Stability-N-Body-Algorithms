@@ -28,7 +28,7 @@ class FileTools{
 		}
 
 		var filenameNew = filenameWOExt+"."+ext;
-		var pathNew = dir+"/"+filenameNew;
+		var pathNew = haxe.io.Path.join([dir, filenameNew]);//dir/filenameNew;
 
 		return findFreeFile(pathNew);
 	}

@@ -11,7 +11,8 @@ TODO
 	- http://www.physics.udel.edu/~jim/PHYS460_660_13S/Ordinary%20Differential%20Equations/KDK_method.pdf
 	- store data
 - Adaptive Timesteps
-
+- Orbital params
+https://code.google.com/p/hattrick-nbody/source/browse/trunk/src/Planets.cc
 
 
 

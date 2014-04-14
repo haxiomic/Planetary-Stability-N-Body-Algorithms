@@ -1,80 +1,36 @@
 package simulator;
 
-import Constants;
 import geom.Vec3;
 import simulator.Body;
 
 class NBodySimulator {
-	public var algorithmName:String = "first-pass";
-	public var algorithmDescription:String = "First pass. No optimizations. G = G_AU_kg_D to 3 d.p.";
-
-	static inline public var G = Constants.G_AU_kg_D;
-
+	public var algorithmName(default, null):String = "";
+	public var algorithmDetails(default, null):String = "";
 	public var bodies:Array<Body>;
-	public var onBodyAdded:Body->Void;
+	public var params(get, null):Dynamic;
 
-	public function new(){
+	public var time(default, null):Float;
+
+	public var G:Float;
+
+	public function new(G:Float){
 		initalize();
+		this.G = G;
 	}
 
 	public function addBody(b:Body):Body{
 		bodies.push(b);
-		if(onBodyAdded != null)onBodyAdded(b);
 		return b;
 	}
+
+	public function step(){}
 
 	public function clear(){
 		initalize();
 	}
 
 	@:noStack
-	public inline function step(dt:Float){
-		var fc:Float, d:Float, dSq:Float, aA:Float, aB:Float;
-		var E:Float = 0;
-
-		for(i in 0...bodies.length){
-			A = bodies[i];
-
-			for(j in i+1...bodies.length){
-				B = bodies[j];	
-
-				//Distance vector
-				Vec3.difference(A.p, B.p, r);
-				
-				dSq = r.lengthSquared();
-				d = Math.sqrt(dSq);
-
-				//Normalize r
-				rNorm.x = r.x/d;
-				rNorm.y = r.y/d;
-				rNorm.z = r.z/d;
-				
-				// ---- Attraction ---- 
-				//Force constant
-				fc = 1 * G / dSq; //2 since each pair is visited just once
-
-				//Acceleration 
-				aA = fc*B.m*dt;
-				aB = -fc*A.m*dt;
-
-				//Apply acceleration
-				A.v.x += rNorm.x*aA;
-				A.v.y += rNorm.y*aA;
-				A.v.z += rNorm.z*aA;
-				B.v.x += rNorm.x*aB;
-				B.v.y += rNorm.y*aB;
-				B.v.z += rNorm.z*aB;
-			}
-
-			//Apply velocity
-			A.x += A.v.x*dt;
-			A.y += A.v.y*dt;
-			A.z += A.v.z*dt;
-		}
-	}
-
-	@:noStack
-	public inline function computeTotalEnergy():Float{
+	public inline function totalEnergy():Float{
 		var E:Float = 0, d:Float;
 		var k:Float = 0;
 		var p:Float = 0;
@@ -95,8 +51,14 @@ class NBodySimulator {
 		return E;
 	}
 
+	//Private
+
+	private function get_params():Dynamic{
+		return {};
+	}
 
 	private function initalize(){
+		time = 0;
 		poolInitialization();
 		bodies = new Array<Body>();
 	}
