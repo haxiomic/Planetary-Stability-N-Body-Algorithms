@@ -63,12 +63,12 @@ class Main {
 			Log.newLine();
 			Log.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
 			Log.newLine();
-
+			
 			//saveExperiment(eulerTest, eulerTest.name);
-			renderer.preRenderCallback = function(){
+			/*renderer.preRenderCallback = function(){
 				eulerTest.simulator.step();	
 			}
-			renderer.startAutoRender();
+			renderer.startAutoRender();*/
 		}
 
 		//Euler's Method Solar System Test
