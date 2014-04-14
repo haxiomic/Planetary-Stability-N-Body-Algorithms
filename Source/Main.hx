@@ -6,7 +6,8 @@ import renderer.*;
 import Experiment.SimulationResults;
 import Experiment.ExperimentInformation;
 
-import sysUtils.CompileTime;
+import sysUtils.compileTime.Build;
+import sysUtils.compileTime.Git;
 import sysUtils.Log;
 import sysUtils.FileTools;
 
@@ -20,15 +21,16 @@ class Main {
 	};
 
 	/* --- File Config --- */
-	var dataOutDirectory = CompileTime.buildDir()+"/Output Data/";
+	var dataOutDirectory = Build.dir()+"/Output Data/";
 	/* -------------- */
 
 	public function new () {
 		renderer = new BasicRenderer();
-
+		
+		//Basic Test
 		{
 			var dt = 1;
-			var eulerTest = new Experiment(EulersMethod, [Constants.G_AU_kg_D, dt], "Euler Algorithm Test");
+			var eulerTest = new Experiment(EulersMethod, [Constants.G_AU_kg_D, dt]);
 
 			var sun = eulerTest.addBody({
 				name: "Sun",
@@ -63,8 +65,8 @@ class Main {
 			Log.newLine();
 			Log.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
 			Log.newLine();
-			
-			//saveExperiment(eulerTest, eulerTest.name);
+
+			saveExperiment(eulerTest, "Basic Test");
 			/*renderer.preRenderCallback = function(){
 				eulerTest.simulator.step();	
 			}
@@ -133,9 +135,9 @@ class Main {
 		//Construct object to save
 		var fileSaveData = {
 			metadata:{
-				date: CompileTime.buildDate(),
-				git: sysUtils.GitTools.lastCommit(),
-				gitHash: sysUtils.GitTools.lastCommitHash(),
+				date: Build.date(),
+				git: Git.lastCommit(),
+				gitHash: Git.lastCommitHash(),
 				units: units,
 			},
 			info: info,
