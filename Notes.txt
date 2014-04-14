@@ -4,8 +4,6 @@ TODO
 - Improve Vec3 memory implementation
 - Rewrite path manipulation to use haxe.io.Path to be cross-platform
 
-- Git should be CompileTime
-- Check energy conservation
 	- Fork, plot graphs, store data
 - Kick drift kick implementation 
 	- http://www.physics.udel.edu/~jim/PHYS460_660_13S/Ordinary%20Differential%20Equations/KDK_method.pdf

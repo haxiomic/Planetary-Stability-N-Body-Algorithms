@@ -10,6 +10,8 @@ import flash.display.Stage;
 
 class BasicRenderer {
 	var stage:flash.display.Stage;
+	var trailLayer:Sprite;
+	var bodyLayer:Sprite;
 
 	var bodyData:Map<Body, BodyRenderData>;
 
@@ -18,9 +20,18 @@ class BasicRenderer {
 	public var preRenderCallback:Void->Void;
 
 	public function new(){
-		initalize();
 		this.stage = flash.Lib.current.stage;
+		initalize();
 		stage.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
+	}
+
+	private function initalize(){
+		bodyData = new Map<Body, BodyRenderData>();
+
+		trailLayer = new Sprite();
+		bodyLayer = new Sprite();
+		stage.addChild(trailLayer);
+		stage.addChild(bodyLayer);
 	}
 
 	public function startAutoRender(){
@@ -35,8 +46,9 @@ class BasicRenderer {
 		var s:Sprite = new Sprite();
 		var data = new BodyRenderData(s, drawRadius, drawColor);
 		bodyData.set(b, data);
+		updatePosition(s, b);
 		drawBody(b);
-		stage.addChild(s);
+		bodyLayer.addChild(s);
 	}
 
 	public function reset(){
@@ -46,7 +58,6 @@ class BasicRenderer {
 	public function render(?e){
 		if(preRenderCallback!=null)preRenderCallback();
 
-		var s:Sprite;
 		for(b in bodyData.keys()){
 			drawBody(b);
 		}
@@ -59,14 +70,29 @@ class BasicRenderer {
 		var c:Int = data.color;
 
 		var baseLengthConversion = 100;
-		r/= baseLengthConversion/lengthConversion;
+		var ratio = baseLengthConversion/lengthConversion;
+
+		r/= ratio;
+
+		//minimum radius
 		if(r<2)r=2;
 
+		//draw circle
 		s.graphics.clear();
 		s.graphics.beginFill(c,1);
 		s.graphics.drawCircle(0, 0, r);
 		s.graphics.endFill();
 
+		//draw trail
+		trailLayer.graphics.lineStyle(1,data.color,1);
+		trailLayer.graphics.moveTo(s.x, s.y);
+
+		updatePosition(s, b);
+
+		trailLayer.graphics.lineTo(s.x, s.y);
+	}
+
+	inline function updatePosition(s:Sprite, b:Body){
 		s.x = screenX(b);
 		s.y = screenY(b);
 	}
@@ -95,10 +121,6 @@ class BasicRenderer {
 	inline function s2rY(v:Float)return simulationToRendererCoordY(v);
 	inline function simulationToRendererCoordY(v:Float)
 		return simulationLengthToRenderLength(v)+stage.stageHeight*.5;
-
-	private function initalize(){
-		bodyData = new Map<Body, BodyRenderData>();
-	}
 }
 
 class BodyRenderData{

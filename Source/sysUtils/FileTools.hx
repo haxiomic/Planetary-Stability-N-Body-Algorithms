@@ -7,14 +7,13 @@ class FileTools{
 
 		//Append number to filename
 		//get filename and directory
-		var explodedPath = path.split("/");
-		var filename = explodedPath.pop();
-		var dir = explodedPath.join("/");
 
-		var explodedFilename = filename.split(".");
-		var ext = explodedFilename.pop();
-		var filenameWOExt = explodedFilename.join(".");
+		var hxPath = new haxe.io.Path(path);
 
+		var filenameWOExt = hxPath.file;
+		var ext = hxPath.ext;
+		var dir = hxPath.dir;
+	
 		//get last digit -xx
 		var lastDigitReg:EReg = ~/\s\((\d+)\)$/;
 		if(lastDigitReg.match(filenameWOExt)){

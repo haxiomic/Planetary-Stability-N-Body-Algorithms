@@ -5,7 +5,7 @@ import haxe.ds.Vector;
 import simulator.Body;
 import simulator.NBodySimulator;
 import BodyDatum;
-import sysUtils.Log;
+import sysUtils.Console;
 
 class Experiment{
 
@@ -94,7 +94,7 @@ class Experiment{
 		i = 0;
 		//run simulation
 		algorithmStartTime = Sys.cpuTime();
-		while(time<=timeEnd){
+		while(time<timeEnd){
 			//Step simulation
 			simulator.step();	
 

@@ -1,6 +1,7 @@
 package sysUtils;
 
-class Log {
+class Console {
+	
 	static public function printRaw(v:Dynamic){
 		Sys.print(v);
 	}
@@ -47,6 +48,13 @@ class Log {
 		var str:String = BRIGHT_WHITE+BOLD+v+RESET;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
+	}
+
+	static public function askYesNoQuestion(v, suffix:String = " (y/n)\n-> ", newLine:Bool = false):Bool{
+		printQuestion(v+suffix, false);
+		var char:Int = Sys.getChar(true);
+		Console.newLine();
+		return (String.fromCharCode(char).toLowerCase() == "y");
 	}
 
 	//Console format escape strings

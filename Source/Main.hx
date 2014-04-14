@@ -8,7 +8,7 @@ import Experiment.ExperimentInformation;
 
 import sysUtils.compileTime.Build;
 import sysUtils.compileTime.Git;
-import sysUtils.Log;
+import sysUtils.Console;
 import sysUtils.FileTools;
 
 class Main {
@@ -26,7 +26,7 @@ class Main {
 
 	public function new () {
 		renderer = new BasicRenderer();
-		
+
 		//Basic Test
 		{
 			var dt = 1;
@@ -38,6 +38,7 @@ class Main {
 				velocity: {x:0, y:0, z:0},
 				mass: 1.988544E30,
 			});renderer.addBody(sun, 5, 0xFFFF00);
+
 			var planet = eulerTest.addBody({
 				name: "Test Planet",
 				position: {x:1, y:0, z:0},
@@ -47,7 +48,7 @@ class Main {
 
 
 			//set experiment conditions
-			eulerTest.timescale = 100;
+			eulerTest.timescale = 10;
 			var analysisCount = 100;
 			eulerTest.analysisInterval = Math.ceil((eulerTest.timescale/dt)/analysisCount);
 
@@ -62,15 +63,15 @@ class Main {
 
 			var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
 
-			Log.newLine();
-			Log.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
-			Log.newLine();
+			Console.newLine();
+			Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
+			Console.newLine();
 
 			saveExperiment(eulerTest, "Basic Test");
-			/*renderer.preRenderCallback = function(){
+			renderer.preRenderCallback = function(){
 				eulerTest.simulator.step();	
 			}
-			renderer.startAutoRender();*/
+			renderer.startAutoRender();
 		}
 
 		//Euler's Method Solar System Test
@@ -101,19 +102,19 @@ class Main {
 			//experiment completed
 			var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
 
-			Log.newLine();
-			Log.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
-			Log.newLine();
+			Console.newLine();
+			Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
+			Console.newLine();
 
 			//save results
 			saveExperiment(eulerTest, eulerTest.name);
 		}
 
 		//Finish program
-		/*Log.newLine();
-		Log.printStatement("Press any key to continue");
+		/*Console.newLine();
+		Console.printStatement("Press any key to continue");
 		Sys.getChar(false);
-		Log.newLine();
+		Console.newLine();
 
 		exit(0);*/
 	}
@@ -122,7 +123,7 @@ class Main {
 	function runtimeLog(e:Experiment){
 		if((Sys.time()-lastLogTime) > 1){
 			var progress = 100*(e.time-e.timeStart)/e.timescale;
-			Log.print(progress+"% "+Sys.time()+"\r", false);
+			Console.print(progress+"% "+Sys.time()+"\r", false);
 			lastLogTime = Sys.time();
 		}
 	}
@@ -155,13 +156,14 @@ class Main {
 			//Create filename
 			saveAsJSON(fileSaveData, path, false);
 		}catch(msg:String){
-			Log.printError(msg);
-			Log.newLine();
-
-			Log.printTitle("Dumping data to console");
-			Log.newLine();
-			Log.print(haxe.Json.stringify(fileSaveData));
-			Log.newLine();
+			Console.printError(msg);
+			Console.newLine();
+			if(Console.askYesNoQuestion("Shall I dump the data to the console?")){
+				Console.printTitle("Dumping data to console");
+				Console.newLine();
+				Console.print(haxe.Json.stringify(fileSaveData));
+				Console.newLine();
+			}
 		}
 	}
 
@@ -181,13 +183,11 @@ class Main {
 				sys.FileSystem.createDirectory(outDir);
 			}else{
 				//create out directory
-				Log.printQuestion("Directory "+outDir+" doesn't exist, create it? (y/n)\n-> ", false);
-				var char:Int = Sys.getChar(true);
-				Log.newLine();
-				Log.newLine();
-				if(String.fromCharCode(char).toLowerCase() == "y"){
+				if(Console.askYesNoQuestion("Directory "+outDir+" doesn't exist, create it?", null, false)){
+					Console.newLine();
+					Console.newLine();
 					sys.FileSystem.createDirectory(outDir);
-					Log.printSuccess("Directory created");
+					Console.printSuccess("Directory created");
 				}else{
 					throw "cannot save data";
 					return false;
@@ -201,7 +201,7 @@ class Main {
 
 		sys.io.File.saveContent(filePath, haxe.Json.stringify(data));
 
-		Log.printSuccess("Data saved to "+Log.BRIGHT_WHITE+filePath+Log.RESET);
+		Console.printSuccess("Data saved to "+Console.BRIGHT_WHITE+filePath+Console.RESET);
 
 		return true;
 	}
