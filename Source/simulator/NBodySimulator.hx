@@ -23,11 +23,11 @@ class NBodySimulator {
 		return b;
 	}
 
-	public function step(){}
-
 	public function clear(){
 		initalize();
 	}
+
+	public function step(){}
 
 	@:noStack
 	public inline function totalEnergy():Float{
@@ -51,7 +51,24 @@ class NBodySimulator {
 		return E;
 	}
 
-	//Private
+	//sets variables
+	var aA:Float;var aB:Float;
+	var fc:Float;
+	inline function accelerationsDueToGravity(A:Body, B:Body){
+		//Distance vector and it's magnitudes
+		Vec3.difference(A.p, B.p, r);
+		dSq = r.lengthSquared();
+		d = Math.sqrt(dSq);
+		//Normalize r
+		r /= d;
+		//Force constant
+		fc = 1 * G / dSq;
+
+		//Acceleration on A & B
+		aA = fc*B.m;
+		aB = -fc*A.m;
+	}
+
 
 	private function get_params():Dynamic{
 		return {};
@@ -66,6 +83,7 @@ class NBodySimulator {
 	//Variable pool
 	var A:Body;var B:Body;
 	var r:Vec3;var rNorm:Vec3;
+	var dSq:Float;var d:Float;
 	private function poolInitialization(){
 		r = new Vec3();
 		rNorm = new Vec3();

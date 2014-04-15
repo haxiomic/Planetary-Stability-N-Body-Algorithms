@@ -4,12 +4,12 @@ import geom.Vec3;
 import simulator.Body;
 import simulator.NBodySimulator;
 
-class EulersMethod extends NBodySimulator {
+class EulerMethod extends NBodySimulator {
 	public var dt:Float;
 
 	public function new(G:Float, dt:Float){
 		super(G);
-		this.algorithmName = "Euler's Method";
+		this.algorithmName = "Euler Method";
 		this.algorithmDetails = "First pass, no optimizations.";
 		this.dt = dt;
 	}
@@ -40,7 +40,7 @@ class EulersMethod extends NBodySimulator {
 				//Force constant
 				fc = 1 * G / dSq; //2 since each pair is visited just once
 
-				//Acceleration 
+				//Acceleration * dt
 				aA = fc*B.m*dt;
 				aB = -fc*A.m*dt;
 

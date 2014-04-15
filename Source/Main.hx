@@ -6,6 +6,8 @@ import renderer.*;
 import Experiment.SimulationResults;
 import Experiment.ExperimentInformation;
 
+import simulator.Leapfrog;
+import simulator.EulerMethod;
 import sysUtils.compileTime.Build;
 import sysUtils.compileTime.Git;
 import sysUtils.Console;
@@ -28,76 +30,120 @@ class Main {
 		renderer = new BasicRenderer();
 
 		//Basic Test
-		{
-			var dt = 1;
-			var eulerTest = new Experiment(EulersMethod, [Constants.G_AU_kg_D, dt]);
-
-			var sun = eulerTest.addBody({
+		function basicTest(simulator:Class<Dynamic>, dt:Float = 5, timescale:Float = 1000, analysisCount:Int = 100, color:Int = 0x2288CC){
+			var exp = new Experiment(simulator, [Constants.G_AU_kg_D, dt]);
+			var sun = exp.addBody({
 				name: "Sun",
 				position: {x:0, y:0, z:0},
 				velocity: {x:0, y:0, z:0},
 				mass: 1.988544E30,
 			});renderer.addBody(sun, 5, 0xFFFF00);
 
-			var planet = eulerTest.addBody({
+			var planet = exp.addBody({
 				name: "Test Planet",
 				position: {x:1, y:0, z:0},
-				velocity: {x:0, y:0, z:0.01},
+				velocity: {x:0, y:0, z:0.009},
 				mass: 5.97219E24,
-			});renderer.addBody(planet, 2.5, 0x2288CC);
-
+			});renderer.addBody(planet, 2.5, color);
 
 			//set experiment conditions
-			eulerTest.timescale = 10;
-			var analysisCount = 100;
-			eulerTest.analysisInterval = Math.ceil((eulerTest.timescale/dt)/analysisCount);
+			exp.timescale = timescale;
+			exp.analysisInterval = Math.ceil((exp.timescale/dt)/analysisCount);
 
 			//enable logging
-			eulerTest.runtimeCallback = function(e){
+			exp.runtimeCallback = inline function(e){
 				renderer.render();
 			}
-			eulerTest.runtimeCallbackInterval = 1;
+			exp.runtimeCallbackInterval = 1;
 
 			//perform experiment
-			var r:SimulationResults = eulerTest.perform();
+			var r:SimulationResults = exp.perform();
+
 
 			var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
-
 			Console.newLine();
+			Console.printStatement(exp.simulator.algorithmName);
+
+			var sumE:Float = 0;
+			for(e in r.energyChange)
+				sumE+=e.value;
+			var avgE = sumE/r.energyChange.length;
+			Console.printTitle("Average energy error: "+avgE);
+
 			Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
 			Console.newLine();
 
-			saveExperiment(eulerTest, "Basic Test");
-			renderer.preRenderCallback = function(){
-				eulerTest.simulator.step();	
-			}
-			renderer.startAutoRender();
+			//saveExperiment(exp, "Basic Test");
+/*			renderer.preRenderCallback = inline function(){
+				exp.simulator.step();	
+			}*/
+			//renderer.startAutoRender();
 		}
+
+		var dt = 5;
+		var timescale = 100000;
+		var analysisCount = 1;
+
+		basicTest(EulerMethod, dt, timescale, analysisCount, 0x2288CC);
+		basicTest(Leapfrog, dt, timescale, analysisCount, 0xFF0000);
+
+		renderer.reset();
+
+		var euler = new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]);
+		var leap = new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]);
+
+		var sunData:BodyDatum = {
+			name: "Sun",
+			position: {x:0, y:0, z:0},
+			velocity: {x:0, y:0, z:0},
+			mass: 1.988544E30,
+		};
+		var planetData:BodyDatum = {
+			name: "Test Planet",
+			position: {x:1, y:0, z:0},
+			velocity: {x:0, y:0, z:0.01},
+			mass: 5.97219E24,
+		};
+
+		var sunE = euler.addBody(sunData);renderer.addBody(sunE, 5, 0xFFFF00);
+		var sunL = leap.addBody(sunData);renderer.addBody(sunL, 5, 0xFFFF00);
+
+		var planetE = euler.addBody(planetData);
+		renderer.addBody(planetE, 2.5, 0x2288CC);
+		var planetL = leap.addBody(planetData);
+		renderer.addBody(planetL, 2.5, 0xFF0000);
+
+		renderer.preRenderCallback = inline function(){
+			euler.simulator.step();	
+			leap.simulator.step();	
+		}
+		renderer.startAutoRender();
+
 
 		//Euler's Method Solar System Test
 		if(false){
 			var dt:Float = 1;
-			var eulerTest = new Experiment(EulersMethod, [Constants.G_AU_kg_D, dt]);
+			var exp = new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]);
 
 			//add bodies
-			var sun:Body = eulerTest.addBody(SolarBodyData.sun); renderer.addBody(sun);
-			var earth:Body = eulerTest.addBody(SolarBodyData.earth); renderer.addBody(earth);
-			var jupiter:Body = eulerTest.addBody(SolarBodyData.jupiter); renderer.addBody(jupiter);
-			var saturn:Body = eulerTest.addBody(SolarBodyData.saturn); renderer.addBody(saturn);
-			var uranus:Body = eulerTest.addBody(SolarBodyData.uranus); renderer.addBody(uranus);
-			var neptune:Body = eulerTest.addBody(SolarBodyData.neptune); renderer.addBody(neptune);
+			var sun:Body = exp.addBody(SolarBodyData.sun); renderer.addBody(sun, 5, 0xFFFF00);
+			var earth:Body = exp.addBody(SolarBodyData.earth); renderer.addBody(earth, 5, 0x2288CC);
+			var jupiter:Body = exp.addBody(SolarBodyData.jupiter); renderer.addBody(jupiter, 5, 0xFF0000);
+			var saturn:Body = exp.addBody(SolarBodyData.saturn); renderer.addBody(saturn, 5, 0xFFFFFF);
+			var uranus:Body = exp.addBody(SolarBodyData.uranus); renderer.addBody(uranus, 5, 0xFFFFFF);
+			var neptune:Body = exp.addBody(SolarBodyData.neptune); renderer.addBody(neptune, 5, 0xFFFFFF);
 
 			//set experiment conditions
-			eulerTest.timescale = 10000*365; //days
+			exp.timescale = 1000*365; //days
 			var analysisCount = 100;
-			eulerTest.analysisInterval = Math.ceil((eulerTest.timescale/dt)/analysisCount);
+			exp.analysisInterval = Math.ceil((exp.timescale/dt)/analysisCount);
 
 			//enable logging
-			eulerTest.runtimeCallback = runtimeLog;
-			eulerTest.runtimeCallbackInterval = 1;
+			exp.runtimeCallback = runtimeLog;
+			exp.runtimeCallbackInterval = exp.analysisInterval*8;//8 times as few logs as analysis
 
 			//perform experiment
-			var r:SimulationResults = eulerTest.perform();
+			var r:SimulationResults = exp.perform();
 
 			//experiment completed
 			var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
@@ -107,7 +153,11 @@ class Main {
 			Console.newLine();
 
 			//save results
-			saveExperiment(eulerTest, eulerTest.name);
+			saveExperiment(exp, exp.name);
+			renderer.preRenderCallback = inline function(){
+				exp.simulator.step();		
+			}
+			renderer.startAutoRender();
 		}
 
 		//Finish program
@@ -119,13 +169,11 @@ class Main {
 		exit(0);*/
 	}
 
-	var lastLogTime:Float = 0;
-	function runtimeLog(e:Experiment){
-		if((Sys.time()-lastLogTime) > 1){
-			var progress = 100*(e.time-e.timeStart)/e.timescale;
-			Console.print(progress+"% "+Sys.time()+"\r", false);
-			lastLogTime = Sys.time();
-		}
+	var lastProgress:Float = 0;
+	inline function runtimeLog(e:Experiment){
+		var progress = 100*(e.time-e.timeStart)/e.timescale;
+		if(progress-lastProgress < 0.1)return;
+		Console.printStatement(progress+"% "+"\r", false);
 	}
 
 	function saveExperiment(e:Experiment, filePrefix:String = ""){
@@ -145,7 +193,7 @@ class Main {
 			results: results,
 		}
 
-		filePrefix = (new haxe.io.Path(filePrefix)).file;//parse filePrefix to make it safe
+		filePrefix = (new haxe.io.Path(filePrefix)).file;//parse filePrefix to make it safe for paths
 		if(filePrefix!="")filePrefix+=" - ";
 
 		var parsedAlgorithmName = (new haxe.io.Path(info.algorithmName)).file;
@@ -206,17 +254,8 @@ class Main {
 		return true;
 	}
 
-	inline function exit(?code:Int){
-		if(code==null)code=0;//successful 
-		#if cpp
-			Sys.exit(code);
-		#end
-	}
-
-	inline function cpuTime():Float{
-		return Sys.cpuTime();
-		//return haxe.Timer.stamp();
-	}
+	inline function exit(?code:Int)
+		Sys.exit((code==null ? 0 : code));//return successful if code == null
 
 	static function main(){
 		new Main();

@@ -15,7 +15,7 @@ class Experiment{
 
 	//Experiment input params
 	public var timescale(default, set):Float;
-	public var analysisInterval(default, set):Int;	//iterations
+	public var analysisInterval(default, set):Null<Int> = null;	//iterations
 	//callback during experiment
 	public var runtimeCallback:Experiment->Void = null;
 	public var runtimeCallbackInterval:Null<Int> = null;
@@ -76,10 +76,14 @@ class Experiment{
 	public var i(default, null):UInt;
 	//results
 	public var results(default, null):SimulationResults;
+	@:noStack
 	public function perform():SimulationResults{
 		//return control callback
 		var runtimeCallbackEnabled = (runtimeCallback!=null && runtimeCallbackInterval != null);
-		var cbI = runtimeCallbackInterval;
+		var cbI:Int = runtimeCallbackInterval;
+		//analysis interval
+		var analysisEnabled = (analysisInterval != null);
+		var aI:Int = analysisInterval;
 		//data
 		energyChangeArray = new Array<SimulationDataPoint>();
 		//system energy
@@ -99,11 +103,13 @@ class Experiment{
 			simulator.step();	
 
 			//Analyze system
-			if(i%analysisInterval==0){
-				//update energy
-				currentEnergy = simulator.totalEnergy();
-				energyChange = Math.abs((currentEnergy - initalEnergy))/initalEnergy;
-				energyChangeArray.push(new SimulationDataPoint(energyChange, simulator.time, i));
+			if(analysisEnabled){
+				if(i%analysisInterval==0){
+					//update energy
+					currentEnergy = simulator.totalEnergy();
+					energyChange = Math.abs((currentEnergy - initalEnergy))/initalEnergy;
+					energyChangeArray.push(new SimulationDataPoint(energyChange, simulator.time, i));
+				}
 			}
 
 			//Callback to return control
@@ -116,6 +122,7 @@ class Experiment{
 			i++;
 		}
 		algorithmEndTime = Sys.cpuTime();
+		if(runtimeCallbackEnabled)runtimeCallback(this);
 
 		var totalIterations = i;
 

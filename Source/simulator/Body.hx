@@ -20,8 +20,8 @@ class Body{
 	public function new(?position:Vec3, ?velocity:Vec3, mass:Float = 1){
 		if(position == null)position = new Vec3(0,0,0);
 		if(velocity == null)velocity = new Vec3(0,0,0);
-		this.p = position;
-		this.v = velocity;
+		this.p = position.clone();
+		this.v = velocity.clone();
 		this.m = mass;
 	}
 

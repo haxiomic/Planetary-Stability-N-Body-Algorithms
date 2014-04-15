@@ -42,6 +42,9 @@ abstract Vec3(Data) from Data to Data{
 		return new Vec3(o.x, o.y, o.z);
 	}
 
+	public inline function toString() {
+	    return "Vec3("+x+","+y+","+z+")";
+	}
 
 	//------- Class Methods -------//
 	public inline function length():Float
@@ -68,10 +71,15 @@ abstract Vec3(Data) from Data to Data{
 		return this;
 	}
 
-	public inline function toString() {
-	    return "Vec3("+x+","+y+","+z+")";
+	public inline function clone():Vec3{
+		return new Vec3(x,y,z);
 	}
 
+	public inline function addProduct(v:Vec3, multiplier:Float){
+		x += multiplier*v.x;
+		y += multiplier*v.y;
+		z += multiplier*v.z;
+	}
 
 	//------- Operator Overloads -------//
 	//Order of definition is important

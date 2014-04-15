@@ -52,7 +52,15 @@ class BasicRenderer {
 	}
 
 	public function reset(){
+		stage.removeChild(trailLayer);
+		stage.removeChild(bodyLayer);
 		initalize();
+	}
+
+	public function clear(){
+		stage.graphics.clear();
+		bodyLayer.graphics.clear();
+		trailLayer.graphics.clear();
 	}
 
 	public function render(?e){
