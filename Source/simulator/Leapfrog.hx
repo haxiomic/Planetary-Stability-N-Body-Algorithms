@@ -14,29 +14,13 @@ class Leapfrog extends NBodySimulator{
 		this.needsKickoff = true;
 	}
 
+	@:noStack 
+	override function step(){
+		stepKDK();
+	}
 
 	@:noStack
-	override public function step(){
-		if(needsKickoff==true){
-			for(i in 0...bodies.length){
-				A = bodies[i];
-
-				//Kick
-				for(j in i+1...bodies.length){
-					B = bodies[j];	
-
-					accelerationsDueToGravity(A, B); 
-
-					//Find change in velocity over half a timestep
-					aA*=dt*.5;
-					aB*=dt*.5;
-					A.v.addProduct(r, aA);
-					B.v.addProduct(r, aB);
-				}
-			}
-			needsKickoff = false;
-		}
-
+	public inline function stepKDK(){
 		for(i in 0...bodies.length){
 			A = bodies[i];
 
@@ -56,6 +40,7 @@ class Leapfrog extends NBodySimulator{
 			//Drift
 			A.p.addProduct(A.v, dt);
 		}
+
 		time+=dt*.5;
 
 		for(i in 0...bodies.length){
@@ -79,13 +64,13 @@ class Leapfrog extends NBodySimulator{
 	}
 
 	@:noStack
-	public function stepDKD(){
+	public inline function stepDKD(){
 		//Drift
 		for(i in 0...bodies.length){
 			A = bodies[i];
-
 			A.p.addProduct(A.v, dt*0.5);
 		}
+
 		time+=dt*.5;
 
 		for(i in 0...bodies.length){

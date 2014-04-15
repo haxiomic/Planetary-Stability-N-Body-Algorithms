@@ -60,10 +60,9 @@ class NBodySimulator {
 		dSq = r.lengthSquared();
 		d = Math.sqrt(dSq);
 		//Normalize r
-		r /= d;
-		//Force constant
+		r *= 1/d;
+		//Force factor
 		fc = 1 * G / dSq;
-
 		//Acceleration on A & B
 		aA = fc*B.m;
 		aB = -fc*A.m;

@@ -26,7 +26,7 @@ class Experiment{
 	public function new(simulatorClass:Class<Dynamic>, simArgs:Array<Dynamic>, name:String = ""){
 		this.bodies = new Array<BodyDatum>();
 		this.simulator = Type.createInstance(simulatorClass, simArgs);
-		this.name = "";
+		this.name = name;
 	}
 
 	public function addBody(bd:BodyDatum):Body{

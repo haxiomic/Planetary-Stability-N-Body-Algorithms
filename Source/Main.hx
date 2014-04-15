@@ -31,38 +31,29 @@ class Main {
 
 		//Basic Test
 		function basicTest(simulator:Class<Dynamic>, dt:Float = 5, timescale:Float = 1000, analysisCount:Int = 100, color:Int = 0x2288CC){
-			var exp = new Experiment(simulator, [Constants.G_AU_kg_D, dt]);
-			var sun = exp.addBody({
-				name: "Sun",
-				position: {x:0, y:0, z:0},
-				velocity: {x:0, y:0, z:0},
-				mass: 1.988544E30,
-			});renderer.addBody(sun, 5, 0xFFFF00);
+			var exp = new Experiment(simulator, [Constants.G_AU_kg_D, dt], "Basic Test SS");
 
-			var planet = exp.addBody({
-				name: "Test Planet",
-				position: {x:1, y:0, z:0},
-				velocity: {x:0, y:0, z:0.009},
-				mass: 5.97219E24,
-			});renderer.addBody(planet, 2.5, color);
+			var sun:Body = exp.addBody(SolarBodyData.sun); renderer.addBody(sun, 5, 0xFFFF00);
+			var earth:Body = exp.addBody(SolarBodyData.earth); renderer.addBody(earth, 5, 0x2288CC);
+			var jupiter:Body = exp.addBody(SolarBodyData.jupiter); renderer.addBody(jupiter, 5, 0xFF0000);
+			var saturn:Body = exp.addBody(SolarBodyData.saturn); renderer.addBody(saturn, 5, 0xFFFFFF);
+			var uranus:Body = exp.addBody(SolarBodyData.uranus); renderer.addBody(uranus, 5, 0xFFFFFF);
+			var neptune:Body = exp.addBody(SolarBodyData.neptune); renderer.addBody(neptune, 5, 0xFFFFFF);
 
 			//set experiment conditions
 			exp.timescale = timescale;
 			exp.analysisInterval = Math.ceil((exp.timescale/dt)/analysisCount);
 
 			//enable logging
-			exp.runtimeCallback = inline function(e){
-				renderer.render();
-			}
-			exp.runtimeCallbackInterval = 1;
+			exp.runtimeCallback = runtimeLog;
+			exp.runtimeCallbackInterval = exp.analysisInterval*8;
 
 			//perform experiment
+			Console.printStatement(exp.simulator.algorithmName);
+
 			var r:SimulationResults = exp.perform();
 
-
 			var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
-			Console.newLine();
-			Console.printStatement(exp.simulator.algorithmName);
 
 			var sumE:Float = 0;
 			for(e in r.energyChange)
@@ -73,20 +64,16 @@ class Main {
 			Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
 			Console.newLine();
 
-			//saveExperiment(exp, "Basic Test");
-/*			renderer.preRenderCallback = inline function(){
-				exp.simulator.step();	
-			}*/
-			//renderer.startAutoRender();
+			saveExperiment(exp, exp.name);
 		}
 
-		var dt = 5;
-		var timescale = 100000;
-		var analysisCount = 1;
+		var dt = 10;
+		var timescale = 100000*365;
+		var analysisCount = 100;
 
 		basicTest(EulerMethod, dt, timescale, analysisCount, 0x2288CC);
 		basicTest(Leapfrog, dt, timescale, analysisCount, 0xFF0000);
-
+/*
 		renderer.reset();
 
 		var euler = new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]);
@@ -117,7 +104,7 @@ class Main {
 			euler.simulator.step();	
 			leap.simulator.step();	
 		}
-		renderer.startAutoRender();
+		renderer.startAutoRender();*/
 
 
 		//Euler's Method Solar System Test
@@ -161,12 +148,12 @@ class Main {
 		}
 
 		//Finish program
-		/*Console.newLine();
+		Console.newLine();
 		Console.printStatement("Press any key to continue");
 		Sys.getChar(false);
 		Console.newLine();
 
-		exit(0);*/
+		exit(0);
 	}
 
 	var lastProgress:Float = 0;

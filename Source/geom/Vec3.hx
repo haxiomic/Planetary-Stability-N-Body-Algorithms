@@ -71,14 +71,14 @@ abstract Vec3(Data) from Data to Data{
 		return this;
 	}
 
-	public inline function clone():Vec3{
-		return new Vec3(x,y,z);
+	public inline function addProduct(v:Vec3, mul:Float){
+		x += mul*v.x;
+		y += mul*v.y;
+		z += mul*v.z;
 	}
 
-	public inline function addProduct(v:Vec3, multiplier:Float){
-		x += multiplier*v.x;
-		y += multiplier*v.y;
-		z += multiplier*v.z;
+	public inline function clone():Vec3{
+		return new Vec3(x,y,z);
 	}
 
 	//------- Operator Overloads -------//
@@ -110,6 +110,28 @@ abstract Vec3(Data) from Data to Data{
 		a.x *= b.x;
 		a.y *= b.y;
 		a.z *= b.z;
+		return a;
+	}
+
+	@:op(A /= B)
+	static public inline function divideIntAssign(a:Vec3, scaler:Int){
+		a.x /= scaler;
+		a.y /= scaler;
+		a.z /= scaler;
+		return a;
+	}
+	@:op(A /= B)
+	static public inline function divideFloatAssign(a:Vec3, scaler:Float){
+		a.x /= scaler;
+		a.y /= scaler;
+		a.z /= scaler;
+		return a;
+	}
+	@:op(A /= B)
+	static public inline function divideVec3Assign(a:Vec3, b:Vec3){
+		a.x /= b.x;
+		a.y /= b.y;
+		a.z /= b.z;
 		return a;
 	}
 
