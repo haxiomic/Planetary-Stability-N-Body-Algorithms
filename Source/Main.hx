@@ -64,10 +64,10 @@ class Main {
 			Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
 			Console.newLine();
 
-			saveExperiment(exp, exp.name);
+			saveExperiment(exp, exp.name+", dt="+dt);
 		}
 
-		var dt = 10;
+		var dt = 20;
 		var timescale = 100000*365;
 		var analysisCount = 100;
 
@@ -189,7 +189,9 @@ class Main {
 		var path = haxe.io.Path.join([fileDir, filename]);
 		try{
 			//Create filename
-			saveAsJSON(fileSaveData, path, false);
+			FileTools.saveAsJSON(fileSaveData, path, function (dir:String){
+				return Console.askYesNoQuestion("Directory "+dir+" doesn't exist, create it?", null, false);
+			});
 		}catch(msg:String){
 			Console.printError(msg);
 			Console.newLine();
@@ -204,42 +206,6 @@ class Main {
 
 	/* -------------------------*/
 	/* --- System Functions --- */
-
-	static public function saveAsJSON(data:Dynamic, path:String, autoCreateDirectory:Bool = true):Bool{
-		var hxPath = new haxe.io.Path(path);
-
-		var filename = hxPath.file;
-		//Assess file out directory
-		var outDir = haxe.io.Path.normalize(hxPath.dir);
-
-		//Check if out directory exists
-		if(!sys.FileSystem.exists(outDir)){
-			if(autoCreateDirectory){
-				sys.FileSystem.createDirectory(outDir);
-			}else{
-				//create out directory
-				if(Console.askYesNoQuestion("Directory "+outDir+" doesn't exist, create it?", null, false)){
-					Console.newLine();
-					Console.newLine();
-					sys.FileSystem.createDirectory(outDir);
-					Console.printSuccess("Directory created");
-				}else{
-					throw "cannot save data";
-					return false;
-				}
-			}
-		}
-
-		//Check the file doesn't already exist, if it does, find a free suffix -xx
-		var filePath = FileTools.findFreeFile(hxPath.toString());
-		filePath = haxe.io.Path.normalize(filePath);//normalize path for readability
-
-		sys.io.File.saveContent(filePath, haxe.Json.stringify(data));
-
-		Console.printSuccess("Data saved to "+Console.BRIGHT_WHITE+filePath+Console.RESET);
-
-		return true;
-	}
 
 	inline function exit(?code:Int)
 		Sys.exit((code==null ? 0 : code));//return successful if code == null

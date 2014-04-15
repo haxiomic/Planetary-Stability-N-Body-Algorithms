@@ -54,7 +54,7 @@ class NBodySimulator {
 	//sets variables
 	var aA:Float;var aB:Float;
 	var fc:Float;
-	inline function accelerationsDueToGravity(A:Body, B:Body){
+	private inline function accelerationsDueToGravity(A:Body, B:Body){
 		//Distance vector and it's magnitudes
 		Vec3.difference(A.p, B.p, r);
 		dSq = r.lengthSquared();

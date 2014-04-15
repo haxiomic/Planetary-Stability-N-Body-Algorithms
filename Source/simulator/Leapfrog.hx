@@ -20,7 +20,7 @@ class Leapfrog extends NBodySimulator{
 	}
 
 	@:noStack
-	public inline function stepKDK(){
+	inline function stepKDK(){
 		for(i in 0...bodies.length){
 			A = bodies[i];
 
@@ -41,8 +41,6 @@ class Leapfrog extends NBodySimulator{
 			A.p.addProduct(A.v, dt);
 		}
 
-		time+=dt*.5;
-
 		for(i in 0...bodies.length){
 			A = bodies[i];
 
@@ -59,19 +57,18 @@ class Leapfrog extends NBodySimulator{
 				B.v.addProduct(r, aB);
 			}
 		}
-		time+=dt*.5;
+
+		time+=dt;
 
 	}
 
 	@:noStack
-	public inline function stepDKD(){
+	inline function stepDKD(){
 		//Drift
 		for(i in 0...bodies.length){
 			A = bodies[i];
 			A.p.addProduct(A.v, dt*0.5);
 		}
-
-		time+=dt*.5;
 
 		for(i in 0...bodies.length){
 			A = bodies[i];
@@ -93,7 +90,7 @@ class Leapfrog extends NBodySimulator{
 			A.p.addProduct(A.v, dt*0.5);
 		}
 
-		time+=dt*.5;
+		time+=dt;
 	}
 
 	override function get_params():Dynamic{

@@ -1,6 +1,38 @@
 package sysUtils;
 
 class FileTools{
+	//createDirectoryBool can be a boolean or a function, dir:String -> Bool
+	static public function saveAsJSON(data:Dynamic, path:String, createDirectoryBool:Dynamic = true):Bool{
+		var hxPath = new haxe.io.Path(path);
+
+		var filename = hxPath.file;
+		//Assess file out directory
+		var outDir = haxe.io.Path.normalize(hxPath.dir);
+
+		//Check if out directory exists
+		if(!sys.FileSystem.exists(outDir)){
+			var r = Reflect.isFunction(createDirectoryBool) ? createDirectoryBool(outDir) : createDirectoryBool;//check if function or boolean
+
+			if(r==true){
+				sys.FileSystem.createDirectory(outDir);
+			}else{
+				throw "cannot save data";
+				return false;
+				//create out directory
+			}
+		}
+
+		//Check the file doesn't already exist, if it does, find a free suffix -xx
+		var filePath = FileTools.findFreeFile(hxPath.toString());
+		filePath = haxe.io.Path.normalize(filePath);//normalize path for readability
+
+		sys.io.File.saveContent(filePath, haxe.Json.stringify(data));
+
+		Console.printSuccess("Data saved to "+Console.BRIGHT_WHITE+filePath+Console.RESET);
+
+		return true;
+	}
+
 	//Recursively search for a free file path by appending numerical extension in the form -xx
 	static public function findFreeFile(path:String){
 		if(!sys.FileSystem.exists(path))return path;//no file exists here, we're good
