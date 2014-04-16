@@ -70,6 +70,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 		for (i in 0...bodyCount){
 			//temporary selection
 			timesteps[i] = (1 << Math.ceil((i)*.5));
+
 			// sysUtils.Console.printSuccess("\t\t"+i+".dt="+AAd.dt);
 		}
 	}
@@ -86,11 +87,14 @@ class LeapfrogAdaptive extends NBodySimulator{
 	//kick particles which have a timestep dt
 	@:noStack
 	inline function kick(dt:Float){
-		updateAcceleration();
-
 		for (i in 0...bodyCount){
 			if(timesteps[i]!=dt)continue;
-			velocities[i].addProduct(accelerations[i], dt);
+
+			for(j in i+1...bodyCount){
+				accelerationsDueToGravityExt(positions[i],positions[j],masses[i],masses[j]);
+				velocities[i].addProduct(r, accelA*dt);
+				velocities[j].addProduct(r, accelB*dt);
+			}
 		}
 	}
 

@@ -57,14 +57,12 @@ class Main {
 		}
 
 		var dt = 1;
-		var timescale = 1000*365;
-		var analysisCount = 1;
+		var timescale = 10000*365;
+		var analysisCount = 100;
 
-		//basicTest(EulerMethod, dt, timescale, analysisCount, 0x2288CC);
-		//basicTest(Leapfrog, dt, timescale, analysisCount, 0xFF0000);
+		basicTest(EulerMethod, dt, timescale, analysisCount, 0x2288CC);
+		basicTest(Leapfrog, dt, timescale, analysisCount, 0xFF0000);
 		var exp = basicTest(simulator.LeapfrogAdaptive, dt, timescale, analysisCount, 0xFF0000);
-
-		//saveExperiment(exp, exp.name+", dt="+dt);
 
 		renderer.preRenderCallback = inline function(){
 			exp.simulator.step();		
