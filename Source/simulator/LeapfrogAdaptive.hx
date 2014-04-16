@@ -36,11 +36,8 @@ class LeapfrogAdaptive extends NBodySimulator{
 		if(n>31)n=31;//maximum ratio between min_dt and max_dt = 2^31 (must be stored in UInt!) 
 		this.max_n = n;*/
 
-		var ratio:UInt = Math.ceil(this.max_dt/min_dt);
+		var max_s:Int = Math.ceil(this.max_dt/min_dt);
 
-		var max_s:Int = ExtendedMath.log2(ratio);
-
-		trace(ratio);trace(max_s);
 		//find nearest power of 2 ceiling
 		if((1<<max_s)/ratio < 1)max_s++;
 
