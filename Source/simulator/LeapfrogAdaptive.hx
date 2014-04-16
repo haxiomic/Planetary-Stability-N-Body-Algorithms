@@ -50,6 +50,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 		//#! should definitly set smallestSS here!!!
 		//#! update accelerations
 		var bAd:BodyAdaptive = new BodyAdaptive(b);
+		//updateAccelerations()
 		return super.addBody(bAd);
 	}
 
@@ -60,17 +61,21 @@ class LeapfrogAdaptive extends NBodySimulator{
 
 		for (i in 0...bodies.length) {
 			AAd = untyped bodies[i]; 
+			//find a new timestep (via step size) if necessary
+			AAd.ss = bestStepSize(AAd);
 			//is it time to step body? (Continue if not)
-			if(AAd.ss%s!=0)continue;
+			if(s%AAd.ss!=0)continue;
 
 			dt = dtForSS(AAd.ss);
 
 			//Pairwise Kick
 			for(j in i+1...bodies.length){
 				BAd = untyped bodies[j];	
+				//#! don't visit lower bodies
 				
 				//find step difference
-				//B_dt = dtForSS(step difference);
+				stepDifference = (s-1)%BAd.ss;
+				B_dt = dtForSS(stepDifference);
 
 				predictAccelerationsDueToGravity(AAd, BAd, B_dt);
 
@@ -87,7 +92,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 		for (i in 0...bodies.length) {
 			AAd = untyped bodies[i]; 
 			//is it time to step body? (Continue if not)
-			if(AAd.ss%s!=0)continue;
+			if(s%AAd.ss!=0)continue;
 
 			AAd.a.zero();//reset acceleration for recalculation at new position
 			//Pairwise Kick
@@ -95,7 +100,8 @@ class LeapfrogAdaptive extends NBodySimulator{
 				B = bodies[j];	
 
 				//find step difference
-				//B_dt = dtForSS(step difference);
+				stepDifference = s%BAd.ss;
+				B_dt = dtForSS(stepDifference);
 
 				predictAccelerationsDueToGravity(AAd, BAd, B_dt);
 
@@ -107,33 +113,36 @@ class LeapfrogAdaptive extends NBodySimulator{
 				BAd.v.addProduct(r, accelB*dt*.5);
 			}
 
-			//find a new timestep if necessary
-			selectStepSize(AAd);
 			//set base stepping size
 			if(AAd.ss<smallestSS)smallestSS = AAd.ss;		
 		}
 
-		s += smallestSS; if(s>max_s)s = 1;
+		//#! order so that 0 has smallest timestep and the last has the longest
+
 		time += dtForSS(smallestSS);
+		s += smallestSS;
+		if(s>max_s)s = 1;
 	}
 	var dt:Float;var B_dt:Float;
+	var stepDifference:Int;
 	var AAd:BodyAdaptive;var BAd:BodyAdaptive;
 
 	inline function dtForSS(ss:Int){
 		return ss*min_dt;
 	}
 
-	inline function selectStepSize(b:BodyAdaptive){
+	inline function bestStepSize(b:BodyAdaptive):Int{
 		//some minimum timestep 
 		//how does timestep relate to rung? 
 		//how does rung relate to step size
+		return 1;
 	}
 
 	inline function predictAccelerationsDueToGravity(A:BodyAdaptive, B:BodyAdaptive, B_dt:Float){
 		//Distance vector and its magnitudes
-		predictedBPosition.x = B.x + B.vx*B_dt + 0.5*B.ax*B_dt;
-		predictedBPosition.y = B.y + B.vy*B_dt + 0.5*B.ay*B_dt;
-		predictedBPosition.z = B.z + B.vz*B_dt + 0.5*B.az*B_dt;
+		predictedBPosition.x = B.x + B.vx*B_dt + 0.5*B.ax*B_dt*B_dt;
+		predictedBPosition.y = B.y + B.vy*B_dt + 0.5*B.ay*B_dt*B_dt;
+		predictedBPosition.z = B.z + B.vz*B_dt + 0.5*B.az*B_dt*B_dt;
 
 		Vec3.difference(A.p, predictedBPosition, r);
 		dSq = r.lengthSquared();

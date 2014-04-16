@@ -31,15 +31,6 @@ class Main {
 	public function new () {
 		renderer = new BasicRenderer();
 
-		var y:simulator.LeapfrogAdaptive.BodyAdaptive = new BodyAdaptive(new simulator.Body());
-		y.ax = 123;
-		var z:simulator.Body = y;
-		
-		untyped {
-			var x:Body = y;
-			trace(x.ax);	
-		}
-
 		//Basic Test
 		function basicTest(simulator:Class<Dynamic>, dt:Float = 5, timescale:Float = 1000, analysisCount:Int = 100, color:Int = 0x2288CC){
 			var exp = new Experiment(simulator, [Constants.G_AU_kg_D, dt], "Basic Test SS");
