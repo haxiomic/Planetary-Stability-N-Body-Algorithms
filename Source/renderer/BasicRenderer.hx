@@ -71,6 +71,7 @@ class BasicRenderer {
 		}
 	}
 
+	var lastLengthRatio:Float;
 	inline function drawBody(b:Body){
 		var data = bodyData.get(b);
 		var s:Sprite = data.sprite;
@@ -79,6 +80,11 @@ class BasicRenderer {
 
 		var baseLengthConversion = 100;
 		var ratio = baseLengthConversion/lengthConversion;
+
+		//#! delete me
+		if(lastLengthRatio!=lengthConversion){
+			trailLayer.graphics.clear();
+		}lastLengthRatio = lengthConversion;
 
 		r/= ratio;
 

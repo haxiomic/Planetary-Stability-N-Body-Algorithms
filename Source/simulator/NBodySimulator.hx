@@ -13,12 +13,15 @@ class NBodySimulator {
 
 	public var G:Float;
 
+	var totalMass:Float;
+
 	public function new(G:Float){
 		initalize();
 		this.G = G;
 	}
 
 	public function addBody(b:Body):Body{
+		totalMass+=b.m;
 		bodies.push(b);
 		return b;
 	}

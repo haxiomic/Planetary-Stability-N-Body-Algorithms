@@ -8,7 +8,6 @@ import Experiment.ExperimentInformation;
 
 import simulator.Leapfrog;
 import simulator.EulerMethod;
-import simulator.LeapfrogAdaptive;
 
 import sysUtils.compileTime.Build;
 import sysUtils.compileTime.Git;
@@ -30,11 +29,13 @@ class Main {
 
 	public function new () {
 		renderer = new BasicRenderer();
-
+		
 		//Basic Test
 		function basicTest(simulator:Class<Dynamic>, dt:Float = 5, timescale:Float = 1000, analysisCount:Int = 100, color:Int = 0x2288CC){
 			var exp = new Experiment(simulator, [Constants.G_AU_kg_D, dt], "Basic Test SS");
 			Console.printStatement(exp.simulator.algorithmName);
+			Console.print(exp.simulator.params);
+
 			//add bodies
 			addSolarSystem(exp);
 
@@ -52,30 +53,23 @@ class Main {
 			experimentSummaryLog(r);
 
 			saveExperiment(exp, exp.name+", dt="+dt);
+			return exp;
 		}
 
-		var dt = 20;
-		var timescale = 100000*365;
-		var analysisCount = 100;
+		var dt = 1;
+		var timescale = 1000*365;
+		var analysisCount = 1;
 
 		//basicTest(EulerMethod, dt, timescale, analysisCount, 0x2288CC);
 		//basicTest(Leapfrog, dt, timescale, analysisCount, 0xFF0000);
+		var exp = basicTest(simulator.LeapfrogAdaptive, dt, timescale, analysisCount, 0xFF0000);
 
-		var AdaptiveLF = new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, Math.pow(2, 5), Math.pow(2,1)], "LF Adaptive WIP");
-		var exp = AdaptiveLF;//alias
+		//saveExperiment(exp, exp.name+", dt="+dt);
 
-		Console.printStatement(exp.simulator.algorithmName);
-
-		addSolarSystem(exp);
-
-		exp.runtimeCallback = runtimeLog;
-		exp.runtimeCallbackInterval = 10;
-
-		exp.timescale = 200;
-
-		var r:ExperimentResults = exp.perform();
-		experimentSummaryLog(r);
-
+		renderer.preRenderCallback = inline function(){
+			exp.simulator.step();		
+		}
+		renderer.startAutoRender();
 /*
 		renderer.reset();
 
@@ -97,7 +91,7 @@ class Main {
 		Sys.getChar(false);
 		Console.newLine();*/
 
-		exit(0);
+		//exit(0);
 	}
 
 

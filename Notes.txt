@@ -5,6 +5,7 @@ TODO
 - Rewrite path manipulation to use haxe.io.Path to be cross-platform
 
 - Adaptive Timesteps
+- Finding new stepsize doesn't need to be every step 
 - Faster log2(x) algorithm
 - Orbital params, eccentricity and whatnot
 https://code.google.com/p/hattrick-nbody/source/browse/trunk/src/Planets.cc

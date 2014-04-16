@@ -74,10 +74,8 @@ class Leapfrog extends NBodySimulator{
 				accelerationsDueToGravity(A, B); 
 
 				//Find change in velocity over half a timestep
-				accelA*=dt;
-				accelB*=dt;
-				A.v.addProduct(r, accelA);
-				B.v.addProduct(r, accelB);
+				A.v.addProduct(r, accelA*dt);
+				B.v.addProduct(r, accelB*dt);
 			}
 
 			//Each-Body Drift
