@@ -4,12 +4,9 @@ TODO
 - Improve Vec3 memory implementation
 - Rewrite path manipulation to use haxe.io.Path to be cross-platform
 
-	- Fork, plot graphs, store data
-- Kick drift kick implementation 
-	- http://www.physics.udel.edu/~jim/PHYS460_660_13S/Ordinary%20Differential%20Equations/KDK_method.pdf
-	- store data
 - Adaptive Timesteps
-- Orbital params
+- Faster log2(x) algorithm
+- Orbital params, eccentricity and whatnot
 https://code.google.com/p/hattrick-nbody/source/browse/trunk/src/Planets.cc
 
 
@@ -17,3 +14,10 @@ https://code.google.com/p/hattrick-nbody/source/browse/trunk/src/Planets.cc
  -- BUGS --
 
 - Order matters for abstract type '@:from's - ie, switch dynamic and TVec3 in AVec and you'll find all TVec3s are registered as dynamics not TVec3
+
+
+- MAJOR PLAYERS -
+Origin of block leapfrog time-symmetric http://arxiv.org/abs/astro-ph/0604371
+	more info http://www.artcompsci.org/kali/vol/block_symmetric/ch01.html
+
+! Piet Hut's page, collaborator with barns, overview of methods and authors here. http://www.ids.ias.edu/~piet/act/comp/algorithms/

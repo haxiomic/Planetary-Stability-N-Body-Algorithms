@@ -4,14 +4,12 @@ import simulator.NBodySimulator;
 
 class Leapfrog extends NBodySimulator{
 	public var dt:Float;
-	var needsKickoff:Bool = true;
 
 	public function new(G:Float, dt:Float){
 		super(G);
 		this.algorithmName = "Leapfrog";
-		this.algorithmDetails = "";
+		this.algorithmDetails = "Fixed timestep, 'Kick Drift Kick' variation.";
 		this.dt = dt;
-		this.needsKickoff = true;
 	}
 
 	@:noStack 
@@ -24,37 +22,33 @@ class Leapfrog extends NBodySimulator{
 		for(i in 0...bodies.length){
 			A = bodies[i];
 
-			//Kick
+			//Pairwise kick
 			for(j in i+1...bodies.length){
 				B = bodies[j];	
 
 				accelerationsDueToGravity(A, B); 
 
 				//Find change in velocity over half a timestep
-				aA*=dt*.5;
-				aB*=dt*.5;
-				A.v.addProduct(r, aA);
-				B.v.addProduct(r, aB);
+				A.v.addProduct(r, accelA*dt*.5);
+				B.v.addProduct(r, accelB*dt*.5);
 			}
 
-			//Drift
+			//Each-Body Drift
 			A.p.addProduct(A.v, dt);
 		}
 
 		for(i in 0...bodies.length){
 			A = bodies[i];
 
-			//Kick
+			//Pairwise Kick
 			for(j in i+1...bodies.length){
 				B = bodies[j];	
 
 				accelerationsDueToGravity(A, B); 
 
 				//Find change in velocity over half a timestep
-				aA*=dt*.5;
-				aB*=dt*.5;
-				A.v.addProduct(r, aA);
-				B.v.addProduct(r, aB);
+				A.v.addProduct(r, accelA*dt*.5);
+				B.v.addProduct(r, accelB*dt*.5);
 			}
 		}
 
@@ -64,7 +58,7 @@ class Leapfrog extends NBodySimulator{
 
 	@:noStack
 	inline function stepDKD(){
-		//Drift
+		//Each-Body Drift
 		for(i in 0...bodies.length){
 			A = bodies[i];
 			A.p.addProduct(A.v, dt*0.5);
@@ -73,20 +67,20 @@ class Leapfrog extends NBodySimulator{
 		for(i in 0...bodies.length){
 			A = bodies[i];
 
-			//Kick
+			//Pairwise Kick
 			for(j in i+1...bodies.length){
 				B = bodies[j];	
 
 				accelerationsDueToGravity(A, B); 
 
 				//Find change in velocity over half a timestep
-				aA*=dt;
-				aB*=dt;
-				A.v.addProduct(r, aA);
-				B.v.addProduct(r, aB);
+				accelA*=dt;
+				accelB*=dt;
+				A.v.addProduct(r, accelA);
+				B.v.addProduct(r, accelB);
 			}
 
-			//Drift
+			//Each-Body Drift
 			A.p.addProduct(A.v, dt*0.5);
 		}
 

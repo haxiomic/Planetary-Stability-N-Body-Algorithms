@@ -26,12 +26,12 @@ class Experiment{
 	public function new(simulatorClass:Class<Dynamic>, simArgs:Array<Dynamic>, name:String = ""){
 		this.bodies = new Array<BodyDatum>();
 		this.simulator = Type.createInstance(simulatorClass, simArgs);
-		this.name = name;
+		this.name = name=="" ? Type.getClassName(simulatorClass) : name;
 	}
 
 	public function addBody(bd:BodyDatum):Body{
 		bodies.push(bd);
-		return simulator.addBody(new Body(bd.position, bd.velocity, bd.mass));
+		return simulator.addBody(new Body(bd.position.clone(), bd.velocity.clone(), bd.mass));
 	}
 
 	public function addbodies(bodies:Array<BodyDatum>){
@@ -43,8 +43,9 @@ class Experiment{
 
 	public function restart(){
 		simulator.clear();
+
 		for(bd in this.bodies){
-			simulator.addBody(new Body(bd.position, bd.velocity, bd.mass));
+			simulator.addBody(new Body(bd.position.clone(), bd.velocity.clone(), bd.mass));
 		}
 
 		//reset related variables
@@ -75,9 +76,9 @@ class Experiment{
 	//iteration
 	public var i(default, null):UInt;
 	//results
-	public var results(default, null):SimulationResults;
+	public var results(default, null):ExperimentResults;
 	@:noStack
-	public function perform():SimulationResults{
+	public function perform():ExperimentResults{
 		//return control callback
 		var runtimeCallbackEnabled = (runtimeCallback!=null && runtimeCallbackInterval != null);
 		var cbI:Int = runtimeCallbackInterval;
@@ -155,7 +156,7 @@ class Experiment{
 	}
 }
 
-typedef SimulationResults = {
+typedef ExperimentResults = {
 	var totalIterations:UInt;
 	var cpuTime:Float;
 	var energyChange:Array<SimulationDataPoint>;

@@ -24,11 +24,11 @@ class EulerMethod extends NBodySimulator {
 				accelerationsDueToGravity(A,B);
 
 				//Apply acceleration
-				aA*=dt;
-				aB*=dt;
+				accelA*=dt;
+				accelB*=dt;
 
-				A.v.addProduct(r, aA);
-				B.v.addProduct(r, aB);
+				A.v.addProduct(r, accelA);
+				B.v.addProduct(r, accelB);
 			}
 
 			//Apply velocity

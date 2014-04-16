@@ -71,6 +71,12 @@ abstract Vec3(Data) from Data to Data{
 		return this;
 	}
 
+	public inline function setProduct(v:Vec3, mul:Float){
+		x = mul*v.x;
+		y = mul*v.y;
+		z = mul*v.z;
+	}
+
 	public inline function addProduct(v:Vec3, mul:Float){
 		x += mul*v.x;
 		y += mul*v.y;
