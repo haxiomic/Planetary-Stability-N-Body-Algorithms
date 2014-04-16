@@ -61,7 +61,7 @@ class Main {
 		//basicTest(EulerMethod, dt, timescale, analysisCount, 0x2288CC);
 		//basicTest(Leapfrog, dt, timescale, analysisCount, 0xFF0000);
 
-		var AdaptiveLF = new Experiment(Leapfrog, [Constants.G_AU_kg_D, Math.pow(2, 8)], "LF Adaptive WIP");
+		var AdaptiveLF = new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, Math.pow(2, 5), Math.pow(2,1)], "LF Adaptive WIP");
 		var exp = AdaptiveLF;//alias
 
 		Console.printStatement(exp.simulator.algorithmName);
@@ -71,7 +71,7 @@ class Main {
 		exp.runtimeCallback = runtimeLog;
 		exp.runtimeCallbackInterval = 10;
 
-		exp.timescale = 100;
+		exp.timescale = 200;
 
 		var r:ExperimentResults = exp.perform();
 		experimentSummaryLog(r);

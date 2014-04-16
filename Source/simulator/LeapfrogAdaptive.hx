@@ -12,6 +12,7 @@
 package simulator;
 
 import geom.Vec3;
+import math.ExtendedMath;
 import simulator.Body;
 import simulator.NBodySimulator;
 
@@ -22,7 +23,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 	//var max_n(default, null):Float;
 	var max_s:Int; 
 
-	var smallestSS:Int = 1;
+	var currentBaseSS:Int;
 
 	/*#! maybe change min_dt argument to scaling factor, ie 0.25 (of max_dt) */
 	public function new(G:Float, max_dt:Float, min_dt:Float = 0){
@@ -35,34 +36,35 @@ class LeapfrogAdaptive extends NBodySimulator{
 		if(n>31)n=31;//maximum ratio between min_dt and max_dt = 2^31 (must be stored in UInt!) 
 		this.max_n = n;*/
 
-		var ratio:UInt = Math.ceil(this.max_dt/this.min_dt);
+		var ratio:UInt = Math.ceil(this.max_dt/min_dt);
 
-		var max_s:Int = math.ExtendedMath.log2(ratio);
+		var max_s:Int = ExtendedMath.log2(ratio);
+
+		trace(ratio);trace(max_s);
 		//find nearest power of 2 ceiling
 		if((1<<max_s)/ratio < 1)max_s++;
 
 		this.min_dt = max_dt/max_s;
-
-		//max_n = log2(max_s);
 	}
 
 	override public function addBody(b:Body):Body{
-		//#! should definitly set smallestSS here!!!
-		//#! update accelerations
-		var bAd:BodyAdaptive = new BodyAdaptive(b);
-		//updateAccelerations()
-		return super.addBody(bAd);
+		AAd = new BodyAdaptive(b);
+		A = super.addBody(AAd);
+		updateAccelerations();
+		AAd.ss = bestStepSize(AAd);
+		if(AAd.ss<currentBaseSS)currentBaseSS = AAd.ss;
+		bodies.sort(sortBodiesBySSAscending);
+		//trace(bodies);
+		return A;
 	}
 
 	var s:Int = 1;//step count
 	@:noStack 
 	override function step(){
-		smallestSS = max_s;
+		newBaseSS = max_s;
 
 		for (i in 0...bodies.length) {
 			AAd = untyped bodies[i]; 
-			//find a new timestep (via step size) if necessary
-			AAd.ss = bestStepSize(AAd);
 			//is it time to step body? (Continue if not)
 			if(s%AAd.ss!=0)continue;
 
@@ -71,7 +73,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 			//Pairwise Kick
 			for(j in i+1...bodies.length){
 				BAd = untyped bodies[j];	
-				//#! don't visit lower bodies
+				//if ordered correctly B will never have a shorter step size than A
 				
 				//find step difference
 				stepDifference = (s-1)%BAd.ss;
@@ -81,6 +83,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 
 				//find midpoint velocity
 				AAd.v.addProduct(r, accelA*dt*.5);
+				//perturb B, but not necessarily with the midpoint velocity
 				BAd.v.addProduct(r, accelB*dt*.5);
 			}
 
@@ -97,7 +100,8 @@ class LeapfrogAdaptive extends NBodySimulator{
 			AAd.a.zero();//reset acceleration for recalculation at new position
 			//Pairwise Kick
 			for(j in i+1...bodies.length){
-				B = bodies[j];	
+				BAd = untyped bodies[j];	
+				//if ordered correctly B will never have a shorter step size than A
 
 				//find step difference
 				stepDifference = s%BAd.ss;
@@ -107,22 +111,29 @@ class LeapfrogAdaptive extends NBodySimulator{
 
 				//update acceleration
 				AAd.a.addProduct(r, accelA);
+				BAd.a.addProduct(r, accelB);				
 
 				//find midpoint velocity
 				AAd.v.addProduct(r, accelA*dt*.5);
-				BAd.v.addProduct(r, accelB*dt*.5);
-			}
+				//perturb B, but not necessarily with the midpoint velocity
+				BAd.v.addProduct(r, accelB*dt*.5);//#! unsure about this kick, maybe it should use acceleration from starting side of AAd.ss
+			}	
 
+			//find a new timestep (via step size) if necessary
+			AAd.ss = bestStepSize(AAd);
 			//set base stepping size
-			if(AAd.ss<smallestSS)smallestSS = AAd.ss;		
+			if(AAd.ss<newBaseSS)newBaseSS = AAd.ss;	
 		}
 
-		//#! order so that 0 has smallest timestep and the last has the longest
+		//order so that 0 has smallest timestep and the last has the longest
+		bodies.sort( sortBodiesBySSAscending );
 
-		time += dtForSS(smallestSS);
-		s += smallestSS;
+		time += dtForSS(currentBaseSS);
+		s += newBaseSS;
+		currentBaseSS = newBaseSS;
 		if(s>max_s)s = 1;
 	}
+	var newBaseSS:Int;
 	var dt:Float;var B_dt:Float;
 	var stepDifference:Int;
 	var AAd:BodyAdaptive;var BAd:BodyAdaptive;
@@ -131,10 +142,10 @@ class LeapfrogAdaptive extends NBodySimulator{
 		return ss*min_dt;
 	}
 
+	//#! need ssFordt(dt:Float):Int
+
 	inline function bestStepSize(b:BodyAdaptive):Int{
-		//some minimum timestep 
-		//how does timestep relate to rung? 
-		//how does rung relate to step size
+		//return: the floor power of 2 of nearest ss given ideal dt, which is a function of acceleration and such
 		return 1;
 	}
 
@@ -156,6 +167,24 @@ class LeapfrogAdaptive extends NBodySimulator{
 		accelB = -fc*A.m;
 	}var predictedBPosition:Vec3;
 
+	inline function updateAccelerations(){
+		//Loop again for final kick
+		for (i in 0...bodies.length) {
+			AAd = untyped bodies[i]; 
+			AAd.a.zero();//reset acceleration for recalculation at new position
+			for(j in i+1...bodies.length){
+				BAd = untyped bodies[j];
+				accelerationsDueToGravity(AAd,BAd);
+				AAd.a.addProduct(r, accelA);
+				BAd.a.addProduct(r, accelB);
+			}
+		}
+	}
+
+	inline function sortBodiesBySSAscending(a:Body, b:Body):Int{
+		return untyped a.ss - b.ss;
+	}
+
 	override function get_params():Dynamic{
 		return {
 			max_dt:max_dt,
@@ -170,7 +199,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 }
 
 class BodyAdaptive extends Body{
-	public var ss:Int;//step size
+	public var ss:Int = 1;//step size
 	public var a:Vec3;
 
 	//Acceleration convenience property
@@ -190,4 +219,8 @@ class BodyAdaptive extends Body{
 	public inline function set_ay(value:Float):Float{return a.y = value;}
 	public inline function get_az():Float{return a.z;}
 	public inline function set_az(value:Float):Float{return a.z = value;}
+
+	public inline function toString() {
+	    return "BodyAdaptive(ss = "+ss+")";
+	}
 }
