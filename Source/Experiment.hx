@@ -172,9 +172,9 @@ typedef ExperimentInformation = {
 	var algorithmDetails:String;
 }
 
-abstract SimulationDataPoint(Vector<Float>) from Vector<Float> to Vector<Float>{
+abstract SimulationDataPoint(Array<Float>) from Array<Float> to Array<Float>{
 	public inline function new(value:Float, time:Float, iteration:UInt){
-		this = new Vector<Float>(3);
+		this = new Array<Float>();
 		this[0] = value;
 		this[1] = time;
 		this[2] = iteration;

@@ -21,9 +21,9 @@ abstract Vec3(Data) from Data to Data{
 	public inline function get_x():Float return this[0];
 	public inline function get_y():Float return this[1];
 	public inline function get_z():Float return this[2];
-	public inline function set_x(v:Float):Float return  this[0] = v;
-	public inline function set_y(v:Float):Float return  this[1] = v;
-	public inline function set_z(v:Float):Float return  this[2] = v;
+	public inline function set_x(v:Float):Float {this[0] = v; return 0;/* tmp fix */}
+	public inline function set_y(v:Float):Float {this[1] = v; return 0;/* tmp fix */}
+	public inline function set_z(v:Float):Float {this[2] = v; return 0;/* tmp fix */}
 
 
 	@:from inline static public function fromFloat(v:Float) {
