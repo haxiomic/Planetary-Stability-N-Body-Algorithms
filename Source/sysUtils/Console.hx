@@ -2,55 +2,75 @@ package sysUtils;
 
 class Console {
 	
+	static public var suppress:Bool = false;
+
 	static public function printRaw(v:Dynamic){
+		if(suppress)return;
+
 		Sys.print(v);
 	}
 
 	static public function newLine() printRaw('\n');
 
 	static public function print(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
 		var str:String = v;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
 
 	static public function printStatement(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
 		var str:String = BRIGHT_WHITE+BOLD+v+RESET;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
 
 	static public function printTitle(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
 		var str:String = BLUE+BOLD+'\t-- '+v+' --'+RESET+'\n';
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
 
 	static public function printError(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
 		var str:String = RED+BOLD+"Error"+RESET+": "+v+RESET;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
 
 	static public function printConcern(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
 		var str:String = YELLOW+BOLD+v+RESET;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
 
 	static public function printSuccess(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
 		var str:String = BRIGHT_GREEN+BOLD+v+RESET;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
 
 	static public function printQuestion(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
 		var str:String = BRIGHT_WHITE+BOLD+v+RESET;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
 
 	static public function askYesNoQuestion(v, suffix:String = " (y/n)\n-> ", newLine:Bool = false):Bool{
+		if(suppress)return false;
+
 		printQuestion(v+suffix, false);
 		var char:Int = Sys.getChar(true);
 		Console.newLine();
