@@ -29,7 +29,7 @@ class Main {
 
 	/* --- File Config --- */
 	var dataOutDirectory = Build.dir()+"/Output Data/";
-	/* -------------- */
+	/* ------------------- */
 
 	public function new () {
 		renderer = new BasicRenderer();
@@ -155,9 +155,12 @@ class Main {
 
 		//data.csv
 		var csv:sysUtils.HackyCSV = new sysUtils.HackyCSV();
-		csv.addColumn(results.analysis.iteration, "Iteration ("+filePrefix+")");
-		csv.addColumn(results.analysis.time, "Time ("+filePrefix+")");
-		csv.addColumn(results.analysis.energyChange, "Energy Error ("+filePrefix+")");
+		//csv.addColumn(results.analysis.iteration, "Iteration ("+filePrefix+")");
+		//csv.addColumn(results.analysis.time, "Time ("+filePrefix+")");
+		//csv.addColumn(results.analysis.energyChange, "Energy Error ("+filePrefix+")");
+		for( fieldName in Reflect.fields(results) ){
+			csv.addColumn(Reflect.field(anon, fieldName), fieldName+" ("+filePrefix+")");
+		}
 
 		filePrefix = (new haxe.io.Path(filePrefix)).file;//parse filePrefix to make it safe for paths
 		if(filePrefix!="")filePrefix+=" - ";
