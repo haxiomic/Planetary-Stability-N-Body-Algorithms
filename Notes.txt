@@ -1,3 +1,6 @@
+Currently building with:
+	lime test mac --build-library=hxcpp -64
+
 ---- Notes ----
 TODO
 - Better constants
@@ -9,7 +12,6 @@ TODO
 - Faster log2(x) algorithm
 - Orbital params, eccentricity and whatnot
 https://code.google.com/p/hattrick-nbody/source/browse/trunk/src/Planets.cc
-
 
 
  -- BUGS --

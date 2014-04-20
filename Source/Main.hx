@@ -16,6 +16,8 @@ import sysUtils.compileTime.Git;
 import sysUtils.Console;
 import sysUtils.FileTools;
 
+using sysUtils.Escape;
+
 class Main {
 	var renderer:BasicRenderer;
 
@@ -30,6 +32,13 @@ class Main {
 	/* -------------- */
 
 	public function new () {
+		var CSV = new sysUtils.HackyCSV();
+		CSV.addColumn([1,3,4,5], "numbers");
+		CSV.addColumn(["a", "f", "b", "d"], "letters");
+		trace(CSV);
+		trace("done");
+		return; 
+
 		renderer = new BasicRenderer();
 		
 		//Basic Test
@@ -60,11 +69,11 @@ class Main {
 		}
 
 		var dt = 30;
-		var timescale:Float = 1E7*365.0;
+		var timescale:Float = 10000*365.0;
 		var analysisCount = 100;
 
-		//var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x00FF00);
-		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
+		var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x00FF00);
+		//var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
 		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
 		//var exp = basicTest(simulator.LeapfrogAdaptive, dt, timescale, analysisCount, 0xFF0000);
 		//var exp2 = basicTest(new Experiment(simulator.LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<4), 1]), 1, timescale, analysisCount);
@@ -74,32 +83,10 @@ class Main {
 		renderer.preRenderCallback = inline function(){
 		//	euler.simulator.step();		
 		//	leapfrog.simulator.step();		
-		//	hermite.simulator.step();		
+			//hermite.simulator.step();		
 		}
 		//renderer.startAutoRender();
 
-/*
-		renderer.reset();
-
-		var euler = new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]);
-		var leap = new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]);
-
-		addTwoBodyEccentricOrbit(euler);
-		addTwoBodyEccentricOrbit(leap);
-
-		renderer.preRenderCallback = inline function(){
-			euler.simulator.step();	
-			leap.simulator.step();	
-		}
-		renderer.startAutoRender();*/
-
-		//Finish program
-		/*Console.newLine();
-		Console.printStatement("Press any key to continue");
-		Sys.getChar(false);
-		Console.newLine();*/
-
-		//exit(0);
 	}
 
 
@@ -183,6 +170,7 @@ class Main {
 			FileTools.saveAsJSON(fileSaveData, path, function (dir:String){
 				return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
 			});
+
 		}catch(msg:String){
 			Console.printError(msg);
 			Console.newLine();

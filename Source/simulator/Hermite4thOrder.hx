@@ -60,10 +60,10 @@ class Hermite4thOrder extends NBodySimulator{
 		}
 
 		predict();
-		 for(i in 0...10){
-				evaluate();
-				correct();
-		 }
+		for(i in 0...2){
+			evaluate();
+			correct();
+		}
 
 		time+=dt; 
 	}
