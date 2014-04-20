@@ -170,10 +170,10 @@ class Main {
 
 			//save file
 			FileTools.save(haxe.io.Path.join([path, "info.json"]), haxe.Json.stringify(fileSaveData), function (dir:String){
-				return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
+				return true;//return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
 			});
 			FileTools.save(haxe.io.Path.join([path, "data - "+(csv.rowCount-1)+" rows.csv"]), csv.toString(), function (dir:String){
-				return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
+				return true;//return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
 			});
 
 		}catch(msg:String){
