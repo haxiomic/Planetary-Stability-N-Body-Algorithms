@@ -34,7 +34,7 @@ class Main {
 	public function new () {
 		var CSV = new sysUtils.HackyCSV();
 		CSV.addColumn([1,3,4,5], "numbers");
-		CSV.addColumn(["a", "f", "b", "d"], "letters");
+		CSV.addColumn(["a", "f"], "letters");
 		trace(CSV);
 		trace("done");
 		return; 
