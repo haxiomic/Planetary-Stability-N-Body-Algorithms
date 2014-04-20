@@ -32,18 +32,10 @@ class Main {
 	/* -------------- */
 
 	public function new () {
-		var CSV = new sysUtils.HackyCSV();
-		CSV.addColumn([1,3,4,5], "numbers");
-		CSV.addColumn(["a", "f"], "letters");
-		trace(CSV);
-		trace("done");
-		return; 
-
 		renderer = new BasicRenderer();
 		
 		//Basic Test
 		function basicTest(exp:Experiment, dt:Float = 5, timescale:Float = 1000, analysisCount:Int = 100, ?c:Int){
-			//var exp = new Experiment(simulator, [Constants.G_AU_kg_D, dt], "Basic Test SS");
 			Console.printStatement(exp.simulator.algorithmName);
 			Console.print(exp.simulator.params);
 
@@ -52,7 +44,7 @@ class Main {
 
 			//set experiment conditions
 			exp.timescale = timescale;
-			exp.analysisInterval = 10000;//Math.ceil((exp.timescale/dt)/analysisCount);
+			exp.analysisInterval = Math.ceil((exp.timescale/dt)/analysisCount);
 
 			//enable runtime logging
 			exp.runtimeCallback = runtimeLog;
@@ -70,11 +62,11 @@ class Main {
 
 		var dt = 30;
 		var timescale:Float = 10000*365.0;
-		var analysisCount = 100;
+		var analysisCount = 200;
 
 		var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x00FF00);
-		//var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
-		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
+		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
+		var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
 		//var exp = basicTest(simulator.LeapfrogAdaptive, dt, timescale, analysisCount, 0xFF0000);
 		//var exp2 = basicTest(new Experiment(simulator.LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<4), 1]), 1, timescale, analysisCount);
 
@@ -131,9 +123,9 @@ class Main {
 		var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
 
 		var sumE:Float = 0;
-		for(e in r.energyChange) sumE+=e.value;
+		for(e in r.analysis.energyChange) sumE+=e;
 
-		var avgE = sumE/r.energyChange.length;
+		var avgE = sumE/r.analysis.energyChange.length;
 		Console.printTitle("Average energy error: "+avgE);
 
 		Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
@@ -144,9 +136,9 @@ class Main {
 	function saveExperiment(e:Experiment, filePrefix:String = ""){
 		var info = e.information;
 		var results = e.results;
-		var r:Dynamic = Reflect.copy(results);
-		r.millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations)+" s";//add extra field
+
 		//Construct object to save
+		//info.json
 		var fileSaveData = {
 			metadata:{
 				date: Build.date(),
@@ -155,19 +147,32 @@ class Main {
 				units: units,
 			},
 			info: info,
-			results: results,
+			results: {
+				totalIterations: results.totalIterations,
+				cpuTime: results.cpuTime,
+			},
 		}
+
+		//data.csv
+		var csv:sysUtils.HackyCSV = new sysUtils.HackyCSV();
+		csv.addColumn(results.analysis.iteration, "Iteration ("+filePrefix+")");
+		csv.addColumn(results.analysis.time, "Time ("+filePrefix+")");
+		csv.addColumn(results.analysis.energyChange, "Energy Error ("+filePrefix+")");
 
 		filePrefix = (new haxe.io.Path(filePrefix)).file;//parse filePrefix to make it safe for paths
 		if(filePrefix!="")filePrefix+=" - ";
 
 		var parsedAlgorithmName = (new haxe.io.Path(info.algorithmName)).file;
-		var filename = filePrefix+info.bodies.length+" bodies, timescale="+Math.round(info.timescale/365)+" years"+".json";
-		var fileDir = haxe.io.Path.join([dataOutDirectory, parsedAlgorithmName]);//dataOutDir/parsedAlgorithmName
-		var path = haxe.io.Path.join([fileDir, filename]);
+		var namespace = filePrefix+Math.round(info.timescale/365)+" years, "+info.bodies.length+" bodies";
+		var path = haxe.io.Path.join([dataOutDirectory, parsedAlgorithmName, namespace]);
+
 		try{
-			//Create filename
-			FileTools.saveAsJSON(fileSaveData, path, function (dir:String){
+
+			//save file
+			FileTools.save(haxe.io.Path.join([path, "info.json"]), haxe.Json.stringify(fileSaveData), function (dir:String){
+				return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
+			});
+			FileTools.save(haxe.io.Path.join([path, "data - "+(csv.rowCount-1)+" rows.csv"]), csv.toString(), function (dir:String){
 				return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
 			});
 

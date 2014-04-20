@@ -26,7 +26,7 @@ class Experiment{
 	public function new(simulatorClass:Class<Dynamic>, simArgs:Array<Dynamic>, name:String = ""){
 		this.bodies = new Array<BodyDatum>();
 		this.simulator = Type.createInstance(simulatorClass, simArgs);
-		this.name = name=="" ? Type.getClassName(simulatorClass) : name;
+		this.name = name=="" ? Type.getClassName(simulatorClass).split(".").pop() : name;
 	}
 
 	public function addBody(bd:BodyDatum):Body{
@@ -41,8 +41,8 @@ class Experiment{
 		return added;
 	}
 
-	public function restart(){
-		simulator.clear();
+	/*public function restart(){
+		simulator.clear();//#! not fully implemented
 
 		for(bd in this.bodies){
 			simulator.addBody(new Body(bd.position.clone(), bd.velocity.clone(), bd.mass));
@@ -58,11 +58,10 @@ class Experiment{
 		time = 0;
 		i = 0;
 		results = null;
-	}
+	}*/
 
 	//Read-only simulation variables
 	//data
-	public var energyChangeArray(default, null):Array<SimulationDataPoint>;
 	//algorithm runtime
 	public var algorithmStartTime(default, null):Float;
 	public var algorithmEndTime(default, null):Float;
@@ -85,8 +84,6 @@ class Experiment{
 		//analysis interval
 		var analysisEnabled = (analysisInterval != null);
 		var aI:Int = analysisInterval;
-		//data
-		energyChangeArray = new Array<SimulationDataPoint>();
 		//system energy
 		initalEnergy = simulator.totalEnergy();
 		currentEnergy = initalEnergy;
@@ -97,6 +94,18 @@ class Experiment{
 		time = timeStart;
 		//iteration
 		i = 0;
+		//
+		var analysis:ExperimentAnalysis = {
+			iteration: new Array<Int>(),
+			time: new Array<Float>(),
+			energyChange: new Array<Float>(),
+		}
+		results = {
+			totalIterations: 0,
+			cpuTime: 0,
+			analysis: analysis
+		}
+
 		//run simulation
 		algorithmStartTime = Sys.cpuTime();
 		while(time<timeEnd){
@@ -106,10 +115,13 @@ class Experiment{
 			//Analyze system
 			if(analysisEnabled){
 				if(i%analysisInterval==0){
+					analysis.iteration.push(i);
+					analysis.time.push(time);
+
 					//update energy
 					currentEnergy = simulator.totalEnergy();
 					energyChange = Math.abs((currentEnergy - initalEnergy))/initalEnergy;
-					energyChangeArray.push(new SimulationDataPoint(energyChange, simulator.time, i));
+					analysis.energyChange.push(energyChange);
 				}
 			}
 
@@ -127,11 +139,8 @@ class Experiment{
 
 		var totalIterations = i;
 
-		results = {
-			totalIterations: totalIterations,
-			cpuTime: (algorithmEndTime - algorithmStartTime),
-			energyChange: energyChangeArray,
-		};
+		results.totalIterations = totalIterations;
+		results.cpuTime = (algorithmEndTime - algorithmStartTime);
 		return results;
 	}
 
@@ -159,7 +168,13 @@ class Experiment{
 typedef ExperimentResults = {
 	var totalIterations:UInt;
 	var cpuTime:Float;
-	var energyChange:Array<SimulationDataPoint>;
+	var analysis:ExperimentAnalysis;
+}
+
+typedef ExperimentAnalysis = {
+	var iteration:Array<Int>;
+	var time:Array<Float>;
+	var energyChange:Array<Float>;
 }
 
 typedef ExperimentInformation = {
@@ -170,28 +185,4 @@ typedef ExperimentInformation = {
 	var simulatorParams:Dynamic;
 	var algorithmName:String;
 	var algorithmDetails:String;
-}
-
-abstract SimulationDataPoint(Vector<Float>) from Vector<Float> to Vector<Float>{
-	public inline function new(value:Float, time:Float, iteration:UInt){
-		this = new Vector<Float>(3);
-		this[0] = value;
-		this[1] = time;
-		this[2] = iteration;
-	}
-
-	public var value(get, set):Float;
-	public var time(get, set):Float;
-	public var iteration(get, set):UInt;
-
-	public inline function get_value():Float return this[0];
-	public inline function get_time():Float return this[1];
-	public inline function get_iteration():UInt return Std.int(this[2]);
-	public inline function set_value(v:Float):Float return this[0] = v;
-	public inline function set_time(v:Float):Float return this[1] = v;
-	public inline function set_iteration(v:UInt):UInt return Std.int(this[2] = v);
-
-	public inline function toString() {
-	    return "SimulationDataPoint(value: "+value+", time: "+time+", iteration: "+iteration+")";
-	}
 }

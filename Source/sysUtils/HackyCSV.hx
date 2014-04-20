@@ -3,10 +3,10 @@ package sysUtils;
 using sysUtils.Escape;
 
 class HackyCSV {
+	public var rowCount(default, null):Int = 0;
+
 	var columns:Array<Column>;
 	var separator:String;
-
-	var rowCount:Int = 0;
 
 	public function new(separator:String = ","){
 		this.separator = separator;
@@ -17,12 +17,12 @@ class HackyCSV {
 		var c = new Column(data, header);
 
 		if(c.rowCount>rowCount)rowCount = c.rowCount;
-		else c.padWithBlanks(rowCount);
+		else c.padWithBlanks(rowCount);	//not enough rows supplied
 
 		columns.push(c);
 	}
 
-	function toString():String{
+	public function toString():String{
 		var csvStr:String = "";
 		for(r in 0...rowCount){
 			for(c in 0...columns.length){
@@ -63,8 +63,6 @@ class HackyCSV {
 }
 
 class Column{
-	//all strings are encased in double quotes
-
 	public var header(default, null):String = null;
 	public var hasHeader(get, null):Bool;
 	public var rowCount(get, null):Int;
@@ -73,9 +71,12 @@ class Column{
 
 	public function new(data:Array<Dynamic>, ?header:String){
 		this.header = header;
-		this.data = data;
+		this.data = new Array<Dynamic>();
+		for(d in data){
+			this.data.push(d);
+		}
 		//add header
-		if(this.header!=null)this.data.unshift(this.header);
+		if(this.header!=null)this.data.unshift(header);
 	}
 
 	public function padWithBlanks(desiredLength:Int){
