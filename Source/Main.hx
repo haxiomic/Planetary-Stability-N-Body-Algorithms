@@ -158,8 +158,8 @@ class Main {
 		//csv.addColumn(results.analysis.iteration, "Iteration ("+filePrefix+")");
 		//csv.addColumn(results.analysis.time, "Time ("+filePrefix+")");
 		//csv.addColumn(results.analysis.energyChange, "Energy Error ("+filePrefix+")");
-		for( fieldName in Reflect.fields(results) ){
-			csv.addColumn(Reflect.field(anon, fieldName), fieldName+" ("+filePrefix+")");
+		for( fieldName in Reflect.fields(results.analysis) ){
+			csv.addColumn(Reflect.field(results.analysis, fieldName), fieldName+" ("+filePrefix+")");
 		}
 
 		filePrefix = (new haxe.io.Path(filePrefix)).file;//parse filePrefix to make it safe for paths
