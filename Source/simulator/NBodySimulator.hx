@@ -36,7 +36,7 @@ class NBodySimulator {
 	var A:Body;var B:Body;
 
 	@:noStack
-	public inline function totalEnergy():Float{
+	public function totalEnergy():Float{
 		var E:Float = 0, d:Float;
 		var k:Float = 0;
 		var p:Float = 0;

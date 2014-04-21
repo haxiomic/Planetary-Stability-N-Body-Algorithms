@@ -1,32 +1,29 @@
 package geom;
 
-import haxe.ds.Vector;
-
-typedef Data = Vector<Float>;
+private typedef Data = geom.VPointer;
 
 abstract Vec3(Data) from Data to Data{
-	public inline function new(x:Float = 0, y:Float = 0, z:Float = 0) {
-		this = new Vector<Float>(3);
-		//this = new Data();
-
-		this[0] = x;
-		this[1] = y;
-		this[2] = z;
+	public function new(x:Float = 0, y:Float = 0, z:Float = 0) {
+		var arr = new geom.VPointer.ArrayType();
+		arr[0] = x;
+		arr[1] = y;
+		arr[2] = z;
+		this = new Data(arr);
 	}
 
 	public var x(get, set):Float;
 	public var y(get, set):Float;
 	public var z(get, set):Float;
 
-	@:arrayAccess public inline function arrayRead(index:Int):Float return this[index];
-	@:arrayAccess public inline function arrayWrite(index:Int, v:Float):Float return this[index] = v;
+	@:arrayAccess inline function arrayRead(index:Int):Float return this[index];
+	@:arrayAccess inline function arrayWrite(index:Int, v:Float):Float{ this[index] = v; return v;}
 
 	public inline function get_x():Float return this[0];
 	public inline function get_y():Float return this[1];
 	public inline function get_z():Float return this[2];
-	public inline function set_x(v:Float):Float return this[0] = v;
-	public inline function set_y(v:Float):Float return this[1] = v;
-	public inline function set_z(v:Float):Float return this[2] = v;
+	public inline function set_x(v:Float):Float{ this[0] = v; return v;}
+	public inline function set_y(v:Float):Float{ this[1] = v; return v;}
+	public inline function set_z(v:Float):Float{ this[2] = v; return v;}
 
 	public inline function iterator():VecIterator{
 		return new VecIterator(3);
@@ -54,7 +51,7 @@ abstract Vec3(Data) from Data to Data{
 
 	//------- Class Methods -------//
 	public inline function length():Float
-		return Math.sqrt(dot(this));
+		return Math.sqrt(lengthSquared());
 
 	public inline function lengthSquared():Float
 		return dot(this);
