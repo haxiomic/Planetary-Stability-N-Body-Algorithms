@@ -156,7 +156,7 @@ class Main {
 		//data.csv
 		var csv:sysUtils.HackyCSV = new sysUtils.HackyCSV();
 		for(key in results.analysis.keys()){
-			//csv.addColumn(results.analysis.get, key);
+			csv.addColumn(results.analysis.get(key), key);
 		}
 		/*for( fieldName in Reflect.fields(results.analysis) ){
 			csv.addColumn(Reflect.field(results.analysis, fieldName), fieldName+" ("+filePrefix+")");

@@ -28,7 +28,7 @@ class Hermite4thOrder extends NBodySimulator{
 	public function new(G:Float, dt:Float){
 		super(G);
 		this.algorithmName = "Hermite 4th Order";
-		this.algorithmDetails = "";
+		this.algorithmDetails = "P(EC)^2, two iterations of evaluate and correct";
 		this.dt = dt;
 	}
 
@@ -54,10 +54,10 @@ class Hermite4thOrder extends NBodySimulator{
 
 			//repoint body vectors to their new home in the flat array
 			var vpoint:VPointer;
-			vpoint = cast b.p;
+			vpoint       = cast b.p;
 			vpoint.index = i*3;
 			vpoint.array = cast position;
-			vpoint = cast b.v;
+			vpoint       = cast b.v;
 			vpoint.index = i*3;
 			vpoint.array = cast velocity;
 		}
@@ -128,8 +128,8 @@ class Hermite4thOrder extends NBodySimulator{
 	inline function evaluate(){
 		var d          : Float;
 		var dSq        : Float;
-		var dCu        : Float;
 		var dvDotR_dSq : Float;
+		var fc 		   : Float;
 		var fcj        : Float;
 		//reset accelerations and jerks
 		for (i in 0...bodyCount){
@@ -166,10 +166,10 @@ class Hermite4thOrder extends NBodySimulator{
 			}
 		}
 	}
-	//Variable pool
+	//Object pool
 	var dv:Vec3 = new Vec3();
 
-	//Faster
+	//Faster implementation
 	override public inline function totalEnergy():Float{
 		var E:Float = 0, d:Float;
 		var k:Float = 0;
