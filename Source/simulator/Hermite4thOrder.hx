@@ -150,7 +150,7 @@ class Hermite4thOrder extends NBodySimulator{
 
 				//Force factor
 				fc  = G / dSq;
-				fcj = G / dCu;
+				fcj = fc / d;
 
 				jerk.addFn(i, inline function(k) return
 					fcj*mass[j]*((dv[k] - 3*dvDotR_dSq*r[k]))
