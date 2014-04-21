@@ -16,7 +16,12 @@ class HackyCSV {
 	public function addColumn(data:Array<Dynamic>, ?header:String){
 		var c = new Column(data, header);
 
-		if(c.rowCount>rowCount)rowCount = c.rowCount;
+		if(c.rowCount>rowCount){
+			rowCount = c.rowCount;
+			//pad shorter columns with blanks
+			for(col in columns)
+				if(col.rowCount<rowCount) col.padWithBlanks(rowCount);
+		}
 		else c.padWithBlanks(rowCount);	//not enough rows supplied
 
 		columns.push(c);
@@ -91,11 +96,7 @@ class Column{
 		return data[index];
 	}
 
-	function get_hasHeader():Bool{
-		return (header != null);
-	}
+	function get_hasHeader():Bool return (header != null);
 
-	function get_rowCount():Int{
-		return data.length;
-	}
+	function get_rowCount():Int return data.length;
 }

@@ -47,11 +47,15 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 		//if(bodies.length == 1)AAd.ss = 8;
 		switch(bodies.length){
 			case 1:
-				AAd.ss = 2;
+				AAd.ss = 128;
 			case 2:
-				AAd.ss = 1;
+				AAd.ss = 32;
 			case 3:
-				AAd.ss = 4;
+				AAd.ss = 64;
+			case 4:
+				AAd.ss = 128;
+			case 5:
+				AAd.ss = 256;
 		}
 		trace(AAd.ss);
 		if(AAd.ss<currentBaseSS)currentBaseSS = AAd.ss;
@@ -64,8 +68,8 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 	override function step(){
 		newBaseSS = max_s;
 
-		sysUtils.Console.newLine();
-		sysUtils.Console.print("Drift:"+s);
+		// sysUtils.Console.newLine();
+		// sysUtils.Console.print("Drift:"+s);
 		//Drift dt*.5
 		for (i in 0...bodies.length) {
 			AAd = untyped bodies[i]; 
@@ -74,15 +78,15 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 
 			dt = dtForSS(AAd.ss);
 
-			sysUtils.Console.print("A"+i+" ss:"+AAd.ss);
+			// sysUtils.Console.print("A"+i+" ss:"+AAd.ss);
 
 			//Each-Body Drift
 			AAd.p.addProduct(AAd.v, dt*.5);
 			AAd.t += dt*.5;
 		}
 
-		sysUtils.Console.newLine();
-		sysUtils.Console.print("Kick:"+s);
+		// sysUtils.Console.newLine();
+		// sysUtils.Console.print("Kick:"+s);
 
 		//Kick
 		for (i in 0...bodies.length) {
@@ -94,16 +98,16 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 			//Pairwise Kick
 			for(j in i+1...bodies.length){
 				BAd = untyped bodies[j];
-				sysUtils.Console.print("A"+i+" ss:"+AAd.ss, false);
-				sysUtils.Console.print("<->B"+j+" ss:"+BAd.ss+" B_dt:",false);
+				// sysUtils.Console.print("A"+i+" ss:"+AAd.ss, false);
+				// sysUtils.Console.print("<->B"+j+" ss:"+BAd.ss+" B_dt:",false);
 
 				//if ordered correctly B will never have a shorter step size than A
 				//find step difference
 				//B_dt = -(0.5)*dtForSS((AAd.ss-BAd.ss));
-				B_dt = (BAd.t-AAd.t)*0;
-				sysUtils.Console.print((BAd.t-AAd.t));
+				//B_dt = (BAd.t-AAd.t);
+				// sysUtils.Console.print((BAd.t-AAd.t));
 
-				predictAccelerationsDueToGravity(AAd, BAd, B_dt);			
+				predictAccelerationsDueToGravity(AAd, BAd, 0);			
 
 				//find midpoint velocity
 				AAd.v.addProduct(r, accelA*dt);

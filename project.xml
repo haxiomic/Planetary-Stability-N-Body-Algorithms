@@ -19,6 +19,6 @@
 	<haxeflag name="-dce" value="std" />
 
 	<!-- Template Overrides -->
-	<template path="Templates" />
+	<!--<template path="Templates" />-->
 	
 </project>

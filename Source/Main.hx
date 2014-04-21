@@ -68,7 +68,7 @@ class Main {
 		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
 		var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
 		//var exp = basicTest(simulator.LeapfrogAdaptive, dt, timescale, analysisCount, 0xFF0000);
-		//var exp2 = basicTest(new Experiment(simulator.LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<4), 1]), 1, timescale, analysisCount);
+		var leapfrogSweep = basicTest(new Experiment(simulator.LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount);
 
 		sysUtils.Console.suppress = true;
 		//start render loop
@@ -123,9 +123,9 @@ class Main {
 		var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
 
 		var sumE:Float = 0;
-		for(e in r.analysis.energyChange) sumE+=e;
+		for(e in r.analysis["Energy Error"]) sumE+=e;
 
-		var avgE = sumE/r.analysis.energyChange.length;
+		var avgE = sumE/r.analysis["Energy Error"].length;
 		Console.printTitle("Average energy error: "+avgE);
 
 		Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
@@ -155,12 +155,12 @@ class Main {
 
 		//data.csv
 		var csv:sysUtils.HackyCSV = new sysUtils.HackyCSV();
-		//csv.addColumn(results.analysis.iteration, "Iteration ("+filePrefix+")");
-		//csv.addColumn(results.analysis.time, "Time ("+filePrefix+")");
-		//csv.addColumn(results.analysis.energyChange, "Energy Error ("+filePrefix+")");
-		for( fieldName in Reflect.fields(results.analysis) ){
-			csv.addColumn(Reflect.field(results.analysis, fieldName), fieldName+" ("+filePrefix+")");
+		for(key in results.analysis.keys()){
+			trace(key);
 		}
+		/*for( fieldName in Reflect.fields(results.analysis) ){
+			csv.addColumn(Reflect.field(results.analysis, fieldName), fieldName+" ("+filePrefix+")");
+		}*/
 
 		filePrefix = (new haxe.io.Path(filePrefix)).file;//parse filePrefix to make it safe for paths
 		if(filePrefix!="")filePrefix+=" - ";
@@ -174,10 +174,10 @@ class Main {
 			//save file
 			FileTools.save(haxe.io.Path.join([path, "info.json"]), haxe.Json.stringify(fileSaveData), function (dir:String){
 				return true;//return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
-			});
+			}, false);
 			FileTools.save(haxe.io.Path.join([path, "data - "+(csv.rowCount-1)+" rows.csv"]), csv.toString(), function (dir:String){
 				return true;//return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
-			});
+			}, false);
 
 		}catch(msg:String){
 			Console.printError(msg);

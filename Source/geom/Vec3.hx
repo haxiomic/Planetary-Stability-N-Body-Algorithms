@@ -200,7 +200,7 @@ abstract Vec3(Data) from Data to Data{
 		return new Vec3(-a.x, -a.y, -a.z);
 
 	@:op(A == B)
-	static public inline function equalsDynamic(a:Vec3, B:Dynamic)
+	static public inline function equalsDynamic(a:Vec3, b:Dynamic)
 		return false;
 	@:op(A == B)
 	static public inline function equalsVec3(a:Vec3, b:Vec3)

@@ -41,7 +41,8 @@ class Experiment{
 		return added;
 	}
 
-	/*public function restart(){
+	public function restart(){
+		return;
 		simulator.clear();//#! not fully implemented
 
 		for(bd in this.bodies){
@@ -58,7 +59,7 @@ class Experiment{
 		time = 0;
 		i = 0;
 		results = null;
-	}*/
+	}
 
 	//Read-only simulation variables
 	//data
@@ -78,6 +79,8 @@ class Experiment{
 	public var results(default, null):ExperimentResults;
 	@:noStack
 	public function perform():ExperimentResults{
+		simulator.prepare();
+
 		//return control callback
 		var runtimeCallbackEnabled = (runtimeCallback!=null && runtimeCallbackInterval != null);
 		var cbI:Int = runtimeCallbackInterval;
@@ -95,15 +98,16 @@ class Experiment{
 		//iteration
 		i = 0;
 		//
-		var analysis:ExperimentAnalysis = {
-			iteration: new Array<Int>(),
-			time: new Array<Float>(),
-			energyChange: new Array<Float>(),
-		}
+		var analysis = new Map<String, Array<Dynamic>>();
+		analysis["Iteration"] = new Array<Int>();
+		analysis["Time"] = new Array<Float>();
+		analysis["Energy Error"] = new Array<Float>();
+
+
 		results = {
 			totalIterations: 0,
 			cpuTime: 0,
-			analysis: analysis
+			analysis: analysis,
 		}
 
 		//run simulation
@@ -115,13 +119,13 @@ class Experiment{
 			//Analyze system
 			if(analysisEnabled){
 				if(i%analysisInterval==0){
-					analysis.iteration.push(i);
-					analysis.time.push(time);
-
 					//update energy
 					currentEnergy = simulator.totalEnergy();
 					energyChange = Math.abs((currentEnergy - initalEnergy))/initalEnergy;
-					analysis.energyChange.push(energyChange);
+
+					analysis["Iteration"].push(i);
+					analysis["Time"].push(time);
+					analysis["Energy Error"].push(energyChange);
 				}
 			}
 
@@ -168,13 +172,7 @@ class Experiment{
 typedef ExperimentResults = {
 	var totalIterations:UInt;
 	var cpuTime:Float;
-	var analysis:ExperimentAnalysis;
-}
-
-typedef ExperimentAnalysis = {
-	var iteration:Array<Int>;
-	var time:Array<Float>;
-	var energyChange:Array<Float>;
+	var analysis:Map<String, Array<Dynamic>>;
 }
 
 typedef ExperimentInformation = {

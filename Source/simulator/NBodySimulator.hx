@@ -20,6 +20,8 @@ class NBodySimulator {
 		this.G = G;
 	}
 
+	public function prepare(){}
+
 	public function addBody(b:Body):Body{
 		totalMass+=b.m;
 		bodies.push(b);
