@@ -211,6 +211,13 @@ abstract FlatVec3Array(Vector<Float>){
 		this = new Vector<Float>(count*VEC_SIZE);
 	}
 
+	@:arrayAccess
+	@:extern public inline function getI(i:Int):Float
+		return this[i];
+	@:arrayAccess
+	@:extern public inline function setI(i:Int, value:Float):Float
+		return this[i] = value;
+
 	@:extern public inline function get(index:Int, k:Int):Float
 		return this[index*VEC_SIZE + k];
 
@@ -241,7 +248,7 @@ abstract FlatVec3Array(Vector<Float>){
 		setY(index, fn(1));
 		setZ(index, fn(2));
 	}
-	
+
 	@:extern public inline function addFn(index:Int, fn:Int->Float){
 		setX(index, fn(0) + getX(index));
 		setY(index, fn(1) + getY(index));
