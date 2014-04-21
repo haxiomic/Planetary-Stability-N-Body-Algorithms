@@ -1,5 +1,3 @@
-//Pre-step jerk and acceleration
-
 package simulator;
 
 import geom.VPointer;
@@ -43,7 +41,7 @@ class Hermite4thOrder extends NBodySimulator{
 		oldVelocity    	= new FlatVec3Array(this.bodies.length);
 		oldAcceleration	= new FlatVec3Array(this.bodies.length);
 		oldJerk        	= new FlatVec3Array(this.bodies.length);
-		mass 			= new Vector<Float>(this.bodies.length);
+		mass            = new Vector<Float>(this.bodies.length);
 
 		var b:Body;
 		for (i in 0...this.bodies.length) {
@@ -129,7 +127,7 @@ class Hermite4thOrder extends NBodySimulator{
 		var d          : Float;
 		var dSq        : Float;
 		var dvDotR_dSq : Float;
-		var fc 		   : Float;
+		var fc         : Float;
 		var fcj        : Float;
 		//reset accelerations and jerks
 		for (i in 0...bodyCount){
