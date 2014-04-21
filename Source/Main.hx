@@ -68,14 +68,14 @@ class Main {
 		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
 		var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
 		//var exp = basicTest(simulator.LeapfrogAdaptive, dt, timescale, analysisCount, 0xFF0000);
-		var leapfrogSweep = basicTest(new Experiment(simulator.LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount);
+		var leapfrogSweep = basicTest(new Experiment(simulator.LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFFFFFF);
 
 		sysUtils.Console.suppress = true;
 		//start render loop
 		renderer.preRenderCallback = inline function(){
-		//	euler.simulator.step();		
-		//	leapfrog.simulator.step();		
-			//hermite.simulator.step();		
+			leapfrog.simulator.step();		
+			leapfrogSweep.simulator.step();		
+			hermite.simulator.step();		
 		}
 		//renderer.startAutoRender();
 
