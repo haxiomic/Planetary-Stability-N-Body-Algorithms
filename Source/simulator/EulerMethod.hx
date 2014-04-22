@@ -1,7 +1,11 @@
 package simulator;
 
+import haxe.ds.Vector;
 import geom.Vec3;
+import geom.FlatVec3Array;
+import geom.VPointer;
 import simulator.NBodySimulator;
+
 
 class EulerMethod extends NBodySimulator {
 	public var dt:Float;
@@ -9,30 +13,31 @@ class EulerMethod extends NBodySimulator {
 	public function new(G:Float, dt:Float){
 		super(G);
 		this.algorithmName = "Euler Method";
-		this.algorithmDetails = "First pass, no optimizations.";
+		this.algorithmDetails = "Since velocity is updated before position it's the 'Semi-Implicit Euler Method'";
 		this.dt = dt;
 	}
 
 	@:noStack
 	override public inline function step(){
-		for(i in 0...bodies.length){
-			A = bodies[i];
-
-			for(j in i+1...bodies.length){
-				B = bodies[j];	
-
-				accelerationsDueToGravity(A,B);
-
-				//Apply acceleration
-				accelA*=dt;
-				accelB*=dt;
-
-				A.v.addProduct(r, accelA);
-				B.v.addProduct(r, accelB);
+		var d          : Float;
+		var dSq        : Float;
+		var fc         : Float;
+		for (i in 0...bodyCount){
+			//pairwise
+			for (j in i+1...bodyCount) {
+				position.difference(i, j, r);
+				dSq  = r.lengthSquared();
+				d    = Math.sqrt(dSq);
+				fc   = G / dSq;
+				//Normalize r
+				r *= 1/d;
+				velocity.addProductVec3(i, r, fc*mass[j]*dt);
+				velocity.addProductVec3(j, r, -fc*mass[i]*dt);
 			}
 
-			//Apply velocity
-			A.p.addProduct(A.v, dt);
+			position.addFn(i, inline function(k) return
+				velocity.get(i,k)*dt
+			);
 		}
 
 		time+=dt;

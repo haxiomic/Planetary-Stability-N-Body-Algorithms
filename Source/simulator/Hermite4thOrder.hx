@@ -10,18 +10,12 @@ import haxe.ds.Vector;
 class Hermite4thOrder extends NBodySimulator{
 	public var dt:Float;
 
-	var bodyCount:Int = 0;
-
-	var position        : FlatVec3Array;
-	var velocity        : FlatVec3Array;
 	var acceleration    : FlatVec3Array;
 	var jerk            : FlatVec3Array;
 	var oldPosition     : FlatVec3Array;
 	var oldVelocity     : FlatVec3Array;
 	var oldAcceleration : FlatVec3Array;
 	var oldJerk         : FlatVec3Array;
-
-	var mass            : Vector<Float>;
 
 	public function new(G:Float, dt:Float){
 		super(G);
@@ -33,40 +27,14 @@ class Hermite4thOrder extends NBodySimulator{
 	@:noStack
 	override public function prepare(){
 		super.prepare();
-		position       	= new FlatVec3Array(this.bodies.length);
-		velocity       	= new FlatVec3Array(this.bodies.length);
 		acceleration   	= new FlatVec3Array(this.bodies.length);
 		jerk           	= new FlatVec3Array(this.bodies.length);
 		oldPosition    	= new FlatVec3Array(this.bodies.length);
 		oldVelocity    	= new FlatVec3Array(this.bodies.length);
 		oldAcceleration	= new FlatVec3Array(this.bodies.length);
 		oldJerk        	= new FlatVec3Array(this.bodies.length);
-		mass            = new Vector<Float>(this.bodies.length);
-
-		var b:Body;
-		for (i in 0...this.bodies.length) {
-			b = this.bodies[i];
-			position.setVec3(i, b.p);
-			velocity.setVec3(i, b.v);
-			mass[i] = b.m;
-
-			//repoint body vectors to their new home in the flat array
-			var vpoint:VPointer;
-			vpoint       = cast b.p;
-			vpoint.index = i*3;
-			vpoint.array = cast position;
-			vpoint       = cast b.v;
-			vpoint.index = i*3;
-			vpoint.array = cast velocity;
-		}
 
 		evaluate();
-	}
-
-	override public function addBody(b:Body):Body{
-		super.addBody(b);
-		bodyCount++;
-		return b;
 	}
 
 	@:noStack 
@@ -159,31 +127,14 @@ class Hermite4thOrder extends NBodySimulator{
 
 				//Normalize r
 				r *= 1/d;
-				acceleration.addProduct(i, r, fc*mass[j]);
-				acceleration.addProduct(j, r, -fc*mass[i]);
+				acceleration.addProductVec3(i, r, fc*mass[j]);
+				acceleration.addProductVec3(j, r, -fc*mass[i]);
 			}
 		}
 	}
 	//Object pool
 	var dv:Vec3 = new Vec3();
 
-	//Faster implementation
-	override public inline function totalEnergy():Float{
-		var E:Float = 0, d:Float;
-		var k:Float = 0;
-		var p:Float = 0;
-		for(i in 0...bodyCount){
-			E += 0.5*mass[i]*velocity.lengthSquared(i);//kinetic energy
-
-			for(j in i+1...bodyCount){
-				position.difference(i, j, r);
-				d = r.length();
-				E -= G*mass[i]*mass[j]/d;//potential energy
-			}
-
-		}
-		return E;
-	}
 
 	override function get_params():Dynamic{
 		return {dt:dt};

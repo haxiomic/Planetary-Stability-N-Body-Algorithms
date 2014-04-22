@@ -22,6 +22,8 @@ class LeapfrogAdaptive extends NBodySimulator{
 
 	public function new(G:Float, max_dt:Float){
 		super(G);
+		initalize();
+
 		this.algorithmName = "Leapfrog Adaptive";
 		this.algorithmDetails = "WIP: time-symmetric adaptive timestep leapfrog";
 
@@ -153,7 +155,6 @@ class LeapfrogAdaptive extends NBodySimulator{
 	}
 
 	override function initalize(){
-		super.initalize();
 		positions = new Array<Vec3>();
 		velocities = new Array<Vec3>();
 		accelerations = new Array<Vec3>();

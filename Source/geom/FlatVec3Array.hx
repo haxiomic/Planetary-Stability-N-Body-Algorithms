@@ -83,25 +83,37 @@ abstract FlatVec3Array(Vector<Float>){
 		setZ(index, fn(2) + getZ(index));
 	}
 
-	@:extern public inline function setProduct(index, v:Vec3, mul:Float){
+	@:extern public inline function setProduct(indexI:Int, indexJ:Int, mul:Float){
+		setX(indexI, mul*getX(indexJ));
+		setY(indexI, mul*getY(indexJ));
+		setZ(indexI, mul*getZ(indexJ));
+	}
+
+	@:extern public inline function addProduct(indexI:Int, indexJ:Int, mul:Float){
+		setX(indexI, mul*getX(indexJ) + getX(indexI));
+		setY(indexI, mul*getY(indexJ) + getY(indexI));
+		setZ(indexI, mul*getZ(indexJ) + getZ(indexI));
+	}
+
+	@:extern public inline function setProductVec3(index:Int, v:Vec3, mul:Float){
 		setX(index, mul*v.x);
 		setY(index, mul*v.y);
 		setZ(index, mul*v.z);
 	}
 
-	@:extern public inline function addProduct(index, v:Vec3, mul:Float){
+	@:extern public inline function addProductVec3(index:Int, v:Vec3, mul:Float){
 		setX(index, mul*v.x + getX(index));
 		setY(index, mul*v.y + getY(index));
 		setZ(index, mul*v.z + getZ(index));
 	}
 
-	// --- Static ---
 	@:extern public inline function difference(indexI:Int, indexJ:Int, r:Vec3){
 		r.x = getX(indexJ) - getX(indexI);
 		r.y = getY(indexJ) - getY(indexI);
 		r.z = getZ(indexJ) - getZ(indexI);
 	}
 
+	// --- Static ---
 	static public inline function fromArrayVec3(array:Array<Vec3>){
 		var r = new FlatVec3Array(array.length*VEC_SIZE);
 		for(i in 0...array.length){

@@ -68,28 +68,31 @@ class Main {
 		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
 		var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
 		//var exp = basicTest(simulator.LeapfrogAdaptive, dt, timescale, analysisCount, 0xFF0000);
-		var leapfrogSweep = basicTest(new Experiment(simulator.LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFFFFFF);
+		// var leapfrogSweep = basicTest(new Experiment(simulator.LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFFFFFF);
 
 		sysUtils.Console.suppress = true;
-		//start render loop
-		renderer.preRenderCallback = inline function(){
-			leapfrog.simulator.step();		
-			leapfrogSweep.simulator.step();		
-			hermite.simulator.step();		
-		}
-		//renderer.startAutoRender();
-
+		//visualize(verlet);
 	}
 
+	function visualize(exp:Experiment){
+		exp.simulator.bodies;
+		for (b in exp.simulator.bodies) {
+			renderer.addBody(b, 0.5, 0xFFFFFF);
+		}
+		renderer.preRenderCallback = inline function(){
+			exp.simulator.step();	
+		}
+		renderer.startAutoRender();
+	}
 
 	/* --- Planetary System Schemes --- */
 	function addSolarSystem(exp:Experiment, ?c:Int){
-		var sun:Body = exp.addBody(SolarBodyData.sun); renderer.addBody(sun, 5, c==null ? 0xFFFF00 : c);
-		//var earth:Body = exp.addBody(SolarBodyData.earth); renderer.addBody(earth, 5, c == null ? 0x2288CC : c);
-		var jupiter:Body = exp.addBody(SolarBodyData.jupiter); renderer.addBody(jupiter, 5, c == null ? 0xFF0000 : c);
-		var saturn:Body = exp.addBody(SolarBodyData.saturn); renderer.addBody(saturn, 5, c == null ? 0xFFFFFF : c);
-		var uranus:Body = exp.addBody(SolarBodyData.uranus); renderer.addBody(uranus, 5, c == null ? 0xFFFFFF : c);
-		var neptune:Body = exp.addBody(SolarBodyData.neptune); renderer.addBody(neptune, 5, c == null ? 0xFFFFFF : c);
+		var sun:Body = exp.addBody(SolarBodyData.sun);
+		//var earth:Body = exp.addBody(SolarBodyData.earth);
+		var jupiter:Body = exp.addBody(SolarBodyData.jupiter);
+		var saturn:Body = exp.addBody(SolarBodyData.saturn);
+		var uranus:Body = exp.addBody(SolarBodyData.uranus);
+		var neptune:Body = exp.addBody(SolarBodyData.neptune);
 	}
 
 	function addTwoBodyEccentricOrbit(exp:Experiment, ?c:Int){
@@ -109,8 +112,6 @@ class Main {
 		var sun = exp.addBody(sunData); 
 		var planet = exp.addBody(planetData);
 		sun.v.z = -planet.v.z*planet.m/sun.m;
-		renderer.addBody(sun, 5, c == null ? 0xFFFF00 : c);
-		renderer.addBody(planet, 2.5, c == null ? 0x2288CC : c);
 	}
 
 	/* --- Logging --- */

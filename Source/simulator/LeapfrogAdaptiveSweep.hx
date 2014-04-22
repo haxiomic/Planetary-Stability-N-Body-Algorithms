@@ -177,7 +177,7 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 		accelA = fc*B.m;
 		accelB = -fc*A.m;
 
-	}var predictedBPosition:Vec3;
+	}var predictedBPosition:Vec3 = new Vec3();
 
 	inline function updateAccelerations(){
 		for (i in 0...bodies.length) {
@@ -202,11 +202,6 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 			min_dt:min_dt,
 			max_s:max_s,
 		};
-	}	
-
-	override function poolInitialization(){
-		predictedBPosition = new Vec3();
-		super.poolInitialization();
 	}
 }
 

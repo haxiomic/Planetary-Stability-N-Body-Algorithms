@@ -8,47 +8,50 @@ class Leapfrog extends NBodySimulator{
 	public function new(G:Float, dt:Float){
 		super(G);
 		this.algorithmName = "Leapfrog";
-		this.algorithmDetails = "Fixed timestep, 'Kick Drift Kick' variation.";
+		this.algorithmDetails = "Fixed timestep, 'Kick Drift Kick' & 'Drift Kick Drift' variation.";
 		this.dt = dt;
 	}
 
 	@:noStack 
 	override function step(){
-		stepKDK();
+		stepDKD();
 	}
 
 	@:noStack
 	inline function stepKDK(){
-		for(i in 0...bodies.length){
-			A = bodies[i];
-
+		var d          : Float;
+		var dSq        : Float;
+		var fc         : Float;
+		for (i in 0...bodyCount){
 			//Pairwise kick
-			for(j in i+1...bodies.length){
-				B = bodies[j];	
-
-				accelerationsDueToGravity(A, B); 
-
-				//Find change in velocity over half a timestep
-				A.v.addProduct(r, accelA*dt*.5);
-				B.v.addProduct(r, accelB*dt*.5);
+			for (j in i+1...bodyCount) {
+				position.difference(i, j, r);
+				dSq  = r.lengthSquared();
+				d    = Math.sqrt(dSq);
+				fc   = G / dSq;
+				//Normalize r
+				r *= 1/d;
+				velocity.addProductVec3(i, r, fc*mass[j]*dt*.5);
+				velocity.addProductVec3(j, r, -fc*mass[i]*dt*.5);
 			}
 
 			//Each-Body Drift
-			A.p.addProduct(A.v, dt);
+			position.addFn(i, inline function(k) return
+				velocity.get(i,k)*dt
+			);
 		}
 
-		for(i in 0...bodies.length){
-			A = bodies[i];
-
-			//Pairwise Kick
-			for(j in i+1...bodies.length){
-				B = bodies[j];	
-
-				accelerationsDueToGravity(A, B); 
-
-				//Find change in velocity over half a timestep
-				A.v.addProduct(r, accelA*dt*.5);
-				B.v.addProduct(r, accelB*dt*.5);
+		for (i in 0...bodyCount){
+			//Pairwise kick
+			for (j in i+1...bodyCount) {
+				position.difference(i, j, r);
+				dSq  = r.lengthSquared();
+				d    = Math.sqrt(dSq);
+				fc   = G / dSq;
+				//Normalize r
+				r *= 1/d;
+				velocity.addProductVec3(i, r, fc*mass[j]*dt*.5);
+				velocity.addProductVec3(j, r, -fc*mass[i]*dt*.5);
 			}
 		}
 
@@ -58,28 +61,32 @@ class Leapfrog extends NBodySimulator{
 
 	@:noStack
 	inline function stepDKD(){
-		//Each-Body Drift
-		for(i in 0...bodies.length){
-			A = bodies[i];
-			A.p.addProduct(A.v, dt*0.5);
+		var d          : Float;
+		var dSq        : Float;
+		var fc         : Float;
+		for (i in 0...bodyCount){
+			//Each-Body Drift
+			position.addFn(i, inline function(k) return
+				velocity.get(i,k)*dt*.5
+			);
 		}
-
-		for(i in 0...bodies.length){
-			A = bodies[i];
-
-			//Pairwise Kick
-			for(j in i+1...bodies.length){
-				B = bodies[j];	
-
-				accelerationsDueToGravity(A, B); 
-
-				//Find change in velocity over half a timestep
-				A.v.addProduct(r, accelA*dt);
-				B.v.addProduct(r, accelB*dt);
+		for (i in 0...bodyCount){
+			//Pairwise kick
+			for (j in i+1...bodyCount) {
+				position.difference(i, j, r);
+				dSq  = r.lengthSquared();
+				d    = Math.sqrt(dSq);
+				fc   = G / dSq;
+				//Normalize r
+				r *= 1/d;
+				velocity.addProductVec3(i, r, fc*mass[j]*dt);
+				velocity.addProductVec3(j, r, -fc*mass[i]*dt);
 			}
 
 			//Each-Body Drift
-			A.p.addProduct(A.v, dt*0.5);
+			position.addFn(i, inline function(k) return
+				velocity.get(i,k)*dt*.5
+			);
 		}
 
 		time+=dt;

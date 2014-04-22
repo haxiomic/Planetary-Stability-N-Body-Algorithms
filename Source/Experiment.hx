@@ -41,26 +41,6 @@ class Experiment{
 		return added;
 	}
 
-	public function restart(){
-		return;
-		simulator.clear();//#! not fully implemented
-
-		for(bd in this.bodies){
-			simulator.addBody(new Body(bd.position.clone(), bd.velocity.clone(), bd.mass));
-		}
-
-		//reset related variables
-		algorithmStartTime = 0;
-		algorithmEndTime = 0;
-		initalEnergy = 0;
-		currentEnergy = 0;
-		timeStart = 0;
-		timeEnd = 0;
-		time = 0;
-		i = 0;
-		results = null;
-	}
-
 	//Read-only simulation variables
 	//data
 	//algorithm runtime
@@ -147,6 +127,27 @@ class Experiment{
 		results.cpuTime = (algorithmEndTime - algorithmStartTime);
 		return results;
 	}
+
+	
+	/*public function restart(){
+		return;
+		simulator.clear();//#! not fully implemented
+
+		for(bd in this.bodies){
+			simulator.addBody(new Body(bd.position.clone(), bd.velocity.clone(), bd.mass));
+		}
+
+		//reset related variables
+		algorithmStartTime = 0;
+		algorithmEndTime = 0;
+		initalEnergy = 0;
+		currentEnergy = 0;
+		timeStart = 0;
+		timeEnd = 0;
+		time = 0;
+		i = 0;
+		results = null;
+	}*/
 
 	public function get_information():ExperimentInformation{
 		return {
