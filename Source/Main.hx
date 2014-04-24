@@ -10,6 +10,8 @@ import simulator.Hermite4thOrder;
 import simulator.Leapfrog;
 import simulator.EulerMethod;
 
+// import simulator.LeapfrogAdaptiveRecursion;
+import simulator.LeapfrogAdaptiveSweep;
 import simulator.NBodySimulator;
 import sysUtils.compileTime.Build;
 import sysUtils.compileTime.Git;
@@ -64,14 +66,14 @@ class Main {
 		var timescale:Float = 10000*365.0;
 		var analysisCount = 200;
 
-		var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x00FF00);
-		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
-		var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
-		//var exp = basicTest(simulator.LeapfrogAdaptive, dt, timescale, analysisCount, 0xFF0000);
-		// var leapfrogSweep = basicTest(new Experiment(simulator.LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFFFFFF);
+		//var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x00FF00);
+		//var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
+		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
+	  	// var leapfrogRecursion = basicTest(new Experiment(LeapfrogAdaptiveRecursion, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFF0000);
+		var leapfrogSweep = basicTest(new Experiment(LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFFFFFF);
 
 		sysUtils.Console.suppress = true;
-		//visualize(verlet);
+		visualize(leapfrogSweep);
 	}
 
 	function visualize(exp:Experiment){

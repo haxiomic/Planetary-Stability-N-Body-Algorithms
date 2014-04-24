@@ -5,7 +5,7 @@ import math.ExtendedMath;
 import simulator.Body;
 import simulator.NBodySimulator;
 
-class LeapfrogAdaptive extends NBodySimulator{
+class LeapfrogAdaptiveRecursion extends NBodySimulator{
 	var max_dt:Float;
 	var min_dt:Float;
 
@@ -13,21 +13,20 @@ class LeapfrogAdaptive extends NBodySimulator{
 
 	var currentBaseSS:Int;
 
-	var bodyCount:Int = 0;
 	var positions:Array<Vec3>;
 	var velocities:Array<Vec3>;
 	var accelerations:Array<Vec3>;
 	var masses:Array<Float>;
 	var timesteps:Array<Float>;
 
-	public function new(G:Float, max_dt:Float){
+	public function new(G:Float, max_dt:Float, min_dt:Float = 0){
 		super(G);
 		initalize();
 
 		this.algorithmName = "Leapfrog Adaptive";
 		this.algorithmDetails = "WIP: time-symmetric adaptive timestep leapfrog";
 
-		this.max_dt = (1<<3);
+		this.max_dt = (1<<8);
 		this.min_dt = 1;
 
 		this.max_k = Math.ceil(this.max_dt/this.min_dt);

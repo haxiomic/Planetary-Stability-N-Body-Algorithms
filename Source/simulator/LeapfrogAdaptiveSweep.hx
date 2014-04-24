@@ -47,7 +47,7 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 		//if(bodies.length == 1)AAd.ss = 8;
 		switch(bodies.length){
 			case 1:
-				AAd.ss = 128;
+				AAd.ss = 32;
 			case 2:
 				AAd.ss = 32;
 			case 3:
@@ -55,7 +55,7 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 			case 4:
 				AAd.ss = 128;
 			case 5:
-				AAd.ss = 256;
+				AAd.ss = 128;
 		}
 		trace(AAd.ss);
 		if(AAd.ss<currentBaseSS)currentBaseSS = AAd.ss;
@@ -63,11 +63,16 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 		return A;
 	}
 
+	override public function prepare(){
+		super.prepare();
+	}
+
 	var s:Int = 0;//step count
 	@:noStack 
 	override function step(){
 		newBaseSS = max_s;
 
+		//Open
 		// sysUtils.Console.newLine();
 		// sysUtils.Console.print("Drift:"+s);
 		//Drift dt*.5
@@ -116,20 +121,29 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 			}
 		}
 
+		//Find smallest stepsize
+		for (i in 0...bodies.length) {
+			AAd = untyped bodies[i];
+			//Update smallest step size
+			if(AAd.ss<newBaseSS)newBaseSS = AAd.ss;
+		}
+
+		//Close
+		// sysUtils.Console.newLine();
+		// sysUtils.Console.print("Close:"+s+"pt 2");
 		//Drift dt*.5
 		for (i in 0...bodies.length) {
 			AAd = untyped bodies[i]; 
 			//is it time to step body? (Continue if not)
-			if((s)%AAd.ss!=0)continue;
+			if(Std.int(s+newBaseSS)%AAd.ss!=0)continue;
 
 			dt = dtForSS(AAd.ss);
+
+			// sysUtils.Console.print("A"+i+" ss:"+AAd.ss);
 
 			//Each-Body Drift
 			AAd.p.addProduct(AAd.v, dt*.5);
 			AAd.t += dt*.5;
-
-			//Update smallest step size
-			if(AAd.ss<newBaseSS)newBaseSS = AAd.ss;
 		}
 
 		//order so that 0 has smallest timestep and the last has the longest
@@ -161,12 +175,7 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 	}
 
 	inline function predictAccelerationsDueToGravity(A:BodyAdaptive, B:BodyAdaptive, B_dt:Float){
-		//Distance vector and its magnitudes
-		predictedBPosition.x = B.x + B.vx*B_dt;// + 0.5*B.ax*B_dt*B_dt;
-		predictedBPosition.y = B.y + B.vy*B_dt;// + 0.5*B.ay*B_dt*B_dt;
-		predictedBPosition.z = B.z + B.vz*B_dt;// + 0.5*B.az*B_dt*B_dt;
-
-		Vec3.difference(A.p, predictedBPosition, r);
+		Vec3.difference(A.p, B.p, r);
 		dSq = r.lengthSquared();
 		d = Math.sqrt(dSq);
 		//Normalize r
@@ -176,7 +185,6 @@ class LeapfrogAdaptiveSweep extends NBodySimulator{
 		//Acceleration on A & B
 		accelA = fc*B.m;
 		accelB = -fc*A.m;
-
 	}var predictedBPosition:Vec3 = new Vec3();
 
 	inline function updateAccelerations(){

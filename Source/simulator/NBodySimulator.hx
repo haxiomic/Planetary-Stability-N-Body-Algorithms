@@ -61,7 +61,6 @@ class NBodySimulator {
 	public function step(){}
 	var A:Body;var B:Body;//#! remove
 
-	//#! replace
 	public inline function totalEnergy():Float{
 		var E:Float = 0, d:Float;
 		var k:Float = 0;
