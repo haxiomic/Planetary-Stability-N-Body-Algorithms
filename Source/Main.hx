@@ -58,25 +58,22 @@ class Main {
 
 			experimentSummaryLog(r);
 
-			//saveExperiment(exp, exp.name+", dt="+dt);
+			saveExperiment(exp, exp.name+", dt="+dt);
 			Console.newLine();
 			return exp;
 		}
 
-		var dt = 60;
-		var timescale:Float = 100000*365.0;
+		var timescale:Float = 10000*365.0;
 		var analysisCount = 200;
 
-		//var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x00FF00);
-		//var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
-		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
-		var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D]), dt, timescale, analysisCount, 0x00FF00);
-	  	// var leapfrogRecursion = basicTest(new Experiment(LeapfrogAdaptiveRecursion, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFF0000);
-		//var leapfrogSweep = basicTest(new Experiment(LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFFFFFF);
+		//var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, 20]), 20, timescale, analysisCount, 0x00FF00);
+		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, 10]), 10, timescale, analysisCount, 0xFF0000);
+		var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, 5, 0.02]), 30, timescale, analysisCount, 0x00FF00);
+		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, 60]), 60, timescale, analysisCount, 0x0000FF);
 
 		sysUtils.Console.suppress = true;
-		//visualize(leapfrogAdaptive);
-		exit();
+		visualize(leapfrogAdaptive);
+		//exit();
 	}
 
 	function visualize(exp:Experiment){
@@ -93,7 +90,10 @@ class Main {
 	/* --- Planetary System Schemes --- */
 	function addSolarSystem(exp:Experiment, ?c:Int){
 		var sun:Body = exp.addBody(SolarBodyData.sun);
-		//var earth:Body = exp.addBody(SolarBodyData.earth);
+		exp.addBody(SolarBodyData.mercury);
+		exp.addBody(SolarBodyData.venus);
+		var earth:Body = exp.addBody(SolarBodyData.earth);
+		exp.addBody(SolarBodyData.mars);
 		var jupiter:Body = exp.addBody(SolarBodyData.jupiter);
 		var saturn:Body = exp.addBody(SolarBodyData.saturn);
 		var uranus:Body = exp.addBody(SolarBodyData.uranus);
