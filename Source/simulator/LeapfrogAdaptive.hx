@@ -70,7 +70,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 			//Select
 			var ssNew;
 			if(i == mostMassiveIndex){
-				ssNew = lastSmallest;
+				ssNew = 16;
 				stepSize[i] = ssNew;
 			}else{
 				ssNew = pickSS(i);

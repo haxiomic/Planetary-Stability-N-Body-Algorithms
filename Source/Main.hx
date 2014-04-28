@@ -38,12 +38,12 @@ class Main {
 		renderer = new BasicRenderer();
 		
 		//Basic Test
-		function basicTest(exp:Experiment, dt:Float = 5, timescale:Float = 1000, analysisCount:Int = 100, ?c:Int){
+		function basicTest(exp:Experiment, dt:Float = 5, timescale:Float = 1000, analysisCount:Int = 100){
 			Console.printStatement(exp.simulator.algorithmName);
 			Console.print(exp.simulator.params);
 
 			//add bodies
-			addSolarSystem(exp, c);
+			addSolarSystem(exp);
 
 			//set experiment conditions
 			exp.timescale = timescale;
@@ -58,29 +58,46 @@ class Main {
 
 			experimentSummaryLog(r);
 
-			saveExperiment(exp, exp.name+", dt="+dt);
+			//saveExperiment(exp, exp.name+", dt="+dt);
 			Console.newLine();
 			return exp;
 		}
 
-		var timescale:Float = 10000*365.0;
-		var analysisCount = 200;
+		var timescale:Float = 500000*365.0;
 
 		//var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, 20]), 20, timescale, analysisCount, 0x00FF00);
-		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, 10]), 10, timescale, analysisCount, 0xFF0000);
-		var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, 5, 0.02]), 30, timescale, analysisCount, 0x00FF00);
+		var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, 1, 0.03]), 30, timescale, 50);
+		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, 16]), 16, timescale, 300);
 		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, 60]), 60, timescale, analysisCount, 0x0000FF);
 
 		sysUtils.Console.suppress = true;
-		visualize(leapfrogAdaptive);
+
+		var exp = leapfrog;
+		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFF0000);
+		exp = leapfrogAdaptive;
+		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0x00FF00);
+		
+		var loopTime = 5;
+		var currTime = 0;
+		renderer.preRenderCallback = inline function(){
+			var exp = leapfrog;
+
+			while(exp.simulator.time<currTime+loopTime)
+				exp.simulator.step();	
+
+			var exp = leapfrogAdaptive;
+			while(exp.simulator.time<currTime+loopTime)
+				exp.simulator.step();
+
+			currTime+=loopTime;
+		}
+		renderer.startAutoRender();
+		//visualize(leapfrogAdaptive);
 		//exit();
 	}
 
 	function visualize(exp:Experiment){
-		exp.simulator.bodies;
-		for (b in exp.simulator.bodies) {
-			renderer.addBody(b, 0.5, 0xFFFFFF);
-		}
+		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFFFFFF);
 		renderer.preRenderCallback = inline function(){
 			exp.simulator.step();	
 		}
@@ -88,19 +105,19 @@ class Main {
 	}
 
 	/* --- Planetary System Schemes --- */
-	function addSolarSystem(exp:Experiment, ?c:Int){
+	function addSolarSystem(exp:Experiment){
 		var sun:Body = exp.addBody(SolarBodyData.sun);
-		exp.addBody(SolarBodyData.mercury);
-		exp.addBody(SolarBodyData.venus);
-		var earth:Body = exp.addBody(SolarBodyData.earth);
-		exp.addBody(SolarBodyData.mars);
+		//exp.addBody(SolarBodyData.mercury);
+		//exp.addBody(SolarBodyData.venus);
+		//exp.addBody(SolarBodyData.earth);
+		//exp.addBody(SolarBodyData.mars);
 		var jupiter:Body = exp.addBody(SolarBodyData.jupiter);
 		var saturn:Body = exp.addBody(SolarBodyData.saturn);
 		var uranus:Body = exp.addBody(SolarBodyData.uranus);
 		var neptune:Body = exp.addBody(SolarBodyData.neptune);
 	}
 
-	function addTwoBodyEccentricOrbit(exp:Experiment, ?c:Int){
+	function addTwoBodyEccentricOrbit(exp:Experiment){
 		var sunData:BodyDatum = {
 			name: "Sun",
 			position: {x:0, y:0, z:0},
