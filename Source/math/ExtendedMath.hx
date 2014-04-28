@@ -2,8 +2,8 @@ package math;
 
 class ExtendedMath {
 	static public inline function log2(x:UInt):Int{
-		br = 0;
+		var br = 0;
 		while((x >>= 1) > 0) ++br;
 		return br;
-	}static var br:Int;
+	}
 }

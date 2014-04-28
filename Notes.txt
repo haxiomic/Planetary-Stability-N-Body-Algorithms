@@ -3,9 +3,10 @@ Currently building with:
 
 ---- Notes ----
 TODO
+- AdaptiveTimestep velocity can probably be set from acceleration with addFn in each body part of kick, minor improvement
+- Orbital params, eccentricity and whatnot
 - Better constants
 - VPointer should be using unsafe calls
-- Orbital params, eccentricity and whatnot
 https://code.google.com/p/hattrick-nbody/source/browse/trunk/src/Planets.cc
 
 

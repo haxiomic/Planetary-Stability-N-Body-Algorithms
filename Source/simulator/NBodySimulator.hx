@@ -7,18 +7,19 @@ import geom.VPointer;
 import simulator.Body;
 
 class NBodySimulator {
-	public var algorithmName(default, null):String = "";
-	public var algorithmDetails(default, null):String = "";
-	public var params(get, null):Dynamic;
+	public var algorithmName(default, null)    : String = "";
+	public var algorithmDetails(default, null) : String = "";
+	public var params(get, null)               : Dynamic;
 
 	public var bodies:Array<Body> = new Array<Body>();
-	var position        : FlatVec3Array;
-	var velocity        : FlatVec3Array;
-	var mass            : Vector<Float>;
 
 	public var time(default, null):Float = 0;
 
 	public var G:Float;
+
+	var position        : FlatVec3Array;
+	var velocity        : FlatVec3Array;
+	var mass            : Vector<Float>;
 
 	var bodyCount:Int = 0;
 	var totalMass:Float;

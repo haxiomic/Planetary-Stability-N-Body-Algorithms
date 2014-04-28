@@ -38,7 +38,7 @@ class Hermite4thOrder extends NBodySimulator{
 	}
 
 	@:noStack 
-	override function step(){
+	override public function step(){
 		for(i in 0...bodyCount*3){
 			oldPosition[i] = position[i];
 			oldVelocity[i] = velocity[i];

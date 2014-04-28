@@ -13,7 +13,7 @@ class Leapfrog extends NBodySimulator{
 	}
 
 	@:noStack 
-	override function step(){
+	override public function step(){
 		stepDKD();
 	}
 

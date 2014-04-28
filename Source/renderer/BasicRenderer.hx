@@ -15,7 +15,7 @@ class BasicRenderer {
 
 	var bodyData:Map<Body, BodyRenderData>;
 
-	var lengthConversion:Float = 50; //how many pixels for each sim unit
+	var lengthConversion:Float = 10; //how many pixels for each sim unit
 
 	public var preRenderCallback:Void->Void;
 
