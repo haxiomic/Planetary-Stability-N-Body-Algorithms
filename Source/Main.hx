@@ -63,17 +63,17 @@ class Main {
 		}
 
 		var dt = 30;
-		var timescale:Float = 10000*365.0;
+		var timescale:Float = 100000*365.0;
 		var analysisCount = 200;
 
-		//var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x00FF00);
-		//var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
-		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
+		var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x00FF00);
+		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0xFF0000);
+		var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]), dt, timescale, analysisCount, 0x0000FF);
 	  	// var leapfrogRecursion = basicTest(new Experiment(LeapfrogAdaptiveRecursion, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFF0000);
-		var leapfrogSweep = basicTest(new Experiment(LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFFFFFF);
+		//var leapfrogSweep = basicTest(new Experiment(LeapfrogAdaptiveSweep, [Constants.G_AU_kg_D, (1<<8), 1]), 1, timescale, analysisCount, 0xFFFFFF);
 
 		sysUtils.Console.suppress = true;
-		visualize(leapfrogSweep);
+		//visualize(leapfrogSweep);
 	}
 
 	function visualize(exp:Experiment){
