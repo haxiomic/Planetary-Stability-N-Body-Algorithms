@@ -1,11 +1,8 @@
 package simulator;
 
-import geom.VPointer;
-import simulator.Body;
-import simulator.NBodySimulator;
 import geom.Vec3;
 import geom.FlatVec3Array;
-import haxe.ds.Vector;
+import simulator.NBodySimulator;
 
 class Hermite4thOrder extends NBodySimulator{
 	public var dt:Float;
@@ -57,19 +54,19 @@ class Hermite4thOrder extends NBodySimulator{
 	
 	@:noStack
 	inline function predict(){
-			for (i in 0...bodyCount){
-				//x1 = x0 + v*dt + (1/2)a*dt^2 + (1/6)j*dt^3
-				position.addFn(i, inline function(k) return
-					velocity.get(i, k)*dt +
-					acceleration.get(i, k)*dt*dt/2 + 
-					jerk.get(i, k)*dt*dt*dt/6
-				);
-				//v1 = v0 + a*dt + (1/2)j*dt^2
-				velocity.addFn(i, inline function(k) return
-					acceleration.get(i, k)*dt +
-					jerk.get(i, k)*dt*dt/2
-				);
-			}
+		for (i in 0...bodyCount){
+			//x1 = x0 + v*dt + (1/2)a*dt^2 + (1/6)j*dt^3
+			position.addFn(i, inline function(k) return
+				velocity.get(i, k)*dt +
+				acceleration.get(i, k)*dt*dt/2 + 
+				jerk.get(i, k)*dt*dt*dt/6
+			);
+			//v1 = v0 + a*dt + (1/2)j*dt^2
+			velocity.addFn(i, inline function(k) return
+				acceleration.get(i, k)*dt +
+				jerk.get(i, k)*dt*dt/2
+			);
+		}
 	}
 	
 	@:noStack
@@ -125,15 +122,13 @@ class Hermite4thOrder extends NBodySimulator{
 					-fcj*mass[i]*((dv[k] - 3*dvDotR_dSq*r[k]))
 				);
 
-				//Normalize r
-				r *= 1/d;
+				r *= 1/d;//normalize
+				
 				acceleration.addProductVec3(i, r, fc*mass[j]);
 				acceleration.addProductVec3(j, r, -fc*mass[i]);
 			}
 		}
-	}
-	//Object pool
-	var dv:Vec3 = new Vec3();
+	}var dv:Vec3 = new Vec3();//Object pool
 
 
 	override function get_params():Dynamic{

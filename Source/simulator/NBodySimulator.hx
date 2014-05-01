@@ -60,7 +60,7 @@ class NBodySimulator {
 	}
 
 	public function step(){}
-	var A:Body;var B:Body;//#! remove
+	var r:Vec3 = new Vec3();
 
 	public inline function totalEnergy():Float{
 		var E:Float = 0, d:Float;
@@ -79,29 +79,5 @@ class NBodySimulator {
 		return E;
 	}
 
-	//reconsider
-	//sets variables
-	var r:Vec3 = new Vec3();
-	var d:Float;
-	var dSq:Float;
-	var fc:Float;
-	var accelA:Float;var accelB:Float;
-	private inline function accelerationsDueToGravity(A:Body, B:Body){
-		//Distance vector and its magnitudes
-		Vec3.difference(A.p, B.p, r);
-		dSq = r.lengthSquared();
-		d = Math.sqrt(dSq);
-		//Normalize r
-		r *= 1/d;
-		//Force factor
-		fc = 1 * G / dSq;
-		//Acceleration on A & B
-		accelA = fc*B.m;
-		accelB = -fc*A.m;
-	}
-
-
-	private function get_params():Dynamic{
-		return {};
-	}
+	private function get_params():Dynamic return {};
 }

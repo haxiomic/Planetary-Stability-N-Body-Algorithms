@@ -6,18 +6,8 @@ import renderer.*;
 import Experiment.ExperimentResults;
 import Experiment.ExperimentInformation;
 
-import simulator.Hermite4thOrder;
-import simulator.Leapfrog;
-import simulator.EulerMethod;
-
-// import simulator.LeapfrogAdaptiveRecursion;
-import simulator.LeapfrogAdaptive;
-import simulator.LeapfrogAdaptiveSweep;
-import simulator.NBodySimulator;
-import sysUtils.compileTime.Build;
-import sysUtils.compileTime.Git;
-import sysUtils.Console;
-import sysUtils.FileTools;
+import sysUtils.compileTime.*;
+import sysUtils.*;
 
 using sysUtils.Escape;
 
@@ -63,16 +53,34 @@ class Main {
 			return exp;
 		}
 
-		var timescale:Float = 500000*365.0;
-
 		//var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, 20]), 20, timescale, analysisCount, 0x00FF00);
-		var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, 1, 0.03]), 30, timescale, 50);
-		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, 16]), 16, timescale, 300);
+		//var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, 1, 0.03]), 30, timescale, 50);
+		//var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, 16]), 16, timescale, 300);
 		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, 60]), 60, timescale, analysisCount, 0x0000FF);
+
+
+		var timescale:Float = 10000*365.0;
+		var analysisCount = 400;
+		var dt = 20;
+
+		var taylor1 = basicTest(new Experiment(Taylor2ndDerivative, [Constants.G_AU_kg_D, dt]),
+			dt, timescale, analysisCount);
+		var taylor3 = basicTest(new Experiment(Taylor3rdDerivative, [Constants.G_AU_kg_D, dt]),
+			dt, timescale, analysisCount);
+		var semiImplicitEuler = basicTest(new Experiment(SemiImplicitEulerMethod, [Constants.G_AU_kg_D, dt]),
+			dt, timescale, analysisCount);
+		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]),
+			dt, timescale, analysisCount);
+		var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, 1, 0.032]),
+			30, timescale, 200);
+		var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]),
+			dt, timescale, analysisCount);				
 
 		sysUtils.Console.suppress = true;
 
-		var exp = leapfrog;
+		visualize(leapfrogAdaptive);
+
+		/*var exp = leapfrog;
 		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFF0000);
 		exp = leapfrogAdaptive;
 		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0x00FF00);
@@ -91,8 +99,8 @@ class Main {
 
 			currTime+=loopTime;
 		}
-		renderer.startAutoRender();
-		//visualize(leapfrogAdaptive);
+		renderer.startAutoRender();*/
+		
 		//exit();
 	}
 

@@ -49,7 +49,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 	}
 
 	var s:Int = 0;//current step
-	var lastSmallest:Int = 1;
+	var prevSmallestSS = 1;
 	@:noStack
 	override function step(){
 		var smallestSS = maxSS;
@@ -59,8 +59,9 @@ class LeapfrogAdaptive extends NBodySimulator{
 		//Open
 		for (i in 0...bodyCount){
 			var ssOld = stepSize[i];
-			var dtOld = dtFromSS(ssOld);
 			if(s % ssOld != 0) continue;//continue if it's not time to step body
+
+			var dtOld = dtFromSS(ssOld);
 
 			//drift forward
 			position.addFn(i, inline function(k) return
@@ -74,7 +75,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 				stepSize[i] = ssNew;
 			}else{
 				ssNew = pickSS(i);
-				if(s % ssNew == 0){//both bodies are 'closed' - step size can only change at points of synchronization
+				if(s % ssNew == 0 && ssNew != ssOld){//both bodies are 'closed' - step size can only change at points of synchronization
 					stepSize[i] = ssNew;
 
 					//correct position
@@ -97,10 +98,8 @@ class LeapfrogAdaptive extends NBodySimulator{
 		if(reorder)orderedIndicies.sort(ssAscending);
 
 		//Pairwise kick, from smallest to largest step size
-		var d          : Float;
 		var dSq        : Float;
 		var fc         : Float;
-		//reset acceleration
 		for (k in 0...bodyCount) {
 			var i = orderedIndicies[k];
 			if(s % stepSize[i] != 0) continue;//continue if it's not time to step body
@@ -112,9 +111,8 @@ class LeapfrogAdaptive extends NBodySimulator{
 
 				position.difference(i, j, r);
 				dSq  = r.lengthSquared();
-				d    = Math.sqrt(dSq);
 				fc   = G / dSq;
-				r *= 1/d;//normalize r
+				r *= 1/Math.sqrt(dSq);//normalize
 
 				velocity.addProductVec3(i, r,  fc*mass[j]*dt);
 				velocity.addProductVec3(j, r, -fc*mass[i]*dt);
@@ -135,8 +133,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 		time += dtFromSS(smallestSS);
 		s += smallestSS;
 		s = s%maxSS;//wrap around
-
-		lastSmallest = smallestSS;
+		prevSmallestSS  = smallestSS;
 	}
 
 	@:noStack
@@ -145,6 +142,7 @@ class LeapfrogAdaptive extends NBodySimulator{
 		var dCu     : Float;
 		var idealDt : Float;
 		var idealSS : Float;
+
 		position.difference(i, mostMassiveIndex, r);
 		dSq = r.lengthSquared();
 		dCu = dSq*Math.sqrt(dSq);
@@ -152,12 +150,12 @@ class LeapfrogAdaptive extends NBodySimulator{
 
 		idealSS = idealDt/dtBase;
 
-		return idealSS < maxSS ? base2Foor(idealSS) : maxSS;
+		return idealSS < maxSS ? floorBase2(idealSS) : maxSS;
 	}
 
 	inline function dtFromSS(ss:Int):Float return ss*dtBase;
 
-	inline function base2Foor(x:Float):Int{
+	inline function floorBase2(x:Float):Int{
 		var br:Int = 0;
 		var y:Int = Std.int(x);
 		while((y >>= 1) > 0) ++br;

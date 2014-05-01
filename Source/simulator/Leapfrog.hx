@@ -19,7 +19,6 @@ class Leapfrog extends NBodySimulator{
 
 	@:noStack
 	inline function stepKDK(){
-		var d          : Float;
 		var dSq        : Float;
 		var fc         : Float;
 		for (i in 0...bodyCount){
@@ -27,10 +26,9 @@ class Leapfrog extends NBodySimulator{
 			for (j in i+1...bodyCount) {
 				position.difference(i, j, r);
 				dSq  = r.lengthSquared();
-				d    = Math.sqrt(dSq);
 				fc   = G / dSq;
-				//Normalize r
-				r *= 1/d;
+				r *= 1/Math.sqrt(dSq);//normalize
+
 				velocity.addProductVec3(i, r, fc*mass[j]*dt*.5);
 				velocity.addProductVec3(j, r, -fc*mass[i]*dt*.5);
 			}
@@ -46,10 +44,9 @@ class Leapfrog extends NBodySimulator{
 			for (j in i+1...bodyCount) {
 				position.difference(i, j, r);
 				dSq  = r.lengthSquared();
-				d    = Math.sqrt(dSq);
 				fc   = G / dSq;
-				//Normalize r
-				r *= 1/d;
+				r *= 1/Math.sqrt(dSq);//normalize
+
 				velocity.addProductVec3(i, r, fc*mass[j]*dt*.5);
 				velocity.addProductVec3(j, r, -fc*mass[i]*dt*.5);
 			}
@@ -61,7 +58,6 @@ class Leapfrog extends NBodySimulator{
 
 	@:noStack
 	inline function stepDKD(){
-		var d          : Float;
 		var dSq        : Float;
 		var fc         : Float;
 		for (i in 0...bodyCount){
@@ -75,10 +71,9 @@ class Leapfrog extends NBodySimulator{
 			for (j in i+1...bodyCount) {
 				position.difference(i, j, r);
 				dSq  = r.lengthSquared();
-				d    = Math.sqrt(dSq);
 				fc   = G / dSq;
-				//Normalize r
-				r *= 1/d;
+				r *= 1/Math.sqrt(dSq);//normalize
+				
 				velocity.addProductVec3(i, r, fc*mass[j]*dt);
 				velocity.addProductVec3(j, r, -fc*mass[i]*dt);
 			}
