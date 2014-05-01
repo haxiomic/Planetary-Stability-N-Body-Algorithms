@@ -94,7 +94,7 @@ class Hermite4thOrder extends NBodySimulator{
 		var dvDotR_dSq : Float;
 		var fc         : Float;
 		var fcj        : Float;
-		//reset accelerations and jerks
+		//Reset accelerations and jerks
 		for (i in 0...bodyCount){
 			acceleration.zero(i); 
 			jerk.zero(i);
