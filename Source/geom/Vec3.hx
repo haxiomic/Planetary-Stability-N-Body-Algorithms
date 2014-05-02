@@ -205,6 +205,13 @@ abstract Vec3(Data) from Data to Data{
 
 	
 	//------- Static Methods -------//
+	static public inline function cross(a:Vec3, b:Vec3, R:Vec3):Vec3{
+		R.x = a.y * b.z - a.z * b.y;
+		R.y = a.z * b.x - a.x * b.z;
+		R.z = a.x * b.y - a.y * b.x;
+		return R;
+	}
+
 	static public inline function difference(a:Vec3, b:Vec3, R:Vec3):Vec3{//store result in r
 		R.x = b.x - a.x;
 		R.y = b.y - a.y;

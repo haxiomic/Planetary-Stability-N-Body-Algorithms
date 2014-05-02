@@ -169,7 +169,7 @@ class LeapfrogAdaptive extends Simulator{
 		return {
 			minimumTimestep:dtBase,
 			accuracyParameter:accuracyParameter,
-			maxStepSize:maxSS,
+			maxStepSize:dtFromSS(maxSS),
 		};
 	}	
 }

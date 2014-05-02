@@ -1,5 +1,6 @@
 package;
 
+import geom.Vec3;
 import haxe.ds.Vector;
 
 import simulator.Body;
@@ -83,7 +84,6 @@ class Experiment{
 		analysis["Time"] = new Array<Float>();
 		analysis["Energy Error"] = new Array<Float>();
 
-
 		results = {
 			totalIterations: 0,
 			cpuTime: 0,
@@ -128,26 +128,48 @@ class Experiment{
 		return results;
 	}
 
-	
-	/*public function restart(){
-		return;
-		simulator.clear();//#! not fully implemented
+	public function kepler(){
+		//Loop through bodies, find eccentricity and semi-major axis
+		//'Osculating' - ignore perturbations
+		var semiMajorArray = new Array<Float>();
+		var eccentricityArray = new Array<Float>();
+		
+		var mostMassiveBody:Body = simulator.bodies[0];
+		for (A in simulator.bodies)
+			if(A.m > mostMassiveBody.m)mostMassiveBody = A;
 
-		for(bd in this.bodies){
-			simulator.addBody(new Body(bd.position.clone(), bd.velocity.clone(), bd.mass));
+		for (i in 0...simulator.bodies.length) {
+			var A = simulator.bodies[i];
+			if(A==mostMassiveBody){
+				semiMajorArray[i] = 0;
+				continue;
+			}
+
+			Vec3.difference(A.p, mostMassiveBody.p, r);
+			var r_COM:Float = r.length();
+
+			//find gravitational parameter, u:
+			var M_r:Float = A.m;//mass within r_COM
+			for (B in simulator.bodies) {
+				if(A==B)continue;
+				if(Vec3.distance(B.p, mostMassiveBody.p) < r_COM)
+					M_r += B.m;
+			}
+			var u = simulator.G * M_r;
+
+			var v = A.v.length();
+			var semiMajor:Float = 1/(2/r_COM - v*v/u);
+
+			var hSq:Float = Vec3.cross(r, A.v, L).lengthSquared();
+			var eccentricity = Math.sqrt(1 - hSq/(semiMajor*u));
+
+			semiMajorArray[i] = semiMajor;
+			eccentricityArray[i] = eccentricity;
 		}
-
-		//reset related variables
-		algorithmStartTime = 0;
-		algorithmEndTime = 0;
-		initalEnergy = 0;
-		currentEnergy = 0;
-		timeStart = 0;
-		timeEnd = 0;
-		time = 0;
-		i = 0;
-		results = null;
-	}*/
+		trace(eccentricityArray);
+	}
+	var r:Vec3 = new Vec3();
+	var L:Vec3 = new Vec3();
 
 	public function get_information():ExperimentInformation{
 		return {
@@ -161,13 +183,8 @@ class Experiment{
 		}
 	}
 
-	private function set_timescale(v:Float):Float{
-		return timescale = v;
-	}
-
-	private function set_analysisInterval(v:Int):Int{
-		return analysisInterval = v;
-	}
+	function set_timescale(v:Float):Float return timescale = v;
+	function set_analysisInterval(v:Int):Int return analysisInterval = v;
 }
 
 typedef ExperimentResults = {

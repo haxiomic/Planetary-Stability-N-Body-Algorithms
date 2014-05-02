@@ -52,7 +52,7 @@ class Main {
 		}
 
 
-		var timescale:Float = 100000*365.0;
+		var timescale:Float = 10000*365.0;
 		var analysisCount = 400;
 		var dt = 20;
 
@@ -72,7 +72,7 @@ class Main {
 
 		sysUtils.Console.suppress = true;
 
-		visualize(leapfrogAdaptive);
+		visualize(leapfrog);
 
 		/*var exp = leapfrog;
 		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFF0000);
@@ -100,9 +100,7 @@ class Main {
 
 	function visualize(exp:Experiment){
 		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFFFFFF);
-		renderer.preRenderCallback = inline function(){
-			exp.simulator.step();	
-		}
+		renderer.preRenderCallback = inline function() exp.simulator.step();	
 		renderer.startAutoRender();
 	}
 
@@ -222,5 +220,5 @@ class Main {
 	inline function exit(?code:Int)
 		Sys.exit((code==null ? 0 : code));//return successful if code == null
 
-	static function main(){new Main();}
+	static function main() new Main();
 }
