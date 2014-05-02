@@ -3,14 +3,14 @@ package;
 import haxe.ds.Vector;
 
 import simulator.Body;
-import simulator.NBodySimulator;
+import simulator.Simulator;
 import BodyDatum;
 import sysUtils.Console;
 
 class Experiment{
 
 	public var name:String = "";
-	public var simulator:NBodySimulator;
+	public var simulator:Simulator;
 	public var bodies(default, null):Array<BodyDatum>;
 
 	//Experiment input params

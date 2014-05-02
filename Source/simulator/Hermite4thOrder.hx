@@ -2,9 +2,9 @@ package simulator;
 
 import geom.Vec3;
 import geom.FlatVec3Array;
-import simulator.NBodySimulator;
+import simulator.Simulator;
 
-class Hermite4thOrder extends NBodySimulator{
+class Hermite4thOrder extends Simulator{
 	public var dt:Float;
 
 	var acceleration    : FlatVec3Array;

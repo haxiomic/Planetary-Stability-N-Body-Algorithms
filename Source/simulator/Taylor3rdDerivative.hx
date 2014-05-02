@@ -2,9 +2,9 @@ package simulator;
 
 import geom.Vec3;
 import geom.FlatVec3Array;
-import simulator.NBodySimulator;
+import simulator.Simulator;
 
-class Taylor3rdDerivative extends NBodySimulator {
+class Taylor3rdDerivative extends Simulator {
 	public var dt:Float;
 
 	var acceleration : FlatVec3Array;

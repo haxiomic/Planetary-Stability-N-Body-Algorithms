@@ -3,7 +3,7 @@ package simulator;
 import geom.FlatVec3Array;
 import haxe.ds.Vector;
 
-class LeapfrogAdaptive extends NBodySimulator{
+class LeapfrogAdaptive extends Simulator{
 
 	var acceleration:FlatVec3Array;
 	var stepSize:Vector<Int>;

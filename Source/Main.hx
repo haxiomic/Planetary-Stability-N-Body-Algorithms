@@ -9,8 +9,6 @@ import Experiment.ExperimentInformation;
 import sysUtils.compileTime.*;
 import sysUtils.*;
 
-using sysUtils.Escape;
-
 class Main {
 	var renderer:BasicRenderer;
 
@@ -59,7 +57,7 @@ class Main {
 		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, 60]), 60, timescale, analysisCount, 0x0000FF);
 
 
-		var timescale:Float = 10000*365.0;
+		var timescale:Float = 100000*365.0;
 		var analysisCount = 400;
 		var dt = 20;
 
@@ -73,6 +71,7 @@ class Main {
 			dt, timescale, analysisCount);
 		var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, 1, 0.032]),
 			30, timescale, 200);
+		dt = 80;
 		var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]),
 			dt, timescale, analysisCount);				
 

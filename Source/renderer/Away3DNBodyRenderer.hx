@@ -25,7 +25,7 @@ import flash.geom.Vector3D;
 
 import flash.Vector;
 import simulator.Body;
-import simulator.NBodySimulator;
+import simulator.Simulator;
 
 class Away3DNBodyRenderer {
 	static inline public var displayUnitsPerSimulationUnitLength = 300;
@@ -33,7 +33,7 @@ class Away3DNBodyRenderer {
 
 	public var stage:Stage;
 
-	public var simulator:NBodySimulator;
+	public var simulator:Simulator;
 
 	private var renderables:Array<IUpdateable>;
 

@@ -1,14 +1,14 @@
 package simulator;
 
-import simulator.NBodySimulator;
+import simulator.Simulator;
 
-class Leapfrog extends NBodySimulator{
+class Leapfrog extends Simulator{
 	public var dt:Float;
 
 	public function new(G:Float, dt:Float){
 		super(G);
 		this.algorithmName = "Leapfrog";
-		this.algorithmDetails = "Fixed timestep, 'Kick Drift Kick' & 'Drift Kick Drift' variation.";
+		this.algorithmDetails = "Symplectic, fixed timestep, includes 'kick drift kick' & 'drift kick drift' variation.";
 		this.dt = dt;
 	}
 
@@ -53,7 +53,6 @@ class Leapfrog extends NBodySimulator{
 		}
 
 		time+=dt;
-
 	}
 
 	@:noStack
@@ -66,6 +65,7 @@ class Leapfrog extends NBodySimulator{
 				velocity.get(i,k)*dt*.5
 			);
 		}
+		
 		for (i in 0...bodyCount){
 			//Pairwise kick
 			for (j in i+1...bodyCount) {

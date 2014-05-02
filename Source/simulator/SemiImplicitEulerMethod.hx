@@ -2,9 +2,9 @@ package simulator;
 
 import geom.Vec3;
 import geom.FlatVec3Array;
-import simulator.NBodySimulator;
+import simulator.Simulator;
 
-class SemiImplicitEulerMethod extends NBodySimulator {
+class SemiImplicitEulerMethod extends Simulator {
 	public var dt:Float;
 
 	public function new(G:Float, dt:Float){
