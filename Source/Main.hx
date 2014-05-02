@@ -51,11 +51,6 @@ class Main {
 			return exp;
 		}
 
-		//var euler = basicTest(new Experiment(EulerMethod, [Constants.G_AU_kg_D, 20]), 20, timescale, analysisCount, 0x00FF00);
-		//var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, 1, 0.03]), 30, timescale, 50);
-		//var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, 16]), 16, timescale, 300);
-		//var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, 60]), 60, timescale, analysisCount, 0x0000FF);
-
 
 		var timescale:Float = 100000*365.0;
 		var analysisCount = 400;
@@ -114,10 +109,10 @@ class Main {
 	/* --- Planetary System Schemes --- */
 	function addSolarSystem(exp:Experiment){
 		var sun:Body = exp.addBody(SolarBodyData.sun);
-		//exp.addBody(SolarBodyData.mercury);
-		//exp.addBody(SolarBodyData.venus);
-		//exp.addBody(SolarBodyData.earth);
-		//exp.addBody(SolarBodyData.mars);
+		exp.addBody(SolarBodyData.mercury);
+		exp.addBody(SolarBodyData.venus);
+		exp.addBody(SolarBodyData.earth);
+		exp.addBody(SolarBodyData.mars);
 		var jupiter:Body = exp.addBody(SolarBodyData.jupiter);
 		var saturn:Body = exp.addBody(SolarBodyData.saturn);
 		var uranus:Body = exp.addBody(SolarBodyData.uranus);
