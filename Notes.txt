@@ -31,3 +31,9 @@ from:
 	http://lss.fnal.gov/archive/other/eso-1384.pdf
 	
 
+
+--------------
+10Myr stability
+dt = 96 days
+average semi-major error = 0.015
+CPU Time = 83.19

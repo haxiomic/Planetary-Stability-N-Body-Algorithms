@@ -17,6 +17,7 @@ class Main {
 		length: "AU",
 		mass: "kg"
 	};
+	static inline var G:Float = Constants.G_AU_kg_D;
 
 	/* --- File Config --- */
 	var dataOutDirectory = Build.dir()+"/Output Data/";
@@ -25,8 +26,8 @@ class Main {
 	public function new () {
 		renderer = new BasicRenderer();
 		
-		var dt:Float = 512;//300;
-		var timescale = 1000000*365.0;
+		var dt:Float = 1 << 7;//300;
+		var timescale = 1E7*365.0;
 
 		var isStable = false;
 
@@ -34,7 +35,7 @@ class Main {
 		var name = "Long-term LF Stability";
 		Console.printTitle(name, false);
 		while(!isStable){
-			exp = new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt], name);
+			exp = new Experiment(Leapfrog, [G, dt], name);
 			addSolarSystem(exp);
 			exp.zeroDift();
 			
@@ -43,10 +44,20 @@ class Main {
 			//set experiment conditions
 			exp.timescale = timescale;
 			exp.analysisTimeInterval = 10000*365;
+			exp.runtimeCallbackTimeInterval = 30000*365;
 			exp.runtimeCallback = function (exp:Experiment){
-				printProgress(exp);
+				//eta
+				var runtime = Sys.cpuTime() - exp.algorithmStartTime;
+				var fractionComplete = (exp.time-exp.timeStart)/exp.timescale;
+				var totalRequiredTime = runtime/fractionComplete;
+				var secondsRemaining = totalRequiredTime - runtime;
+
+				var timeStr = secondsToMM_SS(secondsRemaining);
+				var percent = Math.round(fractionComplete*100*100)/100;
+				Console.print('\r$percent %\tTime Remaining: $timeStr        ', false);
+				//printProgress(exp);
 			}
-			exp.runtimeCallbackTimeInterval = 10000*365;
+			
 
 			isStable = exp.performStabilityTest();
 
@@ -57,7 +68,7 @@ class Main {
 				printBasicSummary(exp);
 			}else{
 				Console.printFatalConcern('System unstable at time ${exp.time} ${units.time}');
-				dt *= 0.5;
+				dt *= 0.75;
 			}
 
 			Console.newLine();
@@ -127,6 +138,17 @@ class Main {
 		Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
 		Console.newLine();
 	}*/
+
+	inline function secondsToMM_SS(seconds:Float){
+		var minutes = seconds/60;
+		var minuteSeconds = (minutes - Math.floor(minutes))*60;
+
+		//var hours = minutes/60;
+		//var hourMinute = (hours - Math.floor(hours))*60;
+
+		var timeStr = (minutes < 9.5 ? '0' : '')+Math.round(minutes)+':'+(minuteSeconds < 9.5 ? '0' : '')+Math.round(minuteSeconds)+' s';
+		return timeStr;
+	}
 
 	/* --- File Output --- */
 	function saveExperiment(e:Experiment, filePrefix:String = ""){
