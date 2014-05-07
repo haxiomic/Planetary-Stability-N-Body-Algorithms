@@ -25,67 +25,43 @@ class Main {
 
 	public function new () {
 		renderer = new BasicRenderer();
-		
-		var dt:Float = 1 << 7;//300;
-		var timescale = 1E7*365.0;
 
-		var isStable = false;
+		var dt:Float = 1 << 7;//300;
+		var timescale = 1E6*365.0;
 
 		var exp:Experiment;
-		var name = "Long-term LF Stability";
+		var name = "Perturbation Stability Map";
 		Console.printTitle(name, false);
-		while(!isStable){
-			exp = new Experiment(Leapfrog, [G, dt], name);
-			addSolarSystem(exp);
-			exp.zeroDift();
-			
-			Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}, ${exp.bodies.length-1} planets');
 
-			//set experiment conditions
-			exp.timescale = timescale;
-			exp.analysisTimeInterval = 10000*365;
-			exp.runtimeCallbackTimeInterval = 30000*365;
-			exp.runtimeCallback = function (exp:Experiment){
-				//eta
-				var runtime = Sys.cpuTime() - exp.algorithmStartTime;
-				var fractionComplete = (exp.time-exp.timeStart)/exp.timescale;
-				var totalRequiredTime = runtime/fractionComplete;
-				var secondsRemaining = totalRequiredTime - runtime;
-
-				var timeStr = secondsToMM_SS(secondsRemaining);
-				var percent = Math.round(fractionComplete*100*100)/100;
-				Console.print('\r$percent %\tTime Remaining: $timeStr        ', false);
-				//printProgress(exp);
-			}
-			
-
-			isStable = exp.performStabilityTest();
-
-			Console.newLine();
-			if(isStable){
-				Console.printSuccess('Stable');
-				Console.printStatement('Average semi-major error: ${exp.semiMajorErrorAverageAbs}');
-				printBasicSummary(exp);
-			}else{
-				Console.printFatalConcern('System unstable at time ${exp.time} ${units.time}');
-				dt *= 0.75;
-			}
-
-			Console.newLine();
-		}
-
+		exp = new Experiment(Leapfrog, [G, dt], name);
+		var sun = exp.addBody(SolarBodyData.sun);
+		var earth = exp.addBody(SolarBodyData.earth);
+		var mars = exp.addBody(SolarBodyData.mars);
+		var jupiter = exp.addBody(SolarBodyData.jupiter);
+		var saturn = exp.addBody(SolarBodyData.saturn);
+		var uranus = exp.addBody(SolarBodyData.uranus);
+		var neptune = exp.addBody(SolarBodyData.neptune);
+		var nearbyStar = exp.addBody({
+			name: 'nearbyStar',
+			position: new Vec3(),	//AU	
+			velocity: new Vec3(),
+			mass: sun.m*0.5
+		});
+		exp.zeroDift();
+		Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}, ${exp.bodies.length-1} planets');
+		exp.timescale = timescale;
+		exp.analysisTimeInterval = 10000*365;
+		exp.runtimeCallbackTimeInterval = 30000*365;
+		exp.runtimeCallback = printProgressTimeRemaining;
+		
+		//execute
+		//var isStable = exp.performStabilityTest();
 		visualize(exp);
-	}
-
-	function visualize(exp:Experiment){
-		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFFFFFF);
-		renderer.preRenderCallback = inline function() exp.simulator.step();	
-		renderer.startAutoRender();
 	}
 
 	/* --- Planetary System Schemes --- */
 	function addSolarSystem(exp:Experiment){
-		var sun:Body = exp.addBody(SolarBodyData.sun);
+		var sun = exp.addBody(SolarBodyData.sun);
 
 		//var mercury = exp.addBody(SolarBodyData.mercury);
 		//var venus = exp.addBody(SolarBodyData.venus);
@@ -117,27 +93,33 @@ class Main {
 		sun.v.z = -planet.v.z*planet.m/sun.m;
 	}
 
+	function visualize(exp:Experiment){
+		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFFFFFF);
+		renderer.preRenderCallback = inline function() exp.simulator.step();	
+		renderer.startAutoRender();
+	}
+
 	/* --- Logging --- */
 	inline function printProgress(exp:Experiment){
 		var progress = 100*(exp.time-exp.timeStart)/exp.timescale;
 		Console.print('\r$progress%          ', false);
 	}
 
+	inline function printProgressTimeRemaining(exp:Experiment){
+		//eta
+		var runtime = Sys.cpuTime() - exp.algorithmStartTime;
+		var fractionComplete = (exp.time-exp.timeStart)/exp.timescale;
+		var totalRequiredTime = runtime/fractionComplete;
+		var secondsRemaining = totalRequiredTime - runtime;
+
+		var timeStr = secondsToMM_SS(secondsRemaining);
+		var percent = Math.round(fractionComplete*100*100)/100;
+		Console.print('\r$percent %\tTime Remaining: $timeStr        ', false);
+	}
+
 	inline function printBasicSummary(exp:Experiment){
 		Console.printStatement('CPU Time: ${exp.totalCPUTime} s, Iterations: ${exp.totalIterations}');
 	}
-/*	inline function experimentSummaryLog(r:ExperimentResults){
-		var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
-
-		var sumE:Float = 0;
-		for(e in r.analysis["Energy Error"]) sumE+=e;
-
-		var avgE = sumE/r.analysis["Energy Error"].length;
-		Console.printTitle("Average energy error: "+avgE);
-
-		Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
-		Console.newLine();
-	}*/
 
 	inline function secondsToMM_SS(seconds:Float){
 		var minutes = seconds/60;
