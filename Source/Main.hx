@@ -63,6 +63,8 @@ class Main {
 		}
 	}
 
+	inline function testStability(dt:Float, timescale:Float){}
+
 	inline function testPerturbationStability(d:Float, v_kms:Float, mass:Float, repeatCount:Int, dt:Float, timescale:Float, ri:Float = 10000):Array<Float>{
 		Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
 
