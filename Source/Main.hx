@@ -29,8 +29,8 @@ class Main {
 		var dt:Float = 96;//300;
 		var timescale:Float = 1E6*365.0;
 		var ri:Float = 10000;//AU, suitably distant starting point so as not to significantly interact with system
+		var repeatCount = 10;
 
-		var exp:Experiment;
 		var name = "Perturbation Stability Map";
 		Console.printTitle(name, false);
 		Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}');
@@ -38,10 +38,47 @@ class Main {
 
 		//Single Experiment:
 		//decide upon closest approach d and initial velocity (magnitude)
-		var d:Float = 700;//AU
-		var v_kms = 0.5; 
+		var dStart = 100;//AU
+		var dEnd   = 0;
+		var dStep  = 100;
 
-			exp = new Experiment(Leapfrog, [G, dt], name);
+		var vStart = 20;//km/s
+		var vEnd   = 0;
+		var vStep  = 10;
+
+		var d = dStart;
+		var v_kms = vStart; 
+		while(d>=dEnd){
+			while(v_kms>=vEnd){
+				var result = testPerturbationStability(d, v_kms, 0.5*SolarBodyData.sun.mass, repeatCount, dt, timescale, ri);
+
+				var stableFraction = result[0];
+				var averageSemiMajorError = result[1];
+
+				trace('stable fraction: ${stableFraction} semi-major error: ${averageSemiMajorError}');
+				v_kms-=vStep;
+			}
+
+			d-=100;
+		}
+	}
+
+	inline function testPerturbationStability(d:Float, v_kms:Float, mass:Float, repeatCount:Int, dt:Float, timescale:Float, ri:Float = 10000):Array<Float>{
+		Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
+
+		var exp:Experiment;
+		var v:Float = v_kms*Constants.secondsInDay/(Constants.AU/1000);//AU/day
+		var f = Math.sqrt(ri*ri + d*d);
+		//estimate how long it'll take star to reach its target unperturbed
+		Console.printStatement('The star should take ~ ${Math.round((f/v)/365.0)} years to reach closest approach');
+
+		var averageSemiMajorError:Float = 0;
+		var stableFraction:Float = 0;
+		var stableCount = 0;
+		var testCount = 0;
+
+		while(testCount<repeatCount){
+			exp = new Experiment(Leapfrog, [G, dt]);
 
 			//Add solar system
 			var sun = exp.addBody(SolarBodyData.sun);
@@ -57,8 +94,6 @@ class Main {
 			exp.zeroDift();
 
 			//Add perturbing star
-			var v:Float = v_kms*Constants.secondsInDay/(Constants.AU/1000);//AU/day
-
 			//pick a random point on sphere of radius d, closet approach, http://mathworld.wolfram.com/SpherePointPicking.html
 			var theta = Math.random()*2*Math.PI;
 			var phi = Math.acos(2*Math.random()-1);
@@ -66,32 +101,25 @@ class Main {
 							 d*Math.sin(theta)*Math.sin(phi),
 							 d*Math.cos(phi));
 			D += sun.p;
-
 			//find vector perpendicular to D to project forward with
 			var perp_D = new Vec3(Math.cos(theta)*Math.sin(phi+Math.PI*.5),
 							 	  Math.sin(theta)*Math.sin(phi+Math.PI*.5),
 							      Math.cos(phi+Math.PI*.5));
-			var f = Math.sqrt(ri*ri + d*d);
-
 			//find starting position of star by projecting forward
 			var P = D.clone();
 			P.addProduct(perp_D, f);
-
 			//set velocity to point towards D, along perp_D
 			var V = perp_D.clone();
 			V *= -1*v;
 
+			//add star to experiment
 			var nearbyStar = exp.addBody({
 				name: 'nearbyStar',
 				position: P,	//AU	
 				velocity: V,
-				mass: sun.m*0.5
+				mass: mass
 			});
 			exp.ignoredBodies.push(nearbyStar);
-
-			Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
-			//estimate how long it'll take star to reach its target unperturbed
-			Console.printStatement('The star should take ~ ${Math.round((f/v)/365.0)} years to reach closest approach');
 
 			exp.timescale = timescale;
 			exp.analysisTimeInterval = 10000*365;
@@ -108,7 +136,7 @@ class Main {
 					// trace('$r, $last_r');
 					if(r>last_r){//receding
 						exp.timeEnd = exp.time+timescale;//extend time another timescale
-						exp.runtimeCallbackTimeInterval = 100*365;
+						exp.runtimeCallbackTimeInterval = 100*365;//reduce callback interval
 						Console.newLine();
 						Console.printStatement('First approach completed, r: ${Math.round(r)} AU, time: ${Math.round(exp.time/365.0)} years, end time: ${Math.round(exp.timeEnd/365.0)} years');
 						firstApproachCompleted = true;
@@ -133,9 +161,20 @@ class Main {
 
 			Console.newLine();
 
+			//progress test loop
+			testCount++;
+			if(isStable)stableCount++;
+			averageSemiMajorError += exp.semiMajorErrorAverageAbs/repeatCount;
+		}
+
+		stableFraction = stableCount/repeatCount;
+
+		//Debug visualization
 		//center on sun
-		renderer.centerBody = exp.simulator.bodies[0];
-		visualize(exp);
+		//renderer.centerBody = exp.simulator.bodies[0];
+		//visualize(exp);
+
+		return [stableFraction, averageSemiMajorError];
 	}
 
 	/* --- Planetary System Schemes --- */
@@ -197,7 +236,7 @@ class Main {
 	}
 
 	inline function printBasicSummary(exp:Experiment){
-		Console.printStatement('CPU Time: ${exp.totalCPUTime} s, Iterations: ${exp.totalIterations}');
+		Console.printStatement('CPU Time: ${exp.totalCPUTime} s');
 	}
 
 	inline function secondsToMM_SS(seconds:Float){
