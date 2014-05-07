@@ -25,77 +25,45 @@ class Main {
 	public function new () {
 		renderer = new BasicRenderer();
 		
-		//Basic Test
-		function basicTest(exp:Experiment, dt:Float = 5, timescale:Float = 1000, analysisCount:Int = 100){
-			Console.printStatement(exp.simulator.algorithmName);
-			Console.print(exp.simulator.params);
+		var dt:Float = 512;//300;
+		var timescale = 1000000*365.0;
 
-			//add bodies
+		var isStable = false;
+
+		var exp:Experiment;
+		var name = "Long-term LF Stability";
+		Console.printTitle(name, false);
+		while(!isStable){
+			exp = new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt], name);
 			addSolarSystem(exp);
+			exp.zeroDift();
+			
+			Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}, ${exp.bodies.length-1} planets');
 
 			//set experiment conditions
 			exp.timescale = timescale;
-			exp.analysisInterval = Math.ceil((exp.timescale/dt)/analysisCount);
+			exp.analysisTimeInterval = 10000*365;
+			exp.runtimeCallback = function (exp:Experiment){
+				printProgress(exp);
+			}
+			exp.runtimeCallbackTimeInterval = 10000*365;
 
-			//enable runtime logging
-			exp.runtimeCallback = runtimeLog;
-			exp.runtimeCallbackInterval = exp.analysisInterval*8;
+			isStable = exp.performStabilityTest();
 
-			//perform experiment
-			var r:ExperimentResults = exp.perform();
-
-			experimentSummaryLog(r);
-
-			//saveExperiment(exp, exp.name+", dt="+dt);
 			Console.newLine();
-			return exp;
+			if(isStable){
+				Console.printSuccess('Stable');
+				Console.printStatement('Average semi-major error: ${exp.semiMajorErrorAverageAbs}');
+				printBasicSummary(exp);
+			}else{
+				Console.printFatalConcern('System unstable at time ${exp.time} ${units.time}');
+				dt *= 0.5;
+			}
+
+			Console.newLine();
 		}
 
-
-		var timescale:Float = 10000*365.0;
-		var analysisCount = 400;
-		var dt = 20;
-
-		var taylor1 = basicTest(new Experiment(Taylor2ndDerivative, [Constants.G_AU_kg_D, dt]),
-			dt, timescale, analysisCount);
-		var taylor3 = basicTest(new Experiment(Taylor3rdDerivative, [Constants.G_AU_kg_D, dt]),
-			dt, timescale, analysisCount);
-		var semiImplicitEuler = basicTest(new Experiment(SemiImplicitEulerMethod, [Constants.G_AU_kg_D, dt]),
-			dt, timescale, analysisCount);
-		var leapfrog = basicTest( new Experiment(Leapfrog, [Constants.G_AU_kg_D, dt]),
-			dt, timescale, analysisCount);
-		var leapfrogAdaptive = basicTest(new Experiment(LeapfrogAdaptive, [Constants.G_AU_kg_D, 1, 0.032]),
-			30, timescale, 200);
-		dt = 80;
-		var hermite = basicTest( new Experiment(Hermite4thOrder, [Constants.G_AU_kg_D, dt]),
-			dt, timescale, analysisCount);				
-
-		sysUtils.Console.suppress = true;
-
-		visualize(leapfrog);
-
-		/*var exp = leapfrog;
-		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFF0000);
-		exp = leapfrogAdaptive;
-		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0x00FF00);
-		
-		var loopTime = 5;
-		var currTime = 0;
-		renderer.preRenderCallback = inline function(){
-			var exp = leapfrog;
-
-			while(exp.simulator.time<currTime+loopTime)
-				exp.simulator.step();	
-
-			var exp = leapfrogAdaptive;
-			while(exp.simulator.time<currTime+loopTime)
-				exp.simulator.step();
-
-			currTime+=loopTime;
-		}
-		renderer.startAutoRender();*/
-		
-		//exit();
+		visualize(exp);
 	}
 
 	function visualize(exp:Experiment){
@@ -107,14 +75,16 @@ class Main {
 	/* --- Planetary System Schemes --- */
 	function addSolarSystem(exp:Experiment){
 		var sun:Body = exp.addBody(SolarBodyData.sun);
-		exp.addBody(SolarBodyData.mercury);
-		exp.addBody(SolarBodyData.venus);
-		exp.addBody(SolarBodyData.earth);
-		exp.addBody(SolarBodyData.mars);
-		var jupiter:Body = exp.addBody(SolarBodyData.jupiter);
-		var saturn:Body = exp.addBody(SolarBodyData.saturn);
-		var uranus:Body = exp.addBody(SolarBodyData.uranus);
-		var neptune:Body = exp.addBody(SolarBodyData.neptune);
+
+		//var mercury = exp.addBody(SolarBodyData.mercury);
+		//var venus = exp.addBody(SolarBodyData.venus);
+		var earth = exp.addBody(SolarBodyData.earth);
+		var mars = exp.addBody(SolarBodyData.mars);
+		
+		var jupiter = exp.addBody(SolarBodyData.jupiter);
+		var saturn = exp.addBody(SolarBodyData.saturn);
+		var uranus = exp.addBody(SolarBodyData.uranus);
+		var neptune = exp.addBody(SolarBodyData.neptune);
 	}
 
 	function addTwoBodyEccentricOrbit(exp:Experiment){
@@ -137,12 +107,15 @@ class Main {
 	}
 
 	/* --- Logging --- */
-	inline function runtimeLog(e:Experiment){
-		var progress = 100*(e.time-e.timeStart)/e.timescale;
-		Console.printStatement(progress+"% "+"\r", false);
+	inline function printProgress(exp:Experiment){
+		var progress = 100*(exp.time-exp.timeStart)/exp.timescale;
+		Console.print('\r$progress%          ', false);
 	}
 
-	inline function experimentSummaryLog(r:ExperimentResults){
+	inline function printBasicSummary(exp:Experiment){
+		Console.printStatement('CPU Time: ${exp.totalCPUTime} s, Iterations: ${exp.totalIterations}');
+	}
+/*	inline function experimentSummaryLog(r:ExperimentResults){
 		var millionIterationTime = 1000*1000*(r.cpuTime/r.totalIterations);
 
 		var sumE:Float = 0;
@@ -153,15 +126,15 @@ class Main {
 
 		Console.print("Total Iterations: "+r.totalIterations+" | CPU Time: "+r.cpuTime+" s  |  1M Iteration: "+millionIterationTime+" s");
 		Console.newLine();
-	}
+	}*/
 
 	/* --- File Output --- */
 	function saveExperiment(e:Experiment, filePrefix:String = ""){
-		var info = e.information;
+		var params = e.params;
 		var results = e.results;
 
 		//Construct object to save
-		//info.json
+		//params.json
 		var fileSaveData = {
 			metadata:{
 				date: Build.date(),
@@ -169,7 +142,7 @@ class Main {
 				gitHash: Git.lastCommitHash(),
 				units: units,
 			},
-			info: info,
+			params: params,
 			results: {
 				totalIterations: results.totalIterations,
 				cpuTime: results.cpuTime,
@@ -188,14 +161,14 @@ class Main {
 		filePrefix = (new haxe.io.Path(filePrefix)).file;//parse filePrefix to make it safe for paths
 		if(filePrefix!="")filePrefix+=" - ";
 
-		var parsedAlgorithmName = (new haxe.io.Path(info.algorithmName)).file;
-		var namespace = filePrefix+Math.round(info.timescale/365)+" years, "+info.bodies.length+" bodies";
+		var parsedAlgorithmName = (new haxe.io.Path(params.algorithmName)).file;
+		var namespace = filePrefix+Math.round(params.timescale/365)+" years, "+params.bodies.length+" bodies";
 		var path = haxe.io.Path.join([dataOutDirectory, parsedAlgorithmName, namespace]);
 
 		try{
 
 			//save file
-			FileTools.save(haxe.io.Path.join([path, "info.json"]), haxe.Json.stringify(fileSaveData), function (dir:String){
+			FileTools.save(haxe.io.Path.join([path, "params.json"]), haxe.Json.stringify(fileSaveData), function (dir:String){
 				return true;//return Console.askYesNoQuestion("Directory '"+dir+"' doesn't exist, create it?", null, false);
 			}, false);
 			FileTools.save(haxe.io.Path.join([path, "data - "+(csv.rowCount-1)+" rows.csv"]), csv.toString(), function (dir:String){

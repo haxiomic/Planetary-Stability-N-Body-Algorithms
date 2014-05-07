@@ -31,7 +31,7 @@ class Console {
 	static public function printTitle(v:Dynamic, newLine:Bool = true){
 		if(suppress)return;
 
-		var str:String = BLUE+BOLD+'\t-- '+v+' --'+RESET+'\n';
+		var str:String = BLUE+BOLD+'\t$v'+RESET+'\n';
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
@@ -39,7 +39,7 @@ class Console {
 	static public function printError(v:Dynamic, newLine:Bool = true){
 		if(suppress)return;
 
-		var str:String = RED+BOLD+"Error"+RESET+": "+v+RESET;
+		var str:String = RED+BOLD+'Error'+RESET+': '+v+RESET;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
@@ -48,6 +48,14 @@ class Console {
 		if(suppress)return;
 
 		var str:String = YELLOW+BOLD+v+RESET;
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
+	}
+
+	static public function printFatalConcern(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
+		var str:String = RED+BOLD+v+RESET;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}

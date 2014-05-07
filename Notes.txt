@@ -20,3 +20,14 @@ Origin of block leapfrog time-symmetric http://arxiv.org/abs/astro-ph/0604371
 	more info http://www.artcompsci.org/kali/vol/block_symmetric/ch01.html
 
 ! Piet Hut's page, collaborator with barns, overview of methods and authors here. http://www.ids.ias.edu/~piet/act/comp/algorithms/
+
+
+
+———
+Mass of cluster star ~ 0.5, std dev ~0.35
+from:	
+	http://mnras.oxfordjournals.org/content/322/2/231.full#p-44
+	http://www.researchgate.net/publication/231013602_On_the_Globular_Cluster_Initial_Mass_Function_below_1_M
+	http://lss.fnal.gov/archive/other/eso-1384.pdf
+	
+

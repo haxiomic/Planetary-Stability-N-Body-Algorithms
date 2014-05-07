@@ -9,25 +9,54 @@ import BodyDatum;
 import sysUtils.Console;
 
 class Experiment{
-
+	//Core
 	public var name:String = "";
 	public var simulator:Simulator;
 	public var bodies(default, null):Array<BodyDatum>;
-
-	//Experiment input params
-	public var timescale(default, set):Float;
-	public var analysisInterval(default, set):Null<Int> = null;	//iterations
+	//Required:
+	public var timescale:Float;
+	//Optional:
+	public var analysisInterval:Null<Int> = null;	//iterations
+	public var analysisTimeInterval:Null<Float> = null;	//same units as timescale
 	//callback during experiment
-	public var runtimeCallback:Experiment->Void = null;
+	public var runtimeCallback:Experiment->Void = null;//runtimeCallback(this)
 	public var runtimeCallbackInterval:Null<Int> = null;
-
-	//Information
-	public var information(get, null):ExperimentInformation;
+	public var runtimeCallbackTimeInterval:Null<Float> = null; //same units as timescale
 	
-	public function new(simulatorClass:Class<Dynamic>, simArgs:Array<Dynamic>, name:String = ""){
+	//Read-only simulation variables
+	//Guaranteed: 
+	//algorithm runtime
+	public var algorithmStartTime (default, null):Float;
+	public var algorithmEndTime   (default, null):Float;
+	//experiment simulation time
+	public var timeStart       (default, null):Float;
+	public var timeEnd         (default, null):Float;
+	public var time            (default, null):Float;
+	public var totalCPUTime    (default, null):Float;
+	public var totalIterations (default, null):Float;
+
+	//Method Dependant:
+	//system energy
+	public var initialEnergy (default, null):Float;
+	public var currentEnergy (default, null):Float;
+	//keplerian elements
+	public var semiMajorArray           (default, null):Vector<Float>;
+	public var eccentricityArray        (default, null):Vector<Float>;
+	public var semiMajorErrorArray      (default, null):Array<Float>;
+	public var semiMajorErrorAverageAbs (default, null):Float;
+	//iteration
+	public var i (default, null):UInt;
+	//results
+	public var results (default, null):ExperimentResults;
+
+	//Experiment params information
+	public var params (get, null):ExperimentInformation;
+
+
+	public function new(simulatorClass:Class<Dynamic>, simArgs:Array<Dynamic>, ?name:String = ""){
 		this.bodies = new Array<BodyDatum>();
 		this.simulator = Type.createInstance(simulatorClass, simArgs);
-		this.name = name=="" ? Type.getClassName(simulatorClass).split(".").pop() : name;
+		this.name = name=="" || name == null ? Type.getClassName(simulatorClass).split(".").pop() : name;
 	}
 
 	public function addBody(bd:BodyDatum):Body{
@@ -42,24 +71,23 @@ class Experiment{
 		return added;
 	}
 
-	//Read-only simulation variables
-	//data
-	//algorithm runtime
-	public var algorithmStartTime(default, null):Float;
-	public var algorithmEndTime(default, null):Float;
-	//system Energy
-	public var initalEnergy(default, null):Float;
-	public var currentEnergy(default, null):Float;
-	//experiment simulation time
-	public var timeStart(default, null):Float;
-	public var timeEnd(default, null):Float;
-	public var time(default, null):Float;
-	//iteration
-	public var i(default, null):UInt;
-	//results
-	public var results(default, null):ExperimentResults;
+	public function zeroDift(){
+		var totalMomentum:Vec3 = new Vec3();
+		var totalMass:Float = 0;
+		for (b in simulator.bodies){
+			totalMomentum.addProduct(b.v, b.m);
+			totalMass += b.m;
+		}
+
+		var diftVelocity:Vec3 = totalMomentum/totalMass;
+		for (b in simulator.bodies){
+			b.v -= diftVelocity;
+		}
+
+	}
+
 	@:noStack
-	public function perform():ExperimentResults{
+	public function performEnergyTest():ExperimentResults{
 		simulator.prepare();
 
 		//return control callback
@@ -69,8 +97,8 @@ class Experiment{
 		var analysisEnabled = (analysisInterval != null);
 		var aI:Int = analysisInterval;
 		//system energy
-		initalEnergy = simulator.totalEnergy();
-		currentEnergy = initalEnergy;
+		initialEnergy = simulator.totalEnergy();
+		currentEnergy = initialEnergy;
 		var energyChange:Float = 0;
 		//time
 		timeStart = simulator.time;
@@ -101,7 +129,7 @@ class Experiment{
 				if(i%analysisInterval==0){
 					//update energy
 					currentEnergy = simulator.totalEnergy();
-					energyChange = Math.abs((currentEnergy - initalEnergy))/initalEnergy;
+					energyChange = Math.abs((currentEnergy - initialEnergy))/initialEnergy;
 
 					analysis["Iteration"].push(i);
 					analysis["Time"].push(time);
@@ -110,9 +138,8 @@ class Experiment{
 			}
 
 			//Callback to return control
-			if(runtimeCallbackEnabled){
+			if(runtimeCallbackEnabled) 
 				if(i%cbI==0) runtimeCallback(this);
-			}
 
 			//Progress loop
 			time = simulator.time;
@@ -128,15 +155,113 @@ class Experiment{
 		return results;
 	}
 
-	public function kepler(){
+	public function performStabilityTest():Bool{
+		simulator.prepare();
+		//Enable runtime callback & analysis
+		//analysis
+		var analysisEnabled = (analysisTimeInterval != null);
+		var AI:Float = analysisTimeInterval;
+		var lastATime:Float = 0;
+		//runtime
+		var runtimeCallbackEnabled = (runtimeCallback != null && runtimeCallbackTimeInterval != null);
+		var RTI:Float = runtimeCallbackTimeInterval;
+		var lastRTTime:Float = 0;
+		//initial system energy
+		initialEnergy = simulator.totalEnergy();
+		currentEnergy = initialEnergy;
+		var energyChange:Float = 0;
+		//initial keplerian elements
+		computeKeplerianElements();
+		var initialSemiMajorArray = new Vector(semiMajorArray.length);
+		Vector.blit(semiMajorArray, 0, initialSemiMajorArray, 0, semiMajorArray.length);
+		//time
+		timeStart = simulator.time;
+		timeEnd = time+timescale;
+		time = timeStart;
+		//iteration
+		i = 0;
+
+		function stablityCheck():Bool{
+			computeKeplerianElements();
+			//check all have eccentricity < 1
+			for (e in eccentricityArray)
+				if(e>=1){//planet ejected
+					return false;
+				}
+			return true;
+		}
+
+		//Step loop
+		//analysis before start
+		if(analysisEnabled)stablityCheck();
+		if(runtimeCallbackEnabled)runtimeCallback(this);
+
+		function stabilityLoop():Bool{
+			while(time<timeEnd){
+				//step simulation
+				simulator.step();	
+
+				//analyze system
+				if(analysisEnabled)
+					if( time - lastATime >= AI){
+						if(!stablityCheck())return false;
+						lastATime = time;
+					}
+				
+
+				//runtime callback
+				if(runtimeCallbackEnabled)
+					if( time - lastRTTime >= RTI){
+						runtimeCallback(this);
+						lastRTTime = time;
+					}
+
+				//progress loop
+				time = simulator.time;
+				i++;
+			}
+
+			return true;
+		}
+		algorithmStartTime = Sys.cpuTime();
+		var isStable = stabilityLoop();
+		algorithmEndTime = Sys.cpuTime();
+
+		totalIterations = i;
+		totalCPUTime = algorithmEndTime - algorithmStartTime;
+
+		//run once again at end
+		if(analysisEnabled)stablityCheck();
+		if(runtimeCallbackEnabled)runtimeCallback(this);
+
+		//Determine magnitude of perturbation
+		semiMajorErrorArray = new Array<Float>();
+		semiMajorErrorAverageAbs = 0;
+
+		for (i in 0...semiMajorArray.length){
+			semiMajorErrorArray[i] = (semiMajorArray[i] - initialSemiMajorArray[i])/initialSemiMajorArray[i];
+		}
+		
+		var te:Float = 0;
+		var n = 0;
+		for (e in semiMajorErrorArray) {
+			if(Math.isNaN(e))continue;
+			te+=Math.abs(e);
+			n++;
+		}
+		semiMajorErrorAverageAbs = te/n;
+
+		return isStable;
+	}
+
+	//Requires orbit central body to be at index[0]
+	public function computeKeplerianElements(){
 		//Loop through bodies, find eccentricity and semi-major axis
 		//'Osculating' - ignore perturbations
-		var semiMajorArray = new Array<Float>();
-		var eccentricityArray = new Array<Float>();
-		
+		semiMajorArray = new Vector(simulator.bodies.length);
+		eccentricityArray = new Vector(simulator.bodies.length);
+
 		var mostMassiveBody:Body = simulator.bodies[0];
-		for (A in simulator.bodies)
-			if(A.m > mostMassiveBody.m)mostMassiveBody = A;
 
 		for (i in 0...simulator.bodies.length) {
 			var A = simulator.bodies[i];
@@ -157,21 +282,23 @@ class Experiment{
 			}
 			var u = simulator.G * M_r;
 
+			//semi-major
 			var v = A.v.length();
 			var semiMajor:Float = 1/(2/r_COM - v*v/u);
 
+			//eccentricity
 			var hSq:Float = Vec3.cross(r, A.v, L).lengthSquared();
 			var eccentricity = Math.sqrt(1 - hSq/(semiMajor*u));
 
+			//store
 			semiMajorArray[i] = semiMajor;
 			eccentricityArray[i] = eccentricity;
 		}
-		trace(eccentricityArray);
 	}
 	var r:Vec3 = new Vec3();
 	var L:Vec3 = new Vec3();
 
-	public function get_information():ExperimentInformation{
+	public function get_params():ExperimentInformation{
 		return {
 			experimentName: this.name,
 			timescale: this.timescale,
@@ -182,9 +309,6 @@ class Experiment{
 			algorithmDetails: simulator.algorithmDetails,
 		}
 	}
-
-	function set_timescale(v:Float):Float return timescale = v;
-	function set_analysisInterval(v:Int):Int return analysisInterval = v;
 }
 
 typedef ExperimentResults = {
