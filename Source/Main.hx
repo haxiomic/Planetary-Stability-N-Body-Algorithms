@@ -26,7 +26,7 @@ class Main {
 	public function new () {
 		renderer = new BasicRenderer();
 
-		var dt:Float = 96;//300;
+		var dt:Float = 96;
 		var timescale:Float = 1E6*365.0;
 		var ri:Float = 10000;//AU, suitably distant starting point so as not to significantly interact with system
 		var repeatCount = 10;
@@ -36,7 +36,7 @@ class Main {
 		Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}');
 		Console.newLine();
 
-		//Single Experiment:
+		//Build map
 		//decide upon closest approach d and initial velocity (magnitude)
 		var dStart = 100;//AU
 		var dEnd   = 0;

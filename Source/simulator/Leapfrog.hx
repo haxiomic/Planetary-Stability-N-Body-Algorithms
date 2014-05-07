@@ -8,7 +8,7 @@ class Leapfrog extends Simulator{
 	public function new(G:Float, dt:Float){
 		super(G);
 		this.algorithmName = "Leapfrog";
-		this.algorithmDetails = "Symplectic, fixed timestep, includes 'kick drift kick' & 'drift kick drift' variation.";
+		this.algorithmDetails = "Symplectic, fixed timestep, includes 'kick drift kick' & 'drift kick drift' variations.";
 		this.dt = dt;
 	}
 
