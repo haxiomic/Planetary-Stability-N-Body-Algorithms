@@ -11,4 +11,9 @@ class Constants{
 
 	//Length Constants SI
 	static inline public var AU:Float = 1.495978707E11;//m
+	static inline public var AU_m:Float = AU;//m
+
+	//time
+	static inline public var secondsInDay:Float = 60*60*24;
+
 }

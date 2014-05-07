@@ -12,7 +12,7 @@ class Experiment{
 	//Core
 	public var name:String = "";
 	public var simulator:Simulator;
-	public var bodies(default, null):Array<BodyDatum>;
+	public var bodies(default, null):Array<BodyDatum> = new Array<BodyDatum>();
 	//Required:
 	public var timescale:Float;
 	//Optional:
@@ -22,16 +22,19 @@ class Experiment{
 	public var runtimeCallback:Experiment->Void = null;//runtimeCallback(this)
 	public var runtimeCallbackInterval:Null<Int> = null;
 	public var runtimeCallbackTimeInterval:Null<Float> = null; //same units as timescale
+	//ignore from analysis
+	public var ignoredBodies(default, null):Array<Body> = new Array<Body>();
 	
+	//Read-write simulation variables
+	public var timeStart:Float;
+	public var timeEnd:Float;
+	public var time:Float;
 	//Read-only simulation variables
 	//Guaranteed: 
 	//algorithm runtime
 	public var algorithmStartTime (default, null):Float;
 	public var algorithmEndTime   (default, null):Float;
 	//experiment simulation time
-	public var timeStart       (default, null):Float;
-	public var timeEnd         (default, null):Float;
-	public var time            (default, null):Float;
 	public var totalCPUTime    (default, null):Float;
 	public var totalIterations (default, null):Float;
 
@@ -54,7 +57,6 @@ class Experiment{
 
 
 	public function new(simulatorClass:Class<Dynamic>, simArgs:Array<Dynamic>, ?name:String = ""){
-		this.bodies = new Array<BodyDatum>();
 		this.simulator = Type.createInstance(simulatorClass, simArgs);
 		this.name = name=="" || name == null ? Type.getClassName(simulatorClass).split(".").pop() : name;
 	}
@@ -160,11 +162,9 @@ class Experiment{
 		//Enable runtime callback & analysis
 		//analysis
 		var analysisEnabled = (analysisTimeInterval != null);
-		var AI:Float = analysisTimeInterval;
 		var lastATime:Float = 0;
 		//runtime
 		var runtimeCallbackEnabled = (runtimeCallback != null && runtimeCallbackTimeInterval != null);
-		var RTI:Float = runtimeCallbackTimeInterval;
 		var lastRTTime:Float = 0;
 		//initial system energy
 		initialEnergy = simulator.totalEnergy();
@@ -203,7 +203,7 @@ class Experiment{
 
 				//analyze system
 				if(analysisEnabled)
-					if( time - lastATime >= AI){
+					if( time - lastATime >= analysisTimeInterval){
 						if(!stablityCheck())return false;
 						lastATime = time;
 					}
@@ -211,7 +211,7 @@ class Experiment{
 
 				//runtime callback
 				if(runtimeCallbackEnabled)
-					if( time - lastRTTime >= RTI){
+					if( time - lastRTTime >= runtimeCallbackTimeInterval){
 						runtimeCallback(this);
 						lastRTTime = time;
 					}
@@ -265,7 +265,7 @@ class Experiment{
 
 		for (i in 0...simulator.bodies.length) {
 			var A = simulator.bodies[i];
-			if(A==mostMassiveBody){
+			if(A==mostMassiveBody || ignoredBodies.indexOf(A)>-1){
 				semiMajorArray[i] = 0;
 				continue;
 			}

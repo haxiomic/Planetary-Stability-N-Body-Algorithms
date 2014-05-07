@@ -18,6 +18,7 @@ class BasicRenderer {
 	var lengthConversion:Float = 10; //how many pixels for each sim unit
 
 	public var preRenderCallback:Void->Void;
+	public var centerBody:Body = null;
 
 	public function new(){
 		this.stage = flash.Lib.current.stage;
@@ -118,11 +119,10 @@ class BasicRenderer {
 	}
 
 	// Coordinate conversion
-
 	inline function screenX(b:Body)
-		return simulationToRendererCoordX(b.x);
+		return simulationToRendererCoordX(b.x - (centerBody != null ? centerBody.p.x : 0));
 	inline function screenY(b:Body)
-		return simulationToRendererCoordY(b.z);
+		return simulationToRendererCoordY(b.z - (centerBody != null ? centerBody.p.z : 0));
 
 	inline function s2r(v:Float)return simulationLengthToRenderLength(v);
 	inline function simulationLengthToRenderLength(v:Float)

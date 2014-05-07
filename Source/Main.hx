@@ -26,36 +26,115 @@ class Main {
 	public function new () {
 		renderer = new BasicRenderer();
 
-		var dt:Float = 1 << 7;//300;
-		var timescale = 1E6*365.0;
+		var dt:Float = 96;//300;
+		var timescale:Float = 1E6*365.0;
+		var ri:Float = 10000;//AU, suitably distant starting point so as not to significantly interact with system
 
 		var exp:Experiment;
 		var name = "Perturbation Stability Map";
 		Console.printTitle(name, false);
+		Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}');
+		Console.newLine();
 
-		exp = new Experiment(Leapfrog, [G, dt], name);
-		var sun = exp.addBody(SolarBodyData.sun);
-		var earth = exp.addBody(SolarBodyData.earth);
-		var mars = exp.addBody(SolarBodyData.mars);
-		var jupiter = exp.addBody(SolarBodyData.jupiter);
-		var saturn = exp.addBody(SolarBodyData.saturn);
-		var uranus = exp.addBody(SolarBodyData.uranus);
-		var neptune = exp.addBody(SolarBodyData.neptune);
-		var nearbyStar = exp.addBody({
-			name: 'nearbyStar',
-			position: new Vec3(),	//AU	
-			velocity: new Vec3(),
-			mass: sun.m*0.5
-		});
-		exp.zeroDift();
-		Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}, ${exp.bodies.length-1} planets');
-		exp.timescale = timescale;
-		exp.analysisTimeInterval = 10000*365;
-		exp.runtimeCallbackTimeInterval = 30000*365;
-		exp.runtimeCallback = printProgressTimeRemaining;
-		
-		//execute
-		//var isStable = exp.performStabilityTest();
+		//Single Experiment:
+		//decide upon closest approach d and initial velocity (magnitude)
+		var d:Float = 700;//AU
+		var v_kms = 0.5; 
+
+			exp = new Experiment(Leapfrog, [G, dt], name);
+
+			//Add solar system
+			var sun = exp.addBody(SolarBodyData.sun);
+			//var mercury = exp.addBody(SolarBodyData.mercury);
+			//var venus = exp.addBody(SolarBodyData.venus);
+			//var earth = exp.addBody(SolarBodyData.earth);
+			//var mars = exp.addBody(SolarBodyData.mars);
+			var jupiter = exp.addBody(SolarBodyData.jupiter);
+			var saturn = exp.addBody(SolarBodyData.saturn);
+			var uranus = exp.addBody(SolarBodyData.uranus);
+			var neptune = exp.addBody(SolarBodyData.neptune);
+			//counter drift
+			exp.zeroDift();
+
+			//Add perturbing star
+			var v:Float = v_kms*Constants.secondsInDay/(Constants.AU/1000);//AU/day
+
+			//pick a random point on sphere of radius d, closet approach, http://mathworld.wolfram.com/SpherePointPicking.html
+			var theta = Math.random()*2*Math.PI;
+			var phi = Math.acos(2*Math.random()-1);
+			var D = new Vec3(d*Math.cos(theta)*Math.sin(phi),
+							 d*Math.sin(theta)*Math.sin(phi),
+							 d*Math.cos(phi));
+			D += sun.p;
+
+			//find vector perpendicular to D to project forward with
+			var perp_D = new Vec3(Math.cos(theta)*Math.sin(phi+Math.PI*.5),
+							 	  Math.sin(theta)*Math.sin(phi+Math.PI*.5),
+							      Math.cos(phi+Math.PI*.5));
+			var f = Math.sqrt(ri*ri + d*d);
+
+			//find starting position of star by projecting forward
+			var P = D.clone();
+			P.addProduct(perp_D, f);
+
+			//set velocity to point towards D, along perp_D
+			var V = perp_D.clone();
+			V *= -1*v;
+
+			var nearbyStar = exp.addBody({
+				name: 'nearbyStar',
+				position: P,	//AU	
+				velocity: V,
+				mass: sun.m*0.5
+			});
+			exp.ignoredBodies.push(nearbyStar);
+
+			Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
+			//estimate how long it'll take star to reach its target unperturbed
+			Console.printStatement('The star should take ~ ${Math.round((f/v)/365.0)} years to reach closest approach');
+
+			exp.timescale = timescale;
+			exp.analysisTimeInterval = 10000*365;
+			exp.runtimeCallbackTimeInterval = 1*365;
+
+			//runtime logic
+			var firstApproachCompleted:Bool = false;
+			var last_r:Float = Vec3.distance(nearbyStar.p, sun.p);
+			exp.runtimeCallback = function(exp){
+				//wait until the star has passed the sun at its closest point
+				if(!firstApproachCompleted){				
+					//calculate distance to sun
+					var r = Vec3.distance(nearbyStar.p, sun.p);
+					// trace('$r, $last_r');
+					if(r>last_r){//receding
+						exp.timeEnd = exp.time+timescale;//extend time another timescale
+						exp.runtimeCallbackTimeInterval = 100*365;
+						Console.newLine();
+						Console.printStatement('First approach completed, r: ${Math.round(r)} AU, time: ${Math.round(exp.time/365.0)} years, end time: ${Math.round(exp.timeEnd/365.0)} years');
+						firstApproachCompleted = true;
+					}
+					last_r = r;
+				}
+
+				printProgressAndTimeRemaining(exp);
+			}
+			
+			//execute
+			var isStable = exp.performStabilityTest();
+
+			//handle result
+			Console.newLine();
+			if(isStable){
+				Console.printSuccess('Stable');
+				Console.printStatement('Average semi-major error: ${exp.semiMajorErrorAverageAbs}');
+				printBasicSummary(exp);
+			}else 
+				Console.printFatalConcern('System unstable at time ${exp.time/365} years');
+
+			Console.newLine();
+
+		//center on sun
+		renderer.centerBody = exp.simulator.bodies[0];
 		visualize(exp);
 	}
 
@@ -65,8 +144,8 @@ class Main {
 
 		//var mercury = exp.addBody(SolarBodyData.mercury);
 		//var venus = exp.addBody(SolarBodyData.venus);
-		var earth = exp.addBody(SolarBodyData.earth);
-		var mars = exp.addBody(SolarBodyData.mars);
+		//var earth = exp.addBody(SolarBodyData.earth);
+		//var mars = exp.addBody(SolarBodyData.mars);
 		
 		var jupiter = exp.addBody(SolarBodyData.jupiter);
 		var saturn = exp.addBody(SolarBodyData.saturn);
@@ -105,10 +184,10 @@ class Main {
 		Console.print('\r$progress%          ', false);
 	}
 
-	inline function printProgressTimeRemaining(exp:Experiment){
+	inline function printProgressAndTimeRemaining(exp:Experiment){
 		//eta
 		var runtime = Sys.cpuTime() - exp.algorithmStartTime;
-		var fractionComplete = (exp.time-exp.timeStart)/exp.timescale;
+		var fractionComplete = (exp.time-exp.timeStart)/(exp.timeEnd - exp.timeStart);
 		var totalRequiredTime = runtime/fractionComplete;
 		var secondsRemaining = totalRequiredTime - runtime;
 
