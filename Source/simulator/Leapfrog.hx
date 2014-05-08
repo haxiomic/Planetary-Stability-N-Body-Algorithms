@@ -14,7 +14,7 @@ class Leapfrog extends Simulator{
 
 	@:noStack 
 	override public function step(){
-		stepDKD();
+		stepKDK();
 	}
 
 	@:noStack

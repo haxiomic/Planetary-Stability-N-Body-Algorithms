@@ -24,7 +24,68 @@ class Main {
 	/* ------------------- */
 
 	public function new () {
-		renderer = new BasicRenderer();
+		renderer = new BasicRenderer(170);
+
+		integratorBenchmarkTest();
+		//pertubationTest();
+	}
+
+	/* --- Tests --- */
+	function integratorBenchmarkTest(){
+		var name = "Integrator Benchmark";
+		var dt = 1;
+		var timescale = 20000;
+
+		Console.printTitle(name, false);
+		Console.newLine();
+
+		saveInfo({
+			name:name,
+			dt: dt,
+			timescale: timescale,
+			units: units,
+			buildDate: Build.date(),
+			git: Git.lastCommit(),
+			gitHash: Git.lastCommitHash(),
+		}, 'info.json', name, true);
+
+		var exp = new Experiment(simulator.Hermite4thOrder, [G, dt]);
+		exp.timescale = timescale;
+		exp.analysisTimeInterval = 1;
+		exp.runtimeCallbackTimeInterval = 1;
+
+		Console.printInfo(exp.name, false);
+		Console.newLine();
+
+
+		var sun = exp.addBody(SolarBodyData.sun);
+		var planet = exp.addBody({
+			name: 'planet',
+			position: new Vec3(2, 0, 0),
+			velocity: new Vec3(0, 0, 0.004),
+			mass: SolarBodyData.earth.mass
+		});
+		exp.zeroDift();
+
+		exp.runtimeCallback = function(exp){
+			//trace(exp.eccentricityArray);
+			renderer.render();
+			printProgressAndTimeRemaining;
+		}
+
+		//drawing
+		renderer.reset();
+		renderer.addBody(sun, 0.5);
+		renderer.addBody(planet, 0.5);
+		renderer.centerBody = exp.simulator.bodies[0];
+
+		var isStable = exp.performStabilityTest(null, false);
+		if(!isStable)Console.printError("Orbit not stable");
+
+		//realtime draw
+/*		renderer.reset();
+		renderer.centerBody = exp.simulator.bodies[0];
+		visualize(exp);*/
 	}
 
 	function pertubationTest(){
@@ -88,7 +149,6 @@ class Main {
 		d = dStart;
 		var col:Int = 0, row:Int = 0;
 		while(d<=dEnd+dStep*.5){
-
 			//Create columns
 			var coordinateColumn = new Array<String>();
 			var stableFractionColumn = new Array<Float>();
@@ -247,26 +307,6 @@ class Main {
 		return [stableFraction, averageSemiMajorError];
 	}
 
-	function saveGridData(columns:Array<Array<Dynamic>>, filename:String, folderName:String = null, overwrite:Bool = false){
-		var csv = new HackyCSV(',', 0);
-		for (i in 0...columns.length)csv.addColumn(columns[i]);
-
-		var path = makePath(filename, folderName);
-		FileTools.save(path, csv.toString(), true , overwrite);
-	}
-
-	function saveInfo(info:Dynamic, filename:String, folderName:String, overwrite:Bool = false){
-		var path = makePath(filename, folderName);
-		FileTools.save(path, haxe.Json.stringify(info), true , overwrite);
-	}
-
-	function makePath(filename:String, folderName:String = null){
-		var path = dataOutDirectory;
-		if(folderName!=null)path = haxe.io.Path.join([path, '/$folderName/']);
-		path = haxe.io.Path.join([path, '$filename']);
-		return path;
-	}
-
 	/* --- Planetary System Schemes --- */
 	function addSolarSystem(exp:Experiment){
 		var sun = exp.addBody(SolarBodyData.sun);
@@ -282,28 +322,12 @@ class Main {
 		var neptune = exp.addBody(SolarBodyData.neptune);
 	}
 
-	function addTwoBodyEccentricOrbit(exp:Experiment){
-		var sunData:BodyDatum = {
-			name: "Sun",
-			position: {x:0, y:0, z:0},
-			velocity: {x:0, y:0, z:0},
-			mass: 1.988544E30,
-		};
-		var planetData:BodyDatum = {
-			name: "Test Planet (Earth-like)",
-			position: {x:1.5, y:0, z:0},
-			velocity: {x:0, y:0, z:0.008},
-			mass: 5.97219E28,
-		};
-		
-		var sun = exp.addBody(sunData); 
-		var planet = exp.addBody(planetData);
-		sun.v.z = -planet.v.z*planet.m/sun.m;
-	}
-
-	function visualize(exp:Experiment){
+	function visualize(exp:Experiment, iterations:Int = 1){
 		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFFFFFF);
-		renderer.preRenderCallback = inline function() exp.simulator.step();	
+		renderer.preRenderCallback = inline function() {
+			for (i in 0...iterations)
+				exp.simulator.step();	
+		}
 		renderer.startAutoRender();
 	}
 
@@ -341,6 +365,26 @@ class Main {
 	}
 
 	/* --- File Output --- */
+	function saveGridData(columns:Array<Array<Dynamic>>, filename:String, folderName:String = null, overwrite:Bool = false){
+		var csv = new HackyCSV(',', 0);
+		for (i in 0...columns.length)csv.addColumn(columns[i]);
+
+		var path = makePath(filename, folderName);
+		FileTools.save(path, csv.toString(), true , overwrite);
+	}
+
+	function saveInfo(info:Dynamic, filename:String, folderName:String, overwrite:Bool = false){
+		var path = makePath(filename, folderName);
+		FileTools.save(path, haxe.Json.stringify(info), true , overwrite);
+	}
+
+	function makePath(filename:String, folderName:String = null){
+		var path = dataOutDirectory;
+		if(folderName!=null)path = haxe.io.Path.join([path, '/$folderName/']);
+		path = haxe.io.Path.join([path, '$filename']);
+		return path;
+	}
+
 	function saveExperiment(e:Experiment, filePrefix:String = ""){
 		var params = e.params;
 		var results = e.results;

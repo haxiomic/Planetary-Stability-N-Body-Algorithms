@@ -157,7 +157,7 @@ class Experiment{
 		return results;
 	}
 
-	public function performStabilityTest(?semiMajorErrorThreshold:Float):Bool{
+	public function performStabilityTest(?semiMajorErrorThreshold:Float, breakWhenUnstable:Bool = true):Bool{
 		simulator.prepare();
 		//Clear data
 		semiMajorErrorArray = new Array<Float>();
@@ -212,7 +212,7 @@ class Experiment{
 				//analyze system
 				if(analysisEnabled)
 					if( time - lastATime >= analysisTimeInterval){
-						if(!stablityCheck())return false;
+						if(!stablityCheck() && breakWhenUnstable)return false;
 						lastATime = time;
 					}
 				

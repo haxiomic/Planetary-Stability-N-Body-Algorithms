@@ -20,8 +20,9 @@ class BasicRenderer {
 	public var preRenderCallback:Void->Void;
 	public var centerBody:Body = null;
 
-	public function new(){
+	public function new(lengthConversion:Float = 10){
 		this.stage = flash.Lib.current.stage;
+		this.lengthConversion = lengthConversion;
 		initalize();
 		stage.addEventListener(MouseEvent.MOUSE_WHEEL, onMouseWheel);
 	}

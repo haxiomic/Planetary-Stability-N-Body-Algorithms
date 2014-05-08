@@ -36,10 +36,18 @@ class Console {
 		else Sys.print(str);
 	}
 
+	static public function printWarning(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
+		var str:String = BRIGHT_YELLOW+BOLD+'Warning'+RESET+': '+v+RESET;
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
+	}
+
 	static public function printError(v:Dynamic, newLine:Bool = true){
 		if(suppress)return;
 
-		var str:String = RED+BOLD+'Error'+RESET+': '+v+RESET;
+		var str:String = BRIGHT_RED+BOLD+'Error'+RESET+': '+v+RESET;
 		if(newLine)Sys.println(str);
 		else Sys.print(str);
 	}
