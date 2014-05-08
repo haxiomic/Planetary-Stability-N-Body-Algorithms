@@ -31,11 +31,31 @@ from:
 
 
 --------------
+
+LEAPFROG
 10Myr stability
 dt = 96 days
 average semi-major error = 0.015
 CPU Time = 83.19
 
+LEAPFROG-ADAPTIVE
+10Myr stability
+dt = 96 days
+accuracyParameter = 0.04
+average semi-major error = 0.0018
+CPU Time = 53.34
 
 -------------
-Leapfrog adaptive kicks butt! It's time-symmetric too!
+Leapfrog adaptive kicks butt! It's very close to time-symmetric too!
+
+
+-------------
+Mapping took >6h
+
+-------------
+Mapping done without Earth and Mars because 10Myr stability requires dt < ~20 (adaptive) and takes > 7 mins!
+dt = 20 days
+accuracyParameter = 0.04
+average semi-major error = 0.0007042668733
+CPU Time = 443.33 
+=5.3 times as long!

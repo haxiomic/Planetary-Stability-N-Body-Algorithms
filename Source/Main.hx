@@ -26,21 +26,32 @@ class Main {
 	public function new () {
 		renderer = new BasicRenderer(100);
 
-		//Energy Conservation Test
-		var dt = 11;
-		var timescale = 1E4*365;
-
-		var integrators:Array<Class<Dynamic>> = [simulator.SemiImplicitEulerMethod, Leapfrog, Hermite4thOrder];
-		for (i in integrators)	integratorEnergyTest(i, dt, timescale);
-
-		integratorEnergyTest(LeapfrogAdaptive, 5, timescale, [0.04]);
-
+		isolatedStabilityTest(96, 1E8*365, 1);
 		
 		// integratorBenchmarkTest();
 		// pertubationTest();
 	}
 
 	/* --- Tests --- */
+	function taylor1VsSemiEulerEnergyTest(){
+		var name = "Low Order Energy Conservation";
+		var dt = 11;
+		var timescale = 1E4*365;
+
+		var integrators:Array<Class<Dynamic>> = [Taylor2ndDerivative, SemiImplicitEulerMethod];
+		for (i in integrators)	integratorEnergyTest(i, dt, timescale, null, name);
+	}
+
+	function higherOrderEnergyTest(){
+		var name = "High Order Energy Conservation";
+		var dt = 11;
+		var timescale = 1E4*365;
+
+		var integrators:Array<Class<Dynamic>> = [simulator.SemiImplicitEulerMethod, Leapfrog, Hermite4thOrder];
+		for (i in integrators)	integratorEnergyTest(i, dt, timescale, null, name);
+		integratorEnergyTest(LeapfrogAdaptive, 5, timescale, [0.04], name);
+	}
+
 	function leapfrogAdaptiveTest(){
 		var name = "Leapfrog vs LeapfrogAdaptive";
 		var timescale:Float;
@@ -108,6 +119,7 @@ class Main {
 			cpuTime: exp.totalCPUTime,
 			additionalParams: additionalParams,
 			energyChangeAvg: energyChangeAvg,
+			integrator: exp.simulator.algorithmName,
 		}, 'Info-${exp.name}.$timescaleYears.json', name, true);
 
 		saveGridData([time, energyChange], '${exp.name}.$timescaleYears.csv', name, true);
@@ -181,7 +193,7 @@ class Main {
 		visualize(exp);*/
 	}
 
-	function pertubationTest(){
+	function pertubationMapTest(){
 		//Main parameters
 		var name = "Perturbation Stability Map";
 		var dt:Float        = 96;
@@ -250,7 +262,7 @@ class Main {
 			v_kms = vStart;
 			row = 0;
 			while(v_kms<=vEnd+vStep*.5){
-				var result = testPerturbationStability(d, v_kms, 0.5*SolarBodyData.sun.mass, dt, timescale, semiMajorErrorThreshold, testCount, ri);
+				var result = perturbationStabilityTest(d, v_kms, 0.5*SolarBodyData.sun.mass, dt, timescale, semiMajorErrorThreshold, testCount, ri);
 
 				var stableFraction = result[0];
 				var averageSemiMajorError = result[1];
@@ -287,7 +299,7 @@ class Main {
 		saveGridData(semiMajorErrorData, 'semiMajorError.csv', name);
 	}
 
-	function testPerturbationStability(d:Float, v_kms:Float, mass:Float, dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>, testCount:Int, ri:Float = 10000):Array<Float>{
+	function perturbationStabilityTest(d:Float, v_kms:Float, mass:Float, dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>, testCount:Int, ri:Float = 10000):Array<Float>{
 		Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
 
 		var exp:Experiment;
@@ -400,8 +412,71 @@ class Main {
 		return [stableFraction, averageSemiMajorError];
 	}
 
+	function isolatedStabilityTest(dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>){
+		var name = "Isolated Stability";
+
+		Console.printTitle(name, false);
+		Console.newLine();
+
+		var exp = new Experiment(simulator.LeapfrogAdaptive, [G, dt, 0.04]);
+		exp.timescale = timescale;
+		exp.analysisTimeInterval = 5000*365;
+		exp.runtimeCallbackTimeInterval = timescale/200;
+
+		Console.printInfo(exp.name, false);
+		Console.newLine();
+
+		//Add solar system
+		var sun = exp.addBody(SolarBodyData.sun);
+		//var mercury = exp.addBody(SolarBodyData.mercury);
+		//var venus = exp.addBody(SolarBodyData.venus);
+		//var earth = exp.addBody(SolarBodyData.earth);
+		//var mars = exp.addBody(SolarBodyData.mars);
+		var jupiter = exp.addBody(SolarBodyData.jupiter);
+		var saturn = exp.addBody(SolarBodyData.saturn);
+		var uranus = exp.addBody(SolarBodyData.uranus);
+		var neptune = exp.addBody(SolarBodyData.neptune);
+
+		exp.runtimeCallback = function(exp){
+		//	trace(exp.eccentricityArray);
+			printProgressAndTimeRemaining(exp);
+		}
+
+		//execute
+		var isStable = exp.performStabilityTest(semiMajorErrorThreshold);
+
+		//handle result
+		Console.newLine();
+		if(isStable){
+			Console.printSuccess('Stable');
+			Console.printStatement('Average semi-major error: ${exp.semiMajorErrorAverageAbs}');
+			printBasicSummary(exp);
+		}else 
+			Console.printFatalConcern('System unstable at time ${exp.time/365} years');
+
+		Console.newLine();
+
+		saveInfo({
+			name:name,
+			dt: dt,
+			timescale: timescale,
+			units: units,
+			buildDate: Build.date(),
+			git: Git.lastCommit(),
+			gitHash: Git.lastCommitHash(),
+			cpuTime: exp.totalCPUTime,
+			semiMajorErrorAvg: exp.semiMajorErrorAverageAbs,
+			integrator: exp.simulator.algorithmName,
+		}, 'info.json', name, false);
+
+		//Debug visualization
+		//center on sun
+		renderer.centerBody = exp.simulator.bodies[0];
+		visualize(exp);
+	}
+
 	/* --- Planetary System Schemes --- */
-	function addSolarSystem(exp:Experiment){
+	/*function addSolarSystem(exp:Experiment){
 		var sun = exp.addBody(SolarBodyData.sun);
 
 		//var mercury = exp.addBody(SolarBodyData.mercury);
@@ -413,7 +488,7 @@ class Main {
 		var saturn = exp.addBody(SolarBodyData.saturn);
 		var uranus = exp.addBody(SolarBodyData.uranus);
 		var neptune = exp.addBody(SolarBodyData.neptune);
-	}
+	}*/
 
 	function visualize(exp:Experiment, iterations:Int = 1){
 		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFFFFFF);
