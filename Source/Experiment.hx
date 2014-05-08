@@ -157,8 +157,10 @@ class Experiment{
 		return results;
 	}
 
-	public function performStabilityTest():Bool{
+	public function performStabilityTest(?semiMajorErrorThreshold:Float):Bool{
 		simulator.prepare();
+		//Clear data
+		semiMajorErrorArray = new Array<Float>();
 		//Enable runtime callback & analysis
 		//analysis
 		var analysisEnabled = (analysisTimeInterval != null);
@@ -185,9 +187,15 @@ class Experiment{
 			computeKeplerianElements();
 			//check all have eccentricity < 1
 			for (e in eccentricityArray)
-				if(e>=1){//planet ejected
-					return false;
-				}
+				if(e>=1)return false;//planet ejected
+
+			//check relative semi-major axis change is below
+			if(semiMajorErrorThreshold!=null){
+				for (i in 0...semiMajorArray.length)
+					if(Math.abs(semiMajorArray[i] - initialSemiMajorArray[i])/initialSemiMajorArray[i] >= semiMajorErrorThreshold)
+						return false;
+			}
+
 			return true;
 		}
 
@@ -235,13 +243,12 @@ class Experiment{
 		if(runtimeCallbackEnabled)runtimeCallback(this);
 
 		//Determine magnitude of perturbation
-		semiMajorErrorArray = new Array<Float>();
-		semiMajorErrorAverageAbs = 0;
-
-		for (i in 0...semiMajorArray.length){
-			semiMajorErrorArray[i] = (semiMajorArray[i] - initialSemiMajorArray[i])/initialSemiMajorArray[i];
-		}
+		for (i in 0...semiMajorArray.length)
+			semiMajorErrorArray[i] = Math.abs(semiMajorArray[i] - initialSemiMajorArray[i])/initialSemiMajorArray[i];
 		
+		
+		//average relative change in semi-major axis over all planets
+		semiMajorErrorAverageAbs = 0;
 		var te:Float = 0;
 		var n = 0;
 		for (e in semiMajorErrorArray) {

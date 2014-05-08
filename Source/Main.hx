@@ -25,17 +25,18 @@ class Main {
 
 	public function new () {
 		renderer = new BasicRenderer();
+	}
 
+	function pertubationTest(){
 		//Main parameters
+		var name = "Perturbation Stability Map";
 		var dt:Float        = 96;
 		var timescale:Float = 1E6*365.0;
 		var ri:Float        = 10000;//AU, suitably distant starting point so as not to significantly interact with system
 		var testCount:Int   = 10;
+		var semiMajorErrorThreshold:Null<Float> = 1;//1 = factor 2 change
 
-		var name = "Perturbation Stability Map";
-		Console.printTitle(name, false);
-		Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}');
-		Console.newLine();
+		/* DEBUG PARAMS */
 
 		//Build perturbation stability map
 		//iterate over range of closest approaches and initial velocities 
@@ -50,6 +51,11 @@ class Main {
 		var vStep:Float  = 0.2;
 		var vEnd:Float   = 5;
 
+		//Print Info
+		Console.printTitle(name, false);
+		Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}, semi-major error threshold: $semiMajorErrorThreshold');
+		Console.newLine();
+
 		//Save info
 		saveInfo({
 			name:name,
@@ -57,6 +63,7 @@ class Main {
 			timescale: timescale,
 			ri: ri,
 			testCount: testCount,
+			semiMajorErrorThreshold: semiMajorErrorThreshold,
 			dStart: dStart,
 			dStep: dStep,
 			dEnd: dEnd,
@@ -74,13 +81,13 @@ class Main {
 		var stableFractionData = new Array<Array<Float>>();
 		var semiMajorErrorData = new Array<Array<Float>>();
 
-		//Command line arguments
+		//command line arguments
 		if(Sys.args().length>=1) 
 			dStart = Std.parseFloat( Sys.args()[0] );
 		//collect data
 		d = dStart;
 		var col:Int = 0, row:Int = 0;
-		while(d<=dEnd){
+		while(d<=dEnd+dStep*.5){
 
 			//Create columns
 			var coordinateColumn = new Array<String>();
@@ -89,8 +96,8 @@ class Main {
 
 			v_kms = vStart;
 			row = 0;
-			while(v_kms<=vEnd){
-				var result = testPerturbationStability(d, v_kms, 0.5*SolarBodyData.sun.mass, testCount, dt, timescale, ri);
+			while(v_kms<=vEnd+vStep*.5){
+				var result = testPerturbationStability(d, v_kms, 0.5*SolarBodyData.sun.mass, dt, timescale, semiMajorErrorThreshold, testCount, ri);
 
 				var stableFraction = result[0];
 				var averageSemiMajorError = result[1];
@@ -101,14 +108,13 @@ class Main {
 
 				Console.printInfo('Stable fraction: ${stableFraction}, semi-major error: ${averageSemiMajorError}');
 
-
 				//save partial data
 				coordinateData[col] = coordinateColumn;
 				stableFractionData[col] = stableFractionColumn;
 				semiMajorErrorData[col] = semiMajorErrorColumn;
-				saveGridData(coordinateData, 'coordinate.csv.part.$dStart,$vStart', name, true);
-				saveGridData(stableFractionData, 'stableFraction.csv.part.$dStart,$vStart', name, true);
-				saveGridData(semiMajorErrorData, 'semiMajorError.csv.part.$dStart,$vStart', name, true);
+				saveGridData(coordinateData, 'part.coordinate.$dStart,$vStart.csv', name, true);
+				saveGridData(stableFractionData, 'part.stableFraction.$dStart,$vStart.csv', name, true);
+				saveGridData(semiMajorErrorData, 'part.semiMajorError.$dStart,$vStart.csv', name, true);
 
 				v_kms+=vStep;
 				row++;
@@ -128,29 +134,7 @@ class Main {
 		saveGridData(semiMajorErrorData, 'semiMajorError.csv', name);
 	}
 
-	function saveGridData(columns:Array<Array<Dynamic>>, filename:String, folderName:String = null, overwrite:Bool = false){
-		var csv = new HackyCSV();
-		for (i in 0...columns.length)csv.addColumn(columns[i]);
-
-		var path = makePath(filename, folderName);
-		FileTools.save(path, csv.toString(), true , overwrite);
-	}
-
-	function saveInfo(info:Dynamic, filename:String, folderName:String, overwrite:Bool = false){
-		var path = makePath(filename, folderName);
-		FileTools.save(path, haxe.Json.stringify(info), true , overwrite);
-	}
-
-	function makePath(filename:String, folderName:String = null){
-		var path = dataOutDirectory;
-		if(folderName!=null)path = haxe.io.Path.join([path, '/$folderName/']);
-		path = haxe.io.Path.join([path, '$filename']);
-		return path;
-	}
-
-	function testIsolatedStability(dt:Float, timescale:Float){}
-
-	function testPerturbationStability(d:Float, v_kms:Float, mass:Float, testCount:Int, dt:Float, timescale:Float, ri:Float = 10000):Array<Float>{
+	function testPerturbationStability(d:Float, v_kms:Float, mass:Float, dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>, testCount:Int, ri:Float = 10000):Array<Float>{
 		Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
 
 		var exp:Experiment;
@@ -166,13 +150,16 @@ class Main {
 
 		while(testN < testCount){
 			exp = new Experiment(Leapfrog, [G, dt]);
+			exp.timescale = timescale;
+			exp.analysisTimeInterval = 5000*365;
+			exp.runtimeCallbackTimeInterval = 1*365;
 
 			//Add solar system
 			var sun = exp.addBody(SolarBodyData.sun);
 			//var mercury = exp.addBody(SolarBodyData.mercury);
 			//var venus = exp.addBody(SolarBodyData.venus);
-			//var earth = exp.addBody(SolarBodyData.earth);
-			//var mars = exp.addBody(SolarBodyData.mars);
+			var earth = exp.addBody(SolarBodyData.earth);
+			var mars = exp.addBody(SolarBodyData.mars);
 			var jupiter = exp.addBody(SolarBodyData.jupiter);
 			var saturn = exp.addBody(SolarBodyData.saturn);
 			var uranus = exp.addBody(SolarBodyData.uranus);
@@ -208,10 +195,6 @@ class Main {
 			});
 			exp.ignoredBodies.push(nearbyStar);
 
-			exp.timescale = timescale;
-			exp.analysisTimeInterval = 10000*365;
-			exp.runtimeCallbackTimeInterval = 1*365;
-
 			//runtime logic
 			var firstApproachCompleted:Bool = false;
 			var last_r:Float = Vec3.distance(nearbyStar.p, sun.p);
@@ -223,7 +206,7 @@ class Main {
 					// trace('$r, $last_r');
 					if(r>last_r){//receding
 						exp.timeEnd = exp.time+timescale;//extend time another timescale
-						exp.runtimeCallbackTimeInterval = 1000*365;//reduce callback interval
+						exp.runtimeCallbackTimeInterval = 10000*365;//reduce callback interval
 						Console.newLine();
 						Console.printStatement('First approach completed, r: ${Math.round(r)} AU, time: ${Math.round(exp.time/365.0)} years, end time: ${Math.round(exp.timeEnd/365.0)} years');
 						firstApproachCompleted = true;
@@ -235,7 +218,7 @@ class Main {
 			}
 			
 			//execute
-			var isStable = exp.performStabilityTest();
+			var isStable = exp.performStabilityTest(semiMajorErrorThreshold);
 
 			//handle result
 			Console.newLine();
@@ -262,6 +245,26 @@ class Main {
 		//visualize(exp);
 
 		return [stableFraction, averageSemiMajorError];
+	}
+
+	function saveGridData(columns:Array<Array<Dynamic>>, filename:String, folderName:String = null, overwrite:Bool = false){
+		var csv = new HackyCSV(',', 0);
+		for (i in 0...columns.length)csv.addColumn(columns[i]);
+
+		var path = makePath(filename, folderName);
+		FileTools.save(path, csv.toString(), true , overwrite);
+	}
+
+	function saveInfo(info:Dynamic, filename:String, folderName:String, overwrite:Bool = false){
+		var path = makePath(filename, folderName);
+		FileTools.save(path, haxe.Json.stringify(info), true , overwrite);
+	}
+
+	function makePath(filename:String, folderName:String = null){
+		var path = dataOutDirectory;
+		if(folderName!=null)path = haxe.io.Path.join([path, '/$folderName/']);
+		path = haxe.io.Path.join([path, '$filename']);
+		return path;
 	}
 
 	/* --- Planetary System Schemes --- */
