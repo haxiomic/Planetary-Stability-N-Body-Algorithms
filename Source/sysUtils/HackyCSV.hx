@@ -27,6 +27,9 @@ class HackyCSV {
 		columns.push(c);
 	}
 
+	//todo: addRow() ?
+	//add2x2Data
+
 	public function toString():String{
 		var csvStr:String = "";
 		for(r in 0...rowCount){

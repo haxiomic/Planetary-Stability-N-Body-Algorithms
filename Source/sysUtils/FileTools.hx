@@ -40,8 +40,8 @@ class FileTools{
 		var hxPath = new haxe.io.Path(path);
 
 		var filenameWOExt = hxPath.file;
-		var ext = hxPath.ext;
-		var dir = hxPath.dir;
+		var ext = hxPath.ext;if(ext==null)ext='';
+		var dir = hxPath.dir;if(dir==null)dir='';
 	
 		//get last digit (x)
 		var lastDigitReg:EReg = ~/\s\((\d+)\)$/;

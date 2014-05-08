@@ -26,46 +26,127 @@ class Main {
 	public function new () {
 		renderer = new BasicRenderer();
 
-		var dt:Float = 96;
+		//Main parameters
+		var dt:Float        = 96;
 		var timescale:Float = 1E6*365.0;
-		var ri:Float = 10000;//AU, suitably distant starting point so as not to significantly interact with system
-		var repeatCount = 10;
+		var ri:Float        = 10000;//AU, suitably distant starting point so as not to significantly interact with system
+		var testCount:Int   = 10;
 
 		var name = "Perturbation Stability Map";
 		Console.printTitle(name, false);
 		Console.printConcern('Timescale: ${timescale/365} years, dt: $dt ${units.time}');
 		Console.newLine();
 
-		//Build map
-		//decide upon closest approach d and initial velocity (magnitude)
-		var dStart = 100;//AU
-		var dEnd   = 0;
-		var dStep  = 100;
+		//Build perturbation stability map
+		//iterate over range of closest approaches and initial velocities 
 
-		var vStart = 20;//km/s
-		var vEnd   = 0;
-		var vStep  = 10;
+		var d:Float, v_kms:Float;
+		//AU
+		var dStart:Float = 0;
+		var dStep:Float  = 100;
+		var dEnd:Float   = 1000;
 
-		var d = dStart;
-		var v_kms = vStart; 
-		while(d>=dEnd){
-			while(v_kms>=vEnd){
-				var result = testPerturbationStability(d, v_kms, 0.5*SolarBodyData.sun.mass, repeatCount, dt, timescale, ri);
+		//km/s
+		var vStart:Float = 0;
+		var vStep:Float  = 0.2;
+		var vEnd:Float   = 5;
+
+		//d x v
+		var coordinateData = new Array<Array<String>>();
+		var stableFractionData = new Array<Array<Float>>();
+		var semiMajorErrorData = new Array<Array<Float>>();
+
+		//collect data
+		d = dStart;
+		var col:Int = 0, row:Int = 0;
+		while(d<=dEnd){
+
+			//Create columns
+			var coordinateColumn = new Array<String>();
+			var stableFractionColumn = new Array<Float>();
+			var semiMajorErrorColumn = new Array<Float>();
+
+			v_kms = vStart;
+			row = 0;
+			while(v_kms<=vEnd){
+				var result = testPerturbationStability(d, v_kms, 0.5*SolarBodyData.sun.mass, testCount, dt, timescale, ri);
 
 				var stableFraction = result[0];
 				var averageSemiMajorError = result[1];
 
+				coordinateColumn[row] = '$d AU, $v_kms km/s';
+				stableFractionColumn[row] = stableFraction;
+				semiMajorErrorColumn[row] = averageSemiMajorError;
+
 				trace('stable fraction: ${stableFraction} semi-major error: ${averageSemiMajorError}');
-				v_kms-=vStep;
+				v_kms+=vStep;
+				row++;
 			}
 
-			d-=100;
+			coordinateData[col] = coordinateColumn;
+			stableFractionData[col] = stableFractionColumn;
+			semiMajorErrorData[col] = semiMajorErrorColumn;
+
+			//save partial data
+			saveGridData(coordinateData, 'coordinate.csv.partial', name, true);
+			saveGridData(stableFractionData, 'stableFraction.csv.partial', name, true);
+			saveGridData(semiMajorErrorData, 'semiMajorError.csv.partial', name, true);
+
+			d+=dStep;
+			col++;
 		}
+
+		//Save data
+		saveGridData(coordinateData, 'coordinate.csv.partial', name);
+		saveGridData(stableFractionData, 'stableFraction.csv.partial', name);
+		saveGridData(semiMajorErrorData, 'semiMajorError.csv.partial', name);
+
+		//Save info
+		saveInfo({
+			dt: 96,
+			timescale: 1E6*365.0,
+			ri: 10000,
+			testCount: 10,
+
+			dStart:  0,
+			dStep:  100,
+			dEnd:  1000,
+			vStart:  0,
+			vStep:  0.2,
+			vEnd:  5,
+
+			units: units,
+
+			date: Build.date(),
+			git: Git.lastCommit(),
+			gitHash: Git.lastCommitHash(),
+
+		}, 'info.json', name, false);
 	}
 
-	inline function testStability(dt:Float, timescale:Float){}
+	function saveGridData(columns:Array<Array<Dynamic>>, filename:String, folderName:String = null, overwrite:Bool = false){
+		var csv = new HackyCSV();
+		for (i in 0...columns.length)csv.addColumn(columns[i]);
 
-	inline function testPerturbationStability(d:Float, v_kms:Float, mass:Float, repeatCount:Int, dt:Float, timescale:Float, ri:Float = 10000):Array<Float>{
+		var path = makePath(filename, folderName);
+		FileTools.save(path, csv.toString(), true , overwrite);
+	}
+
+	function saveInfo(info:Dynamic, filename:String, folderName:String, overwrite:Bool = false){
+		var path = makePath(filename, folderName);
+		FileTools.save(path, JSON.stringify(info), true , overwrite);
+	}
+
+	function makePath(filename:String, folderName:String = null){
+		var path = dataOutDirectory;
+		if(folderName!=null)path = haxe.io.Path.join([path, '/$folderName/']);
+		path = haxe.io.Path.join([path, '$filename']);
+		return path;
+	}
+
+	function testIsolatedStability(dt:Float, timescale:Float){}
+
+	function testPerturbationStability(d:Float, v_kms:Float, mass:Float, testCount:Int, dt:Float, timescale:Float, ri:Float = 10000):Array<Float>{
 		Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
 
 		var exp:Experiment;
@@ -77,9 +158,9 @@ class Main {
 		var averageSemiMajorError:Float = 0;
 		var stableFraction:Float = 0;
 		var stableCount = 0;
-		var testCount = 0;
+		var testN = 0;
 
-		while(testCount<repeatCount){
+		while(testN < testCount){
 			exp = new Experiment(Leapfrog, [G, dt]);
 
 			//Add solar system
@@ -92,8 +173,8 @@ class Main {
 			var saturn = exp.addBody(SolarBodyData.saturn);
 			var uranus = exp.addBody(SolarBodyData.uranus);
 			var neptune = exp.addBody(SolarBodyData.neptune);
-			//counter drift
-			exp.zeroDift();
+		
+			exp.zeroDift();//counter drift
 
 			//Add perturbing star
 			//pick a random point on sphere of radius d, closet approach, http://mathworld.wolfram.com/SpherePointPicking.html
@@ -131,14 +212,14 @@ class Main {
 			var firstApproachCompleted:Bool = false;
 			var last_r:Float = Vec3.distance(nearbyStar.p, sun.p);
 			exp.runtimeCallback = function(exp){
-				//wait until the star has passed the sun at its closest point
+				//wait until the star has passed the sun at its closest point before starting timescale
 				if(!firstApproachCompleted){				
 					//calculate distance to sun
 					var r = Vec3.distance(nearbyStar.p, sun.p);
 					// trace('$r, $last_r');
 					if(r>last_r){//receding
 						exp.timeEnd = exp.time+timescale;//extend time another timescale
-						exp.runtimeCallbackTimeInterval = 100*365;//reduce callback interval
+						exp.runtimeCallbackTimeInterval = 1000*365;//reduce callback interval
 						Console.newLine();
 						Console.printStatement('First approach completed, r: ${Math.round(r)} AU, time: ${Math.round(exp.time/365.0)} years, end time: ${Math.round(exp.timeEnd/365.0)} years');
 						firstApproachCompleted = true;
@@ -164,12 +245,12 @@ class Main {
 			Console.newLine();
 
 			//progress test loop
-			testCount++;
+			testN++;
 			if(isStable)stableCount++;
-			averageSemiMajorError += exp.semiMajorErrorAverageAbs/repeatCount;
+			averageSemiMajorError += exp.semiMajorErrorAverageAbs/testCount;
 		}
 
-		stableFraction = stableCount/repeatCount;
+		stableFraction = stableCount/testCount;
 
 		//Debug visualization
 		//center on sun
