@@ -5,12 +5,13 @@ using sysUtils.Escape;
 class HackyCSV {
 	public var rowCount(default, null):Int = 0;
 
-	var columns:Array<Column>;
+	var columns:Array<Column> = new Array<Column>();
 	var separator:String;
+	var blank:Dynamic = "";
 
-	public function new(separator:String = ","){
+	public function new(separator:String = ",", blank:Dynamic = ""){
 		this.separator = separator;
-		columns = new Array<Column>();
+		this.blank = blank;
 	}
 
 	public function addColumn(data:Array<Dynamic>, ?header:String){
@@ -20,7 +21,7 @@ class HackyCSV {
 			rowCount = c.rowCount;
 			//pad shorter columns with blanks
 			for(col in columns)
-				if(col.rowCount<rowCount) col.padWithBlanks(rowCount);
+				if(col.rowCount<rowCount) col.padWithBlanks(rowCount, blank);
 		}
 		else c.padWithBlanks(rowCount);	//not enough rows supplied
 
@@ -87,11 +88,11 @@ class Column{
 		if(this.header!=null)this.data.unshift(header);
 	}
 
-	public function padWithBlanks(desiredLength:Int){
+	public function padWithBlanks(desiredLength:Int, blank:Dynamic = ""){
 		var dl = desiredLength-this.rowCount;
 		if(dl<=0)return;
 		for(i in 0...dl){
-			data.push("");
+			data.push(blank);
 		}
 	}
 

@@ -39,7 +39,6 @@ class Main {
 
 		//Build perturbation stability map
 		//iterate over range of closest approaches and initial velocities 
-
 		var d:Float, v_kms:Float;
 		//AU
 		var dStart:Float = 0;
@@ -51,11 +50,33 @@ class Main {
 		var vStep:Float  = 0.2;
 		var vEnd:Float   = 5;
 
+		//Save info
+		saveInfo({
+			name:name,
+			dt: dt,
+			timescale: timescale,
+			ri: ri,
+			testCount: testCount,
+			dStart: dStart,
+			dStep: dStep,
+			dEnd: dEnd,
+			vStart: vStart,
+			vStep: vStep,
+			vEnd: vEnd,
+			units: units,
+			buildDate: Build.date(),
+			git: Git.lastCommit(),
+			gitHash: Git.lastCommitHash(),
+		}, 'info.json', name, true);
+
 		//d x v
 		var coordinateData = new Array<Array<String>>();
 		var stableFractionData = new Array<Array<Float>>();
 		var semiMajorErrorData = new Array<Array<Float>>();
 
+		//Command line arguments
+		if(Sys.args().length>=1) 
+			dStart = Std.parseFloat( Sys.args()[0] );
 		//collect data
 		d = dStart;
 		var col:Int = 0, row:Int = 0;
@@ -78,7 +99,17 @@ class Main {
 				stableFractionColumn[row] = stableFraction;
 				semiMajorErrorColumn[row] = averageSemiMajorError;
 
-				trace('stable fraction: ${stableFraction} semi-major error: ${averageSemiMajorError}');
+				Console.printInfo('Stable fraction: ${stableFraction}, semi-major error: ${averageSemiMajorError}');
+
+
+				//save partial data
+				coordinateData[col] = coordinateColumn;
+				stableFractionData[col] = stableFractionColumn;
+				semiMajorErrorData[col] = semiMajorErrorColumn;
+				saveGridData(coordinateData, 'coordinate.csv.part.$dStart,$vStart', name, true);
+				saveGridData(stableFractionData, 'stableFraction.csv.part.$dStart,$vStart', name, true);
+				saveGridData(semiMajorErrorData, 'semiMajorError.csv.part.$dStart,$vStart', name, true);
+
 				v_kms+=vStep;
 				row++;
 			}
@@ -87,41 +118,14 @@ class Main {
 			stableFractionData[col] = stableFractionColumn;
 			semiMajorErrorData[col] = semiMajorErrorColumn;
 
-			//save partial data
-			saveGridData(coordinateData, 'coordinate.csv.partial', name, true);
-			saveGridData(stableFractionData, 'stableFraction.csv.partial', name, true);
-			saveGridData(semiMajorErrorData, 'semiMajorError.csv.partial', name, true);
-
 			d+=dStep;
 			col++;
 		}
 
 		//Save data
-		saveGridData(coordinateData, 'coordinate.csv.partial', name);
-		saveGridData(stableFractionData, 'stableFraction.csv.partial', name);
-		saveGridData(semiMajorErrorData, 'semiMajorError.csv.partial', name);
-
-		//Save info
-		saveInfo({
-			dt: 96,
-			timescale: 1E6*365.0,
-			ri: 10000,
-			testCount: 10,
-
-			dStart:  0,
-			dStep:  100,
-			dEnd:  1000,
-			vStart:  0,
-			vStep:  0.2,
-			vEnd:  5,
-
-			units: units,
-
-			date: Build.date(),
-			git: Git.lastCommit(),
-			gitHash: Git.lastCommitHash(),
-
-		}, 'info.json', name, false);
+		saveGridData(coordinateData, 'coordinate.csv', name);
+		saveGridData(stableFractionData, 'stableFraction.csv', name);
+		saveGridData(semiMajorErrorData, 'semiMajorError.csv', name);
 	}
 
 	function saveGridData(columns:Array<Array<Dynamic>>, filename:String, folderName:String = null, overwrite:Bool = false){
@@ -134,7 +138,7 @@ class Main {
 
 	function saveInfo(info:Dynamic, filename:String, folderName:String, overwrite:Bool = false){
 		var path = makePath(filename, folderName);
-		FileTools.save(path, JSON.stringify(info), true , overwrite);
+		FileTools.save(path, haxe.Json.stringify(info), true , overwrite);
 	}
 
 	function makePath(filename:String, folderName:String = null){

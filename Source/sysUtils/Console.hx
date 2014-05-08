@@ -68,6 +68,14 @@ class Console {
 		else Sys.print(str);
 	}
 
+	static public function printInfo(v:Dynamic, newLine:Bool = true){
+		if(suppress)return;
+
+		var str:String = CYAN+BOLD+v+RESET;
+		if(newLine)Sys.println(str);
+		else Sys.print(str);
+	}
+
 	static public function printQuestion(v:Dynamic, newLine:Bool = true){
 		if(suppress)return;
 
