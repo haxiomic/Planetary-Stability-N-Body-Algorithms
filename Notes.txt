@@ -66,3 +66,9 @@ accuracyParameter = 0.04
 average semi-major error = 0.0007042668733
 CPU Time = 443.33 
 =5.3 times as long!
+
+
+-------------
+Draw stability maps 
+	imagesc(stability); colormap(bone);set(gca,'YDir','normal');caxis([0 1]);
+	imagesc(semiMajorError); colormap(flipud(jet));set(gca,'YDir','normal');caxis([0 1]);
