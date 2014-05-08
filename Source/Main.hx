@@ -27,13 +27,23 @@ class Main {
 		renderer = new BasicRenderer(100);
 
 		//Energy Conservation Test
-		var dt = 20;
-		var timescale = 1E6*365;
+		var dt = 11;
+		var timescale = 1E4*365;
 
-		//var integrators:Array<Class<Dynamic>> = [simulator.SemiImplicitEulerMethod, Leapfrog, Hermite4thOrder];
-		//for (i in integrators)	integratorEnergyTest(i, dt, timescale);
+		var integrators:Array<Class<Dynamic>> = [simulator.SemiImplicitEulerMethod, Leapfrog, Hermite4thOrder];
+		for (i in integrators)	integratorEnergyTest(i, dt, timescale);
 
+		integratorEnergyTest(LeapfrogAdaptive, 5, timescale, [0.04]);
+
+		
+		// integratorBenchmarkTest();
+		// pertubationTest();
+	}
+
+	/* --- Tests --- */
+	function leapfrogAdaptiveTest(){
 		var name = "Leapfrog vs LeapfrogAdaptive";
+		var timescale:Float;
 		timescale = 1E5*365;
 		integratorEnergyTest(Leapfrog, 11, timescale, null, name);
 		integratorEnergyTest(LeapfrogAdaptive, 5, timescale, [0.04], name);
@@ -41,12 +51,8 @@ class Main {
 		timescale = 1E6*365;
 		integratorEnergyTest(Leapfrog, 11, timescale, null, name);
 		integratorEnergyTest(LeapfrogAdaptive, 5, timescale, [0.04], name);
-		
-		// integratorBenchmarkTest();
-		// pertubationTest();
 	}
 
-	/* --- Tests --- */
 	function integratorEnergyTest(?simulatorClass:Class<Dynamic>, dt:Float = 20, timescale:Float = 1E6*365, ?additionalParams:Array<Dynamic>, name:String = "Integrator Energy Conservation"){
 		if(simulatorClass==null)simulatorClass = simulator.Leapfrog;
 		if(additionalParams==null)additionalParams = [];
@@ -90,10 +96,11 @@ class Main {
 		for (ec in energyChange)energyChangeAvg+=ec/energyChange.length;
 		Console.printStatement('Average dE: $energyChangeAvg');
 
+		var timescaleYears = Math.round(timescale/365);
 		saveInfo({
 			name:name,
 			dt: dt,
-			timescale: timescale,
+			timescale: '$timescaleYears years',
 			units: units,
 			buildDate: Build.date(),
 			git: Git.lastCommit(),
@@ -101,9 +108,9 @@ class Main {
 			cpuTime: exp.totalCPUTime,
 			additionalParams: additionalParams,
 			energyChangeAvg: energyChangeAvg,
-		}, 'Info-${exp.name}.$timescale.json', name, true);
+		}, 'Info-${exp.name}.$timescaleYears.json', name, true);
 
-		saveGridData([time, energyChange], '${exp.name}.$timescale.csv', name, true);
+		saveGridData([time, energyChange], '${exp.name}.$timescaleYears.csv', name, true);
 
 		//realtime draw
 		renderer.reset();

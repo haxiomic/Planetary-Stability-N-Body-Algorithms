@@ -35,3 +35,7 @@ from:
 dt = 96 days
 average semi-major error = 0.015
 CPU Time = 83.19
+
+
+-------------
+Leapfrog adaptive kicks butt! It's time-symmetric too!

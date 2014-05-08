@@ -50,6 +50,7 @@ class LeapfrogAdaptive extends Simulator{
 
 
 	override function step(){
+		//Step until synchronised
 		do{
 			subStep();
 		}while(closedCount!=bodyCount);
