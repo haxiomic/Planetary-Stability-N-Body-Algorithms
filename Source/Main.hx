@@ -51,12 +51,11 @@ class Main {
 
 		var exp = new Experiment(simulator.Hermite4thOrder, [G, dt]);
 		exp.timescale = timescale;
-		exp.analysisTimeInterval = 1;
-		exp.runtimeCallbackTimeInterval = 1;
+		exp.analysisTimeInterval = 0;
+		exp.runtimeCallbackTimeInterval = 3;
 
 		Console.printInfo(exp.name, false);
 		Console.newLine();
-
 
 		var sun = exp.addBody(SolarBodyData.sun);
 		var planet = exp.addBody({
@@ -67,9 +66,13 @@ class Main {
 		});
 		exp.zeroDift();
 
+		var pointsX = new Array<Dynamic>();pointsX.push('${exp.name}_x');
+		var pointsY = new Array<Dynamic>();pointsY.push('${exp.name}_y');
 		exp.runtimeCallback = function(exp){
 			//trace(exp.eccentricityArray);
 			renderer.render();
+			pointsX.push(planet.x*.5);
+			pointsY.push(-planet.z*.5);
 			printProgressAndTimeRemaining;
 		}
 
@@ -82,6 +85,10 @@ class Main {
 		var isStable = exp.performStabilityTest(null, false);
 		if(!isStable)Console.printError("Orbit not stable");
 
+
+		saveGridData([pointsX, pointsY], '${exp.name}_xyz', name, true);
+		exit();
+		//
 		//realtime draw
 /*		renderer.reset();
 		renderer.centerBody = exp.simulator.bodies[0];
