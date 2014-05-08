@@ -48,10 +48,18 @@ class LeapfrogAdaptive extends Simulator{
 		mostMassiveMass = mass[mostMassiveIndex];
 	}
 
+
+	override function step(){
+		do{
+			subStep();
+		}while(closedCount!=bodyCount);
+	}
+
 	var s:Int = 0;//current step
 	var prevSmallestSS = 1;
+	var closedCount:Int = 0;
 	@:noStack
-	override function step(){
+	inline function subStep(){
 		var smallestSS = maxSS;
 		var dt;
 		var reorder:Bool = false;
@@ -119,6 +127,7 @@ class LeapfrogAdaptive extends Simulator{
 			}
 		}
 
+		closedCount = 0;
 		//Close
 		for (i in 0...bodyCount){
 			if(Std.int(s+smallestSS) % stepSize[i] != 0) continue;//continue if it's not time to step body
@@ -128,6 +137,8 @@ class LeapfrogAdaptive extends Simulator{
 			position.addFn(i, inline function(k) return
 				velocity.get(i,k)*dt*.5
 			);
+
+			closedCount++;
 		}
 
 		time += dtFromSS(smallestSS);

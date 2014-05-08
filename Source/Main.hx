@@ -24,13 +24,93 @@ class Main {
 	/* ------------------- */
 
 	public function new () {
-		renderer = new BasicRenderer(170);
+		renderer = new BasicRenderer(100);
 
-		integratorBenchmarkTest();
-		//pertubationTest();
+		//Energy Conservation Test
+		var dt = 20;
+		var timescale = 1E6*365;
+
+		//var integrators:Array<Class<Dynamic>> = [simulator.SemiImplicitEulerMethod, Leapfrog, Hermite4thOrder];
+		//for (i in integrators)	integratorEnergyTest(i, dt, timescale);
+
+		var name = "Leapfrog vs LeapfrogAdaptive";
+		timescale = 1E5*365;
+		integratorEnergyTest(Leapfrog, 11, timescale, null, name);
+		integratorEnergyTest(LeapfrogAdaptive, 5, timescale, [0.04], name);
+
+		timescale = 1E6*365;
+		integratorEnergyTest(Leapfrog, 11, timescale, null, name);
+		integratorEnergyTest(LeapfrogAdaptive, 5, timescale, [0.04], name);
+		
+		// integratorBenchmarkTest();
+		// pertubationTest();
 	}
 
 	/* --- Tests --- */
+	function integratorEnergyTest(?simulatorClass:Class<Dynamic>, dt:Float = 20, timescale:Float = 1E6*365, ?additionalParams:Array<Dynamic>, name:String = "Integrator Energy Conservation"){
+		if(simulatorClass==null)simulatorClass = simulator.Leapfrog;
+		if(additionalParams==null)additionalParams = [];
+
+		Console.printTitle(name, false);
+		Console.newLine();
+		
+		var params:Array<Dynamic> = [G, dt];
+		params = params.concat(additionalParams);
+		var exp = new Experiment(simulatorClass, params);
+		exp.timescale = timescale;
+		exp.analysisTimeInterval = timescale/2000;
+		exp.runtimeCallbackTimeInterval = timescale/2000;
+
+		Console.printInfo(exp.name, false);
+		Console.newLine();
+
+		var sun = exp.addBody(SolarBodyData.sun);
+		//var mercury = exp.addBody(SolarBodyData.mercury);
+		//var venus = exp.addBody(SolarBodyData.venus);
+		var earth = exp.addBody(SolarBodyData.earth);
+		var mars = exp.addBody(SolarBodyData.mars);
+		var jupiter = exp.addBody(SolarBodyData.jupiter);
+		var saturn = exp.addBody(SolarBodyData.saturn);
+		var uranus = exp.addBody(SolarBodyData.uranus);
+		var neptune = exp.addBody(SolarBodyData.neptune);
+		exp.zeroDift();
+
+		var time = new Array<Dynamic>();time.push('${exp.name}_time');
+		var energyChange = new Array<Dynamic>();energyChange.push('${exp.name}_energyChange');
+		exp.runtimeCallback = function(exp){
+			//get vars
+			time.push(exp.simulator.time);
+			energyChange.push(exp.energyChange);
+			printProgressAndTimeRemaining(exp);
+		}
+
+		exp.performAnalysis();
+
+		var energyChangeAvg:Float = 0;
+		for (ec in energyChange)energyChangeAvg+=ec/energyChange.length;
+		Console.printStatement('Average dE: $energyChangeAvg');
+
+		saveInfo({
+			name:name,
+			dt: dt,
+			timescale: timescale,
+			units: units,
+			buildDate: Build.date(),
+			git: Git.lastCommit(),
+			gitHash: Git.lastCommitHash(),
+			cpuTime: exp.totalCPUTime,
+			additionalParams: additionalParams,
+			energyChangeAvg: energyChangeAvg,
+		}, 'Info-${exp.name}.$timescale.json', name, true);
+
+		saveGridData([time, energyChange], '${exp.name}.$timescale.csv', name, true);
+
+		//realtime draw
+		renderer.reset();
+		renderer.centerBody = exp.simulator.bodies[0];
+		visualize(exp);
+	}
+
 	function integratorBenchmarkTest(){
 		var name = "Integrator Benchmark";
 		var dt = 1;
@@ -49,7 +129,7 @@ class Main {
 			gitHash: Git.lastCommitHash(),
 		}, 'info.json', name, true);
 
-		var exp = new Experiment(simulator.Hermite4thOrder, [G, dt]);
+		var exp = new Experiment(simulator.Leapfrog, [G, dt]);
 		exp.timescale = timescale;
 		exp.analysisTimeInterval = 0;
 		exp.runtimeCallbackTimeInterval = 3;
@@ -85,8 +165,7 @@ class Main {
 		var isStable = exp.performStabilityTest(null, false);
 		if(!isStable)Console.printError("Orbit not stable");
 
-
-		saveGridData([pointsX, pointsY], '${exp.name}_xyz', name, true);
+		saveGridData([pointsX, pointsY], '${exp.name}_xyz.csv', name, true);
 		exit();
 		//
 		//realtime draw

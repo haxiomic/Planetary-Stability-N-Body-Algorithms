@@ -42,6 +42,7 @@ class Experiment{
 	//system energy
 	public var initialEnergy (default, null):Float;
 	public var currentEnergy (default, null):Float;
+	public var energyChange (default, null):Float;
 	//keplerian elements
 	public var semiMajorArray           (default, null):Vector<Float>;
 	public var eccentricityArray        (default, null):Vector<Float>;
@@ -82,79 +83,92 @@ class Experiment{
 		}
 
 		var diftVelocity:Vec3 = totalMomentum/totalMass;
-		for (b in simulator.bodies){
+		for (b in simulator.bodies)
 			b.v -= diftVelocity;
-		}
-
 	}
 
-	@:noStack
-	public function performEnergyTest():ExperimentResults{
+	public function performAnalysis(){
 		simulator.prepare();
-
-		//return control callback
-		var runtimeCallbackEnabled = (runtimeCallback!=null && runtimeCallbackInterval != null);
-		var cbI:Int = runtimeCallbackInterval;
-		//analysis interval
-		var analysisEnabled = (analysisInterval != null);
-		var aI:Int = analysisInterval;
-		//system energy
+		//Clear data
+		semiMajorErrorArray = new Array<Float>();
+		//Enable runtime callback & analysis
+		//analysis
+		var analysisEnabled = (analysisTimeInterval != null);
+		var lastATime:Float = 0;
+		//runtime
+		var runtimeCallbackEnabled = (runtimeCallback != null && runtimeCallbackTimeInterval != null);
+		var lastRTTime:Float = 0;
+		//initial system energy
 		initialEnergy = simulator.totalEnergy();
 		currentEnergy = initialEnergy;
-		var energyChange:Float = 0;
+		//initial keplerian elements
+		computeKeplerianElements();
+		var initialSemiMajorArray = new Vector(semiMajorArray.length);
+		Vector.blit(semiMajorArray, 0, initialSemiMajorArray, 0, semiMajorArray.length);
 		//time
 		timeStart = simulator.time;
 		timeEnd = time+timescale;
 		time = timeStart;
 		//iteration
 		i = 0;
-		//
-		var analysis = new Map<String, Array<Dynamic>>();
-		analysis["Iteration"] = new Array<Int>();
-		analysis["Time"] = new Array<Float>();
-		analysis["Energy Error"] = new Array<Float>();
 
-		results = {
-			totalIterations: 0,
-			cpuTime: 0,
-			analysis: analysis,
+		function analysis(){
+			computeKeplerianElements();
+			//update energy
+			currentEnergy = simulator.totalEnergy();
+			energyChange = Math.abs((currentEnergy - initialEnergy))/initialEnergy;
 		}
 
-		//run simulation
+		//Step loop
+		//analysis before start
+		if(analysisEnabled)analysis();
+		if(runtimeCallbackEnabled)runtimeCallback(this);
 		algorithmStartTime = Sys.cpuTime();
 		while(time<timeEnd){
-			//Step simulation
+			//step simulation
 			simulator.step();	
 
-			//Analyze system
-			if(analysisEnabled){
-				if(i%analysisInterval==0){
-					//update energy
-					currentEnergy = simulator.totalEnergy();
-					energyChange = Math.abs((currentEnergy - initialEnergy))/initialEnergy;
-
-					analysis["Iteration"].push(i);
-					analysis["Time"].push(time);
-					analysis["Energy Error"].push(energyChange);
+			//analyze system
+			if(analysisEnabled)
+				if( time - lastATime >= analysisTimeInterval){
+					analysis();
+					lastATime = time;
 				}
-			}
+			
+			//runtime callback
+			if(runtimeCallbackEnabled)
+				if( time - lastRTTime >= runtimeCallbackTimeInterval){
+					runtimeCallback(this);
+					lastRTTime = time;
+				}
 
-			//Callback to return control
-			if(runtimeCallbackEnabled) 
-				if(i%cbI==0) runtimeCallback(this);
-
-			//Progress loop
+			//progress loop
 			time = simulator.time;
 			i++;
 		}
 		algorithmEndTime = Sys.cpuTime();
+
+		totalIterations = i;
+		totalCPUTime = algorithmEndTime - algorithmStartTime;
+
+		//run once again at end
+		if(analysisEnabled)analysis();
 		if(runtimeCallbackEnabled)runtimeCallback(this);
 
-		var totalIterations = i;
-
-		results.totalIterations = totalIterations;
-		results.cpuTime = (algorithmEndTime - algorithmStartTime);
-		return results;
+		//Determine magnitude of perturbation
+		for (i in 0...semiMajorArray.length)
+			semiMajorErrorArray[i] = Math.abs(semiMajorArray[i] - initialSemiMajorArray[i])/initialSemiMajorArray[i];
+		
+		//average relative change in semi-major axis over all planets
+		semiMajorErrorAverageAbs = 0;
+		var te:Float = 0;
+		var n = 0;
+		for (e in semiMajorErrorArray) {
+			if(Math.isNaN(e))continue;
+			te+=Math.abs(e);
+			n++;
+		}
+		semiMajorErrorAverageAbs = te/n;
 	}
 
 	public function performStabilityTest(?semiMajorErrorThreshold:Float, breakWhenUnstable:Bool = true):Bool{
