@@ -45,6 +45,13 @@ accuracyParameter = 0.04
 average semi-major error = 0.0018
 CPU Time = 53.34
 
+LEAPFROG-ADAPTIVE
+100Myr stability
+dt = 96 days
+accuracyParameter = 0.04
+average semi-major error = 0.0072
+CPU Time = 572.44
+
 -------------
 Leapfrog adaptive kicks butt! It's very close to time-symmetric too!
 
