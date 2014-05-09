@@ -27,7 +27,6 @@ class Main {
 		renderer = new BasicRenderer(100);
 
 		function singleDVTest(d, v, dt:Float = 30, testCount:Int = 5){
-			Console.record = true;
 			var name = "VEMJSUN Stability";
 			var timescale:Float = 1E6*365.0;
 			var ri:Float        = 10000;//AU, suitably distant starting point so as not to significantly interact with system
@@ -48,8 +47,6 @@ class Main {
 				passingVelocity: results[2]+' km/s',
 				instabilityAfterTime: results[3]/365+' years',
 			}, '$d,$v-dt=$dt, x$testCount.json', name, true);
-			
-			saveString(sysUtils.Console.log, '$d,$v-dt=$dt, x$testCount.log', name, true);
 		}
 
 		singleDVTest(300, 1.8);
