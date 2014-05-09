@@ -79,7 +79,7 @@ VEMJSUN Stability (10^6 years)
 -------------
 Draw stability maps 
 	imagesc(stableFraction); colormap(bone);set(gca,'YDir','normal');caxis([0 1]);
-	imagesc(semiMajorError); colormap(flipud(jet));set(gca,'YDir','normal');caxis([0 1]);
+	imagesc(semiMajorError); colormap(flipud(hot));set(gca,'YDir','normal');caxis([0 1]);
 	% axis labels
 	set(gca,'XTick',1:11)
 	set(gca,'XTickLabel',{0:100:1000})
@@ -90,5 +90,19 @@ Draw stability maps
 	ylabel('(km/s)')
 
 	set(gca, 'PlotBoxAspectRatio', [1,1,1])
-	set(gca, 'DataAspectRatio', [1,1,1])
+	%set(gca, 'DataAspectRatio', [1,1,1])
 	%set(gca, 'Position', [x y width height])
+--------------
+4x4+2x2
+	imagesc(newSemiMajorError); colormap(flipud(hot));set(gca,'YDir','normal');caxis([0 2]);
+
+	set(gca,'XTick',1:8)
+	set(gca,'XTickLabel',{0:1000/3:3000})
+	set(gca,'YTick',1:8)
+	set(gca,'YTickLabel',{0:5/3:100})
+
+	set(gca, 'DataAspectRatio', [1,1,1])
+	xlabel('(AU)')
+	ylabel('(km/s)')
+
+	set(gca, 'PlotBoxAspectRatio', [1,1,1])

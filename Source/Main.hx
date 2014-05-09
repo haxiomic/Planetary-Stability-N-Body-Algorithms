@@ -29,6 +29,9 @@ class Main {
 		var dt:Float = 30;
 		var testCount:Int = 5;
 
+		isolatedStabilityTest(simulator.Leapfrog, dt, 0E6*365, 1);
+		// exit();
+
 		function conditions(start:Float, delta:Float, samples)
 			return [start, delta/(samples-1), start+delta];
 		function nextConditions(delta:Float, nextSamples:Int, prevEnd:Float, prevDelta:Float, prevSamples:Int):Array<Float>{
@@ -374,7 +377,6 @@ class Main {
 			var saturn = exp.addBody(SolarBodyData.saturn);
 			var uranus = exp.addBody(SolarBodyData.uranus);
 			var neptune = exp.addBody(SolarBodyData.neptune);
-		
 			exp.zeroDift();//counter drift
 
 			//Add perturbing star
@@ -484,13 +486,14 @@ class Main {
 		//Add solar system
 		var sun = exp.addBody(SolarBodyData.sun);
 		//var mercury = exp.addBody(SolarBodyData.mercury);
-		//var venus = exp.addBody(SolarBodyData.venus);
+		var venus = exp.addBody(SolarBodyData.venus);
 		var earth = exp.addBody(SolarBodyData.earth);
 		var mars = exp.addBody(SolarBodyData.mars);
 		var jupiter = exp.addBody(SolarBodyData.jupiter);
 		var saturn = exp.addBody(SolarBodyData.saturn);
 		var uranus = exp.addBody(SolarBodyData.uranus);
 		var neptune = exp.addBody(SolarBodyData.neptune);
+		exp.zeroDift();
 
 		exp.runtimeCallback = function(exp){
 		//	trace(exp.eccentricityArray);

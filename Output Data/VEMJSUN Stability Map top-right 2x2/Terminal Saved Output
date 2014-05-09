@@ -1,0 +1,155 @@
+Geo in ~ ⋮ z algo
+Geo in ~/Projects/University/Planetary Systems/Algorithms on master* ⋮ lmac
+xcrun --sdk macosx10.9 clang++ -Iinclude -c -fvisibility=hidden -stdlib=libstdc++ -O2 -I/usr/lib/haxe/lib/hxcpp/3,1,30/include -DHX_MACOS -m64 -Wno-parentheses -Wno-null-dereference -Wno-unused-value -Wno-format-extra-args -Wno-bool-conversion -DHXCPP_M64 -DHXCPP_VISIT_ALLOCS -DHXCPP_API_LEVEL=0 -frtti -x c++-header -o obj/darwin64//__pch/haxe/hxcpp.h.gch /usr/lib/haxe/lib/hxcpp/3,1,30/include/hxcpp.h
+xcrun --sdk macosx10.9 clang++ -Iobj/darwin64//__pch/haxe -Iinclude -c -fvisibility=hidden -stdlib=libstdc++ -O2 -I/usr/lib/haxe/lib/hxcpp/3,1,30/include -DHX_MACOS -m64 -Wno-parentheses -Wno-null-dereference -Wno-unused-value -Wno-format-extra-args -Wno-bool-conversion -DHXCPP_M64 -DHXCPP_VISIT_ALLOCS -DHXCPP_API_LEVEL=0 -x c++ -frtti ./src/Main.cpp -oobj/darwin64/57588eaa_Main.o
+xcrun --sdk macosx10.9 clang++ -o ApplicationMain -stdlib=libstdc++ -framework Cocoa -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -m64 @obj/darwin64//all_objs
+strip -u -r -x ApplicationMain
+Could not find primitive lime_curl_get_headers__1.
+	VEMJSUN Stability Map top-right 2x2
+Timescale: 1000000 years, dt: 30 days, semi-major error threshold: 1
+
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/info.json
+Target closest approach: 1500 AU, velocity: 7.5 km/s
+The star should take ~ 6396 years to reach closest approach
+0.64 %  Time Remaining: 02:54 s        
+First approach completed, r: 1480 AU, time: 6386 years, end time: 1006386 years, passing velocity: 7.56777729 km/s
+69.06 % Time Remaining: 01:36 s        
+System unstable at time 695007.6164 years
+
+0.64 %  Time Remaining: 02:09 s        
+First approach completed, r: 1480 AU, time: 6387 years, end time: 1006387 years, passing velocity: 7.567776786 km/s
+98.87 % Time Remaining: 00:01 s        
+System unstable at time 995010.9041 years
+
+0.64 %  Time Remaining: 02:23 s        
+First approach completed, r: 1480 AU, time: 6389 years, end time: 1006389 years, passing velocity: 7.567776117 km/s
+20.87 % Time Remaining: 02:39 s        
+System unstable at time 210002.3014 years
+
+0.64 %  Time Remaining: 03:31 s        
+First approach completed, r: 1480 AU, time: 6387 years, end time: 1006387 years, passing velocity: 7.567776963 km/s
+31.3 %% Time Remaining: 01:23 s        
+System unstable at time 315003.4521 years
+
+0.64 %  Time Remaining: 02:14 s        
+First approach completed, r: 1480 AU, time: 6387 years, end time: 1006387 years, passing velocity: 7.567776977 km/s
+30.31 % Time Remaining: 01:26 s        
+System unstable at time 305003.3425 years
+
+Stable fraction: 0, semi-major error: 1.828225934
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.coordinate.1500,7.5.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.stableFraction.1500,7.5.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.semiMajorError.1500,7.5.csv
+Target closest approach: 1500 AU, velocity: 10.83333333 km/s
+The star should take ~ 4428 years to reach closest approach
+0.44 %  Time Remaining: 02:15 s        
+First approach completed, r: 1490 AU, time: 4426 years, end time: 1004426 years, passing velocity: 10.88010962 km/s
+100 % % Time Remaining: 00:60 s        
+Stable
+Average semi-major error: 0.05584159657
+CPU Time: 120.65 s
+
+0.44 %  Time Remaining: 05:30 s        
+First approach completed, r: 1490 AU, time: 4426 years, end time: 1004426 years, passing velocity: 10.88010957 km/s
+8.96 %	Time Remaining: 04:01 s        
+System unstable at time 90000.9863 years
+
+0.44 %  Time Remaining: 02:02 s        
+First approach completed, r: 1490 AU, time: 4426 years, end time: 1004426 years, passing velocity: 10.88010958 km/s
+100 % % Time Remaining: 00:60 s        
+Stable
+Average semi-major error: 0.01911618808
+CPU Time: 122.71 s
+
+0.44 %  Time Remaining: 02:53 s        
+First approach completed, r: 1490 AU, time: 4426 years, end time: 1004426 years, passing velocity: 10.88010952 km/s
+48.78 % Time Remaining: 01:50 s        
+System unstable at time 490005.3699 years
+
+0.44 %  Time Remaining: 02:53 s        
+First approach completed, r: 1490 AU, time: 4426 years, end time: 1004426 years, passing velocity: 10.88010966 km/s
+100 % % Time Remaining: 00:60 s        
+Stable
+Average semi-major error: 0.1641134415
+CPU Time: 98.79 s
+
+Stable fraction: 0.6, semi-major error: 0.2372302061
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.coordinate.1500,7.5.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.stableFraction.1500,7.5.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.semiMajorError.1500,7.5.csv
+Target closest approach: 2166.666667 AU, velocity: 7.5 km/s
+The star should take ~ 6472 years to reach closest approach
+0.65 %  Time Remaining: 02:52 s        
+First approach completed, r: 2148 AU, time: 6470 years, end time: 1006470 years, passing velocity: 7.54352879 km/s
+100 % % Time Remaining: 00:60 s        
+Stable
+Average semi-major error: 0.02347805236
+CPU Time: 102.6 s
+
+0.65 %  Time Remaining: 02:06 s        
+First approach completed, r: 2148 AU, time: 6467 years, end time: 1006467 years, passing velocity: 7.543529303 km/s
+65.08 % Time Remaining: 01:39 s        
+System unstable at time 655007.1781 years
+
+0.65 %  Time Remaining: 02:18 s        
+First approach completed, r: 2148 AU, time: 6469 years, end time: 1006469 years, passing velocity: 7.543529065 km/s
+71.04 % Time Remaining: 01:35 s        
+System unstable at time 715007.8356 years
+
+0.65 %  Time Remaining: 02:12 s        
+First approach completed, r: 2148 AU, time: 6470 years, end time: 1006470 years, passing velocity: 7.543528816 km/s
+27.82 % Time Remaining: 01:28 s        
+System unstable at time 280003.0685 years
+
+0.65 %  Time Remaining: 02:24 s        
+First approach completed, r: 2148 AU, time: 6467 years, end time: 1006467 years, passing velocity: 7.543529313 km/s
+100 % % Time Remaining: 00:60 s        
+Stable
+Average semi-major error: 0.05809043834
+CPU Time: 127.71 s
+
+Stable fraction: 0.4, semi-major error: 0.3113551155
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.coordinate.1500,7.5.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.stableFraction.1500,7.5.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.semiMajorError.1500,7.5.csv
+Target closest approach: 2166.666667 AU, velocity: 10.83333333 km/s
+The star should take ~ 4480 years to reach closest approach
+0.45 %  Time Remaining: 03:31 s        
+First approach completed, r: 2158 AU, time: 4479 years, end time: 1004479 years, passing velocity: 10.86340029 km/s
+100 % % Time Remaining: 00:60 s        
+Stable
+Average semi-major error: 0.164121399
+CPU Time: 138.87 s
+
+0.45 %  Time Remaining: 02:29 s        
+First approach completed, r: 2158 AU, time: 4480 years, end time: 1004480 years, passing velocity: 10.86340013 km/s
+100 % % Time Remaining: 00:60 s        
+Stable
+Average semi-major error: 0.1463485402
+CPU Time: 129.5 s
+
+0.45 %  Time Remaining: 02:18 s        
+First approach completed, r: 2158 AU, time: 4480 years, end time: 1004480 years, passing velocity: 10.86340015 km/s
+99.56 % Time Remaining: 00:01 s        
+System unstable at time 1000010.959 years
+
+0.45 %  Time Remaining: 02:16 s        
+First approach completed, r: 2158 AU, time: 4480 years, end time: 1004480 years, passing velocity: 10.86340017 km/s
+100 % % Time Remaining: 00:60 s        
+Stable
+Average semi-major error: 0.07788907093
+CPU Time: 124.65 s
+
+0.45 %  Time Remaining: 02:29 s        
+First approach completed, r: 2158 AU, time: 4479 years, end time: 1004479 years, passing velocity: 10.86340026 km/s
+27.38 % Time Remaining: 02:32 s        
+System unstable at time 275003.0137 years
+
+Stable fraction: 0.6, semi-major error: 0.2820056434
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.coordinate.1500,7.5.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.stableFraction.1500,7.5.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/part.semiMajorError.1500,7.5.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/coordinate.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/stableFraction.csv
+Data saved to /Users/Geo/Projects/University/Planetary Systems/Algorithms/Output Data/VEMJSUN Stability Map top-right 2x2/semiMajorError.csv
+
