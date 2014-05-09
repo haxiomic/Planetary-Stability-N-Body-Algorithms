@@ -26,32 +26,12 @@ class Main {
 	public function new () {
 		renderer = new BasicRenderer(100);
 
-		function singleDVTest(d, v, dt:Float = 30, testCount:Int = 5){
-			var name = "VEMJSUN Stability";
-			var timescale:Float = 1E6*365.0;
-			var ri:Float        = 10000;//AU, suitably distant starting point so as not to significantly interact with system
-			var semiMajorErrorThreshold:Null<Float> = 1;//1 = factor 2 change
+		var dt:Float = 30;
+		var testCount:Int = 5;
 
-			var results = perturbationStabilityTest(d, v, SolarBodyData.sun.mass*.5, dt, timescale, semiMajorErrorThreshold, testCount);
-			saveInfo({
-				name:name,
-				dt: dt,
-				timescale: timescale,
-				ri: ri,
-				testCount: testCount,
-				semiMajorErrorThreshold: semiMajorErrorThreshold,
-				d: d,
-				v: v,
-				stableFraction: results[0],
-				averageSemiMajorError: results[1],
-				passingVelocity: results[2]+' km/s',
-				instabilityAfterTime: results[3]/365+' years',
-			}, '$d,$v-dt=$dt, x$testCount.json', name, true);
-		}
-
-		singleDVTest(300, 1.8);
-		singleDVTest(400, 2.0);
-		singleDVTest(300, 3.5);
+		//pertubationMapTest([0,250,1000], [0,1.25,5], dt, testCount, "VEMJSUN Perturbation Stability Map 4x4 1000,5");
+		//pertubationMapTest([0,500,2000], [5,2.5,10], dt, testCount, "VEMJSUN Perturbation Stability Map 4x2 2000,5-10");
+		pertubationMapTest([1000,500,2000], [0,2.5,5], dt, testCount, "VEMJSUN Perturbation Stability Map 2x2 1000-2000,10");
 
 		// isolatedStabilityTest(20, 1E8*365, 1);
 		// integratorBenchmarkTest();
@@ -220,29 +200,46 @@ class Main {
 		visualize(exp);*/
 	}
 
-	function pertubationMapTest(){
-		//Main parameters
-		var name = "Perturbation Stability Map";
-		var dt:Float        = 96;
+	function singleDVTest(d, v, dt:Float = 30, testCount:Int = 5, name = "VEMJSUN Perturbation Stability Single"){
 		var timescale:Float = 1E6*365.0;
 		var ri:Float        = 10000;//AU, suitably distant starting point so as not to significantly interact with system
-		var testCount:Int   = 10;
 		var semiMajorErrorThreshold:Null<Float> = 1;//1 = factor 2 change
 
-		/* DEBUG PARAMS */
+		var results = perturbationStabilityTest(d, v, SolarBodyData.sun.mass*.5, dt, timescale, semiMajorErrorThreshold, testCount);
+		saveInfo({
+			name:name,
+			dt: dt,
+			timescale: timescale,
+			ri: ri,
+			testCount: testCount,
+			semiMajorErrorThreshold: semiMajorErrorThreshold,
+			d: d,
+			v: v,
+			stableFraction: results[0],
+			averageSemiMajorError: results[1],
+			passingVelocity: results[2]+' km/s',
+			instabilityAfterTime: results[3]/365+' years',
+		}, '$d,$v-dt=$dt, x$testCount.json', name, true);
+	}
+
+	function pertubationMapTest(dConditions:Array<Float>, vConditions:Array<Float>, dt:Float = 96, testCount:Int = 10, name:String = "Perturbation Stability Map"){
+		//Main parameters
+		var timescale:Float = 1E6*365.0;
+		var ri:Float        = 10000;//AU, suitably distant starting point so as not to significantly interact with system
+		var semiMajorErrorThreshold:Null<Float> = 1;//1 = factor 2 change
 
 		//Build perturbation stability map
 		//iterate over range of closest approaches and initial velocities 
 		var d:Float, v_kms:Float;
 		//AU
-		var dStart:Float = 0;
-		var dStep:Float  = 100;
-		var dEnd:Float   = 1000;
+		var dStart:Float = dConditions[0];
+		var dStep:Float  = dConditions[1];
+		var dEnd:Float   = dConditions[2];
 
 		//km/s
-		var vStart:Float = 0;
-		var vStep:Float  = 0.2;
-		var vEnd:Float   = 5;
+		var vStart:Float = vConditions[0];
+		var vStep:Float  = vConditions[1];
+		var vEnd:Float   = vConditions[2];
 
 		//Print Info
 		Console.printTitle(name, false);
@@ -274,9 +271,6 @@ class Main {
 		var stableFractionData = new Array<Array<Float>>();
 		var semiMajorErrorData = new Array<Array<Float>>();
 
-		//command line arguments
-		if(Sys.args().length>=1) 
-			dStart = Std.parseFloat( Sys.args()[0] );
 		//collect data
 		d = dStart;
 		var col:Int = 0, row:Int = 0;
