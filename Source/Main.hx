@@ -29,7 +29,7 @@ class Main {
 		var dt:Float = 30;
 		var testCount:Int = 5;
 
-		isolatedStabilityTest(simulator.Leapfrog, dt, 0E6*365, 1);
+		//isolatedStabilityTest(simulator.Leapfrog, dt, 0E6*365, 1);
 		// exit();
 
 		function conditions(start:Float, delta:Float, samples)
@@ -44,17 +44,17 @@ class Main {
 
 		var name:String;
 		name='bottom-left 4x4';
-		// pertubationMapTest(conditions(0, 1000, 4), conditions(0,5,4), dt, testCount, 'VEMJSUN Stability Map $name');
+		//pertubationMapTest(conditions(0, 1000, 4), conditions(0,5,4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		name='top-right 2x2';
-		// pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
+		//pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		//Buggy:
 		name='top-left 2x2';
-		// pertubationMapTest(nextConditions(1000, 2, -(1000/(4-1)), 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
+		//pertubationMapTest(nextConditions(1000, 2, -(1000/(4-1)), 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		name='bottom-right 2x2';
-		// pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, -5/(4-1), 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
+		pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, -5/(4-1), 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		// isolatedStabilityTest(20, 1E8*365, 1);
 		// integratorBenchmarkTest();
@@ -338,9 +338,9 @@ class Main {
 		}
 
 		//Save data
-		saveGridData(coordinateData, 'coordinate.csv', name);
-		saveGridData(stableFractionData, 'stableFraction.csv', name);
-		saveGridData(semiMajorErrorData, 'semiMajorError.csv', name);
+		saveGridData(coordinateData, 'coordinate.csv', name, false);
+		saveGridData(stableFractionData, 'stableFraction.csv', name, false);
+		saveGridData(semiMajorErrorData, 'semiMajorError.csv', name, false);
 	}
 
 	function perturbationStabilityTest(d_au:Float, v_kms:Float, mass:Float, dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>, testCount:Int, ri:Float = 10000):Array<Float>{
