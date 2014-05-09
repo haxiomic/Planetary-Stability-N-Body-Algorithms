@@ -2,7 +2,7 @@
 <project>
 	
 	<meta title="NBodyHX" package="com.gcorney.nbodyhx" version="1.0.0" company="George Corney" />
-	<app main="Main" path="Export2" file="NBodyHX" />
+	<app main="Main" path="Export" file="NBodyHX" />
 
 	<window width="600" height="400" background="0x000000" fps="60" vsync="false" />
 	<window orientation="landscape" />

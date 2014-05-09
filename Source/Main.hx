@@ -26,13 +26,43 @@ class Main {
 	public function new () {
 		renderer = new BasicRenderer(100);
 
-		isolatedStabilityTest(96, 1E8*365, 1);
-		
+		function singleDVTest(d, v, dt:Float = 30, testCount:Int = 5){
+			Console.record = true;
+			var name = "VEMJSUN Stability";
+			var timescale:Float = 1E6*365.0;
+			var ri:Float        = 10000;//AU, suitably distant starting point so as not to significantly interact with system
+			var semiMajorErrorThreshold:Null<Float> = 1;//1 = factor 2 change
+
+			var results = perturbationStabilityTest(d, v, SolarBodyData.sun.mass*.5, dt, timescale, semiMajorErrorThreshold, testCount);
+			saveInfo({
+				name:name,
+				dt: dt,
+				timescale: timescale,
+				ri: ri,
+				testCount: testCount,
+				semiMajorErrorThreshold: semiMajorErrorThreshold,
+				d: d,
+				v: v,
+				stableFraction: results[0],
+				averageSemiMajorError: results[1],
+				passingVelocity: results[2]+' km/s',
+				instabilityAfterTime: results[3]/365+' years',
+			}, '$d,$v-dt=$dt, x$testCount.json', name, true);
+			
+			saveString(sysUtils.Console.log, '$d,$v-dt=$dt, x$testCount.log', name, true);
+		}
+
+		singleDVTest(300, 1.8);
+		singleDVTest(400, 2.0);
+		singleDVTest(300, 3.5);
+
+		// isolatedStabilityTest(20, 1E8*365, 1);
 		// integratorBenchmarkTest();
-		// pertubationTest();
+		// pertubationMapTest();
 	}
 
 	/* --- Tests --- */
+
 	function taylor1VsSemiEulerEnergyTest(){
 		var name = "Low Order Energy Conservation";
 		var dt = 11;
@@ -299,22 +329,26 @@ class Main {
 		saveGridData(semiMajorErrorData, 'semiMajorError.csv', name);
 	}
 
-	function perturbationStabilityTest(d:Float, v_kms:Float, mass:Float, dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>, testCount:Int, ri:Float = 10000):Array<Float>{
-		Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
-
+	function perturbationStabilityTest(d_au:Float, v_kms:Float, mass:Float, dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>, testCount:Int, ri:Float = 10000):Array<Float>{
+		var d:Float = d_au;
 		var exp:Experiment;
-		var v:Float = v_kms*Constants.secondsInDay/(Constants.AU/1000);//AU/day
+		var v:Float = v_kms*Constants.secondsInDay/(Constants.AU/1000);//to AU/day
 		var f = Math.sqrt(ri*ri + d*d);
+
+		Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
 		//estimate how long it'll take star to reach its target unperturbed
 		Console.printStatement('The star should take ~ ${Math.round((f/v)/365.0)} years to reach closest approach');
 
-		var averageSemiMajorError:Float = 0;
-		var stableFraction:Float = 0;
+		var stableFraction:Float          = 0;
+		var semiMajorErrorAvg:Float       = 0;
+		var passingVelocityAvg:Float      = 0;
+		var instabilityAfterTimeAvg:Float = 0;
+		var instabilityAfterTimeSum:Float = 0;
+
 		var stableCount = 0;
 		var testN = 0;
-
 		while(testN < testCount){
-			exp = new Experiment(Leapfrog, [G, dt]);
+			exp = new Experiment(simulator.Leapfrog, [G, dt]);
 			exp.timescale = timescale;
 			exp.analysisTimeInterval = 5000*365;
 			exp.runtimeCallbackTimeInterval = 1*365;
@@ -322,7 +356,7 @@ class Main {
 			//Add solar system
 			var sun = exp.addBody(SolarBodyData.sun);
 			//var mercury = exp.addBody(SolarBodyData.mercury);
-			//var venus = exp.addBody(SolarBodyData.venus);
+			var venus = exp.addBody(SolarBodyData.venus);
 			var earth = exp.addBody(SolarBodyData.earth);
 			var mars = exp.addBody(SolarBodyData.mars);
 			var jupiter = exp.addBody(SolarBodyData.jupiter);
@@ -363,6 +397,7 @@ class Main {
 			//runtime logic
 			var firstApproachCompleted:Bool = false;
 			var last_r:Float = Vec3.distance(nearbyStar.p, sun.p);
+			var passingVelocity:Float = 0;
 			exp.runtimeCallback = function(exp){
 				//wait until the star has passed the sun at its closest point before starting timescale
 				if(!firstApproachCompleted){				
@@ -372,8 +407,9 @@ class Main {
 					if(r>last_r){//receding
 						exp.timeEnd = exp.time+timescale;//extend time another timescale
 						exp.runtimeCallbackTimeInterval = 10000*365;//reduce callback interval
+						passingVelocity = nearbyStar.v.length()*(Constants.AU/1000)/Constants.secondsInDay; //in km/s
 						Console.newLine();
-						Console.printStatement('First approach completed, r: ${Math.round(r)} AU, time: ${Math.round(exp.time/365.0)} years, end time: ${Math.round(exp.timeEnd/365.0)} years');
+						Console.printStatement('First approach completed, r: ${Math.round(r)} AU, time: ${Math.round(exp.time/365.0)} years, end time: ${Math.round(exp.timeEnd/365.0)} years, passing velocity: $passingVelocity km/s');
 						firstApproachCompleted = true;
 					}
 					last_r = r;
@@ -388,37 +424,45 @@ class Main {
 			//handle result
 			Console.newLine();
 			if(isStable){
+				stableCount++;
 				Console.printSuccess('Stable');
 				Console.printStatement('Average semi-major error: ${exp.semiMajorErrorAverageAbs}');
 				printBasicSummary(exp);
-			}else 
+			}else{
+				instabilityAfterTimeSum += exp.time;
 				Console.printFatalConcern('System unstable at time ${exp.time/365} years');
+			}
 
 			Console.newLine();
 
 			//progress test loop
 			testN++;
-			if(isStable)stableCount++;
-			averageSemiMajorError += exp.semiMajorErrorAverageAbs/testCount;
+			semiMajorErrorAvg += exp.semiMajorErrorAverageAbs/testCount;
+			passingVelocityAvg += passingVelocity/testCount;
 		}
 
 		stableFraction = stableCount/testCount;
 
+		instabilityAfterTimeAvg = instabilityAfterTimeSum/(testCount - stableCount);
 		//Debug visualization
 		//center on sun
 		//renderer.centerBody = exp.simulator.bodies[0];
 		//visualize(exp);
 
-		return [stableFraction, averageSemiMajorError];
+		return [stableFraction, semiMajorErrorAvg, passingVelocityAvg, instabilityAfterTimeAvg];
 	}
 
-	function isolatedStabilityTest(dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>){
+	function isolatedStabilityTest(simulatorClass:Class<Dynamic>, dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>, ?additionalParams:Array<Dynamic>){
+		if(additionalParams==null)additionalParams = [];
+
 		var name = "Isolated Stability";
 
 		Console.printTitle(name, false);
 		Console.newLine();
 
-		var exp = new Experiment(simulator.LeapfrogAdaptive, [G, dt, 0.04]);
+		var params:Array<Dynamic> = [G, dt];
+		params = params.concat(additionalParams);
+		var exp = new Experiment(simulatorClass, params);
 		exp.timescale = timescale;
 		exp.analysisTimeInterval = 5000*365;
 		exp.runtimeCallbackTimeInterval = timescale/200;
@@ -430,8 +474,8 @@ class Main {
 		var sun = exp.addBody(SolarBodyData.sun);
 		//var mercury = exp.addBody(SolarBodyData.mercury);
 		//var venus = exp.addBody(SolarBodyData.venus);
-		//var earth = exp.addBody(SolarBodyData.earth);
-		//var mars = exp.addBody(SolarBodyData.mars);
+		var earth = exp.addBody(SolarBodyData.earth);
+		var mars = exp.addBody(SolarBodyData.mars);
 		var jupiter = exp.addBody(SolarBodyData.jupiter);
 		var saturn = exp.addBody(SolarBodyData.saturn);
 		var uranus = exp.addBody(SolarBodyData.uranus);
@@ -456,6 +500,7 @@ class Main {
 
 		Console.newLine();
 
+		var timescaleYears = Math.round(timescale/365);
 		saveInfo({
 			name:name,
 			dt: dt,
@@ -467,7 +512,8 @@ class Main {
 			cpuTime: exp.totalCPUTime,
 			semiMajorErrorAvg: exp.semiMajorErrorAverageAbs,
 			integrator: exp.simulator.algorithmName,
-		}, 'info.json', name, false);
+			additionalParams: additionalParams,
+		}, 'Info-${exp.name}.$timescaleYears.json', name, false);
 
 		//Debug visualization
 		//center on sun
@@ -533,6 +579,11 @@ class Main {
 	}
 
 	/* --- File Output --- */
+	function saveString(string:String ,filename:String, folderName:String, overwrite:Bool = false){
+		var path = makePath(filename, folderName);
+		FileTools.save(path, string, true , overwrite);
+	}
+
 	function saveGridData(columns:Array<Array<Dynamic>>, filename:String, folderName:String = null, overwrite:Bool = false){
 		var csv = new HackyCSV(',', 0);
 		for (i in 0...columns.length)csv.addColumn(columns[i]);
