@@ -29,9 +29,28 @@ class Main {
 		var dt:Float = 30;
 		var testCount:Int = 5;
 
-		//pertubationMapTest([0,250,1000], [0,1.25,5], dt, testCount, "VEMJSUN Perturbation Stability Map 4x4 1000,5");
-		//pertubationMapTest([0,500,2000], [5,2.5,10], dt, testCount, "VEMJSUN Perturbation Stability Map 4x2 2000,5-10");
-		pertubationMapTest([1000,500,2000], [0,2.5,5], dt, testCount, "VEMJSUN Perturbation Stability Map 2x2 1000-2000,10");
+		function conditions(start:Float, delta:Float, samples)
+			return [start, delta/(samples-1), start+delta];
+		function nextConditions(delta:Float, nextSamples:Int, prevEnd:Float, prevDelta:Float, prevSamples:Int):Array<Float>{
+			var prevStep = prevDelta/(prevSamples-1);
+			var nextStep = prevStep*(prevSamples)/(nextSamples);
+			var nextStart = prevEnd + 0.5*prevStep + 0.5*nextStep;
+			var nextEnd = nextStart+nextStep*(nextSamples-1);
+			return [nextStart, nextStep, nextEnd];
+		}
+
+		var name:String;
+		name='bottom-left 4x4';
+		// pertubationMapTest(conditions(0, 1000, 4), conditions(0,5,4), dt, testCount, 'VEMJSUN Stability Map $name');
+
+		name='top-right 2x2';
+		// pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
+
+		name='top-left 2x2';
+		// pertubationMapTest(conditions(0, 1000, 2), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
+
+		name='bottom-right 2x2';
+		pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), conditions(0,5,4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		// isolatedStabilityTest(20, 1E8*365, 1);
 		// integratorBenchmarkTest();
