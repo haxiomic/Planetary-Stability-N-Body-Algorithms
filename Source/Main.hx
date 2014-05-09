@@ -46,11 +46,12 @@ class Main {
 		name='top-right 2x2';
 		// pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
 
+		//Buggy:
 		name='top-left 2x2';
-		// pertubationMapTest(conditions(0, 1000, 2), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
+		// pertubationMapTest(nextConditions(1000, 2, -(1000/(4-1)), 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		name='bottom-right 2x2';
-		pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), conditions(0,5,4), dt, testCount, 'VEMJSUN Stability Map $name');
+		// pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, -5/(4-1), 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		// isolatedStabilityTest(20, 1E8*365, 1);
 		// integratorBenchmarkTest();
