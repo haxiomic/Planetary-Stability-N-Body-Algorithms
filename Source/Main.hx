@@ -10,7 +10,7 @@ import sysUtils.compileTime.*;
 import sysUtils.*;
 
 class Main {
-	var renderer:BasicRenderer;
+	var renderer:BasicRenderer = new BasicRenderer(100);
 
 	var units:Dynamic = {
 		time: "days",
@@ -24,13 +24,131 @@ class Main {
 	/* ------------------- */
 
 	public function new () {
-		renderer = new BasicRenderer(100);
+		var name = "Cputime vs Energy Error";
+		var timescale:Float = 1E6*365;
+		var timescaleYears = Math.round(timescale/365);
 
+		var startDt;
+		var endDt;
+		var stepDt;
+
+		Console.printTitle('$timescaleYears  years');
+
+		//Leapfrog
+		var error = new Array<Dynamic>(); error.push("lf error");
+		var cputime = new Array<Dynamic>(); cputime.push("lf cputime");
+		var dtArray = new Array<Dynamic>(); dtArray.push("lf dtArray");
+		startDt = 5;
+		endDt = startDt+60;
+		stepDt = 5;
+		var dt = startDt;
+		while(dt<=endDt){
+			var r = cputime_errorTest(simulator.Leapfrog, dt, timescale, [], name);
+			error.push(r[0]);
+			cputime.push(r[2]);
+			dtArray.push(dt);
+			dt+=stepDt;
+		}
+
+		saveGridData([error, cputime, dtArray], 'leapfrog.$timescaleYears.csv', name, true);
+
+		//Hermite
+		var error = new Array<Dynamic>(); error.push("her error");
+		var cputime = new Array<Dynamic>(); cputime.push("her cputime");
+		var dtArray = new Array<Dynamic>(); dtArray.push("her dtArray");
+		var dt = startDt;
+		startDt = 35;
+		endDt = startDt+60;
+		stepDt = 5;
+		dt = startDt;
+		while(dt<=endDt){
+			var r = cputime_errorTest(simulator.Hermite4thOrder, dt, timescale, [], name);
+			error.push(r[1]);
+			cputime.push(r[2]);
+			dtArray.push(dt);
+			dt+=stepDt;
+		}
+		
+		saveGridData([error, cputime, dtArray], 'hermite.$timescaleYears.csv', name, true);
+
+		//Semi-Euler
+/*		var error = new Array<Dynamic>(); error.push("semi error");
+		var cputime = new Array<Dynamic>(); cputime.push("semi cputime");
+		var dtArray = new Array<Dynamic>(); dtArray.push("semi dtArray");
+		var dt = startDt;
+		startDt = 0.5;
+		endDt = 80;
+		stepDt = 5;
+		while(dt<=endDt){
+			var r = cputime_errorTest(simulator.SemiImplicitEulerMethod, dt, timescale, [], name);
+			error.push(r[1]);
+			cputime.push(r[2]);
+			dtArray.push(dt);
+			dt+=stepDt;
+		}
+		saveGridData([error, cputime, dtArray], 'semiEuler.$timescaleYears.csv', name, true);*/
+
+
+		// isolatedStabilityTest(simulator.Leapfrog, dt, 0E6*365, 1);
+		// isolatedStabilityTest(20, 1E8*365, 1);
+		// integratorBenchmarkTest();
+		// pertubationMapTest();
+	}
+
+	/* --- Tests --- */
+
+	function cputime_errorTest(?simulatorClass:Class<Dynamic>, dt:Float = 20, timescale:Float = 1E6*365, ?additionalParams:Array<Dynamic>, name:String = "Cputime vs Energy Error"):Array<Dynamic>{
+		if(simulatorClass==null)simulatorClass = simulator.Leapfrog;
+		if(additionalParams==null)additionalParams = [];
+		
+		var params:Array<Dynamic> = [G, dt];
+		params = params.concat(additionalParams);
+		var exp = new Experiment(simulatorClass, params);
+		exp.timescale = timescale;
+		exp.analysisTimeInterval = timescale/1000;
+		exp.runtimeCallbackTimeInterval = timescale/1000;
+
+		Console.printInfo('${exp.name} dt = $dt', false);
+		Console.newLine();
+
+		var sun = exp.addBody(SolarBodyData.sun);
+		//var mercury = exp.addBody(SolarBodyData.mercury);
+		//var venus = exp.addBody(SolarBodyData.venus);
+		//var earth = exp.addBody(SolarBodyData.earth);
+		//var mars = exp.addBody(SolarBodyData.mars);
+		var jupiter = exp.addBody(SolarBodyData.jupiter);
+		var saturn = exp.addBody(SolarBodyData.saturn);
+		var uranus = exp.addBody(SolarBodyData.uranus);
+		var neptune = exp.addBody(SolarBodyData.neptune);
+		exp.zeroDift();
+
+		var energyChange = new Array<Dynamic>();energyChange.push('${exp.name}_energyChange');
+		exp.runtimeCallback = function(exp){
+			//get vars
+			energyChange.push(exp.energyChange);
+
+			printProgressAndTimeRemaining(exp);
+		}
+		exp.performAnalysis();
+
+		var energyChangeAvg:Float = 0;
+		for (ec in energyChange)energyChangeAvg+=ec/energyChange.length;
+
+		Console.printStatement('Average dE: $energyChangeAvg');
+
+		var timescaleYears = Math.round(timescale/365);
+
+		//realtime draw
+		renderer.reset();
+		renderer.centerBody = exp.simulator.bodies[0];
+		visualize(exp);
+
+		return [Math.abs(energyChangeAvg), Math.abs(energyChange[energyChange.length-1]), exp.totalCPUTime];
+	}
+
+	function multiLevelMapTest(){
 		var dt:Float = 30;
 		var testCount:Int = 5;
-
-		//isolatedStabilityTest(simulator.Leapfrog, dt, 0E6*365, 1);
-		// exit();
 
 		function conditions(start:Float, delta:Float, samples)
 			return [start, delta/(samples-1), start+delta];
@@ -55,13 +173,7 @@ class Main {
 
 		name='bottom-right 2x2';
 		pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, -5/(4-1), 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
-
-		// isolatedStabilityTest(20, 1E8*365, 1);
-		// integratorBenchmarkTest();
-		// pertubationMapTest();
 	}
-
-	/* --- Tests --- */
 
 	function taylor1VsSemiEulerEnergyTest(){
 		var name = "Low Order Energy Conservation";
