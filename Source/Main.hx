@@ -24,8 +24,8 @@ class Main {
 	/* ------------------- */
 
 	public function new () {
-		var name = "Cputime vs Energy Error";
-		var timescale:Float = 1E6*365;
+		var name = "CPU Time vs Energy Error";
+		var timescale:Float = 1E4*365;
 		var timescaleYears = Math.round(timescale/365);
 
 		var startDt;
@@ -39,7 +39,7 @@ class Main {
 		var cputime = new Array<Dynamic>(); cputime.push("lf cputime");
 		var dtArray = new Array<Dynamic>(); dtArray.push("lf dtArray");
 		startDt = 5;
-		endDt = startDt+60;
+		endDt = 160;
 		stepDt = 5;
 		var dt = startDt;
 		while(dt<=endDt){
@@ -52,13 +52,14 @@ class Main {
 
 		saveGridData([error, cputime, dtArray], 'leapfrog.$timescaleYears.csv', name, true);
 
+
 		//Hermite
 		var error = new Array<Dynamic>(); error.push("her error");
 		var cputime = new Array<Dynamic>(); cputime.push("her cputime");
 		var dtArray = new Array<Dynamic>(); dtArray.push("her dtArray");
 		var dt = startDt;
-		startDt = 35;
-		endDt = startDt+60;
+		startDt = 20;
+		endDt = 180;
 		stepDt = 5;
 		dt = startDt;
 		while(dt<=endDt){
