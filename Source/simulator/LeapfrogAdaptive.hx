@@ -101,10 +101,10 @@ class LeapfrogAdaptive extends Simulator{
 				smallestSS = stepSize[i];
 		}
 
-		// trace(stepSize);
-
 		//Order
-		if(reorder)orderedIndicies.sort(ssAscending);
+		if(reorder)orderedIndicies.sort(inline function(i:Int, j:Int):Int 
+			return stepSize[i] - stepSize[j];//a-b => smallest to largest
+		);
 
 		//Pairwise kick, from smallest to largest step size
 		var dSq        : Float;
@@ -173,9 +173,6 @@ class LeapfrogAdaptive extends Simulator{
 		while((y >>= 1) > 0) ++br;
 		return 1 << br;
 	}
-
-	inline function ssAscending(i:Int, j:Int):Int 
-		return stepSize[i] - stepSize[j];//a-b => smallest to largest
 
 	override function get_params():Dynamic{
 		return {

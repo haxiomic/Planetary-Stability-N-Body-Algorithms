@@ -24,81 +24,65 @@ class Main {
 	/* ------------------- */
 
 	public function new () {
-		var name = "CPU Time vs Energy Error";
-		var timescale:Float = 1E4*365;
-		var timescaleYears = Math.round(timescale/365);
-
-		var startDt;
-		var endDt;
-		var stepDt;
-
-		Console.printTitle('$timescaleYears  years');
-
-		//Leapfrog
-		var error = new Array<Dynamic>(); error.push("lf error");
-		var cputime = new Array<Dynamic>(); cputime.push("lf cputime");
-		var dtArray = new Array<Dynamic>(); dtArray.push("lf dtArray");
-		startDt = 5;
-		endDt = 160;
-		stepDt = 5;
-		var dt = startDt;
-		while(dt<=endDt){
-			var r = cputime_errorTest(simulator.Leapfrog, dt, timescale, [], name);
-			error.push(r[0]);
-			cputime.push(r[2]);
-			dtArray.push(dt);
-			dt+=stepDt;
-		}
-
-		saveGridData([error, cputime, dtArray], 'leapfrog.$timescaleYears.csv', name, true);
-
-
-		//Hermite
-		var error = new Array<Dynamic>(); error.push("her error");
-		var cputime = new Array<Dynamic>(); cputime.push("her cputime");
-		var dtArray = new Array<Dynamic>(); dtArray.push("her dtArray");
-		var dt = startDt;
-		startDt = 20;
-		endDt = 180;
-		stepDt = 5;
-		dt = startDt;
-		while(dt<=endDt){
-			var r = cputime_errorTest(simulator.Hermite4thOrder, dt, timescale, [], name);
-			error.push(r[1]);
-			cputime.push(r[2]);
-			dtArray.push(dt);
-			dt+=stepDt;
-		}
-		
-		saveGridData([error, cputime, dtArray], 'hermite.$timescaleYears.csv', name, true);
-
-		//Semi-Euler
-/*		var error = new Array<Dynamic>(); error.push("semi error");
-		var cputime = new Array<Dynamic>(); cputime.push("semi cputime");
-		var dtArray = new Array<Dynamic>(); dtArray.push("semi dtArray");
-		var dt = startDt;
-		startDt = 0.5;
-		endDt = 80;
-		stepDt = 5;
-		while(dt<=endDt){
-			var r = cputime_errorTest(simulator.SemiImplicitEulerMethod, dt, timescale, [], name);
-			error.push(r[1]);
-			cputime.push(r[2]);
-			dtArray.push(dt);
-			dt+=stepDt;
-		}
-		saveGridData([error, cputime, dtArray], 'semiEuler.$timescaleYears.csv', name, true);*/
-
-
-		// isolatedStabilityTest(simulator.Leapfrog, dt, 0E6*365, 1);
-		// isolatedStabilityTest(20, 1E8*365, 1);
-		// integratorBenchmarkTest();
-		// pertubationMapTest();
+		var dt = 80;
+		var timescale = 1E6*365;
+		integratorEnergyTest(simulator.Leapfrog,dt,timescale);
+		integratorEnergyTest(simulator.Hermite4thOrder,dt,timescale);
+		integratorEnergyTest(simulator.SemiImplicitEulerMethod,dt,timescale);
+		integratorEnergyTest(simulator.Taylor2ndDerivative,dt,timescale);
+		integratorEnergyTest(simulator.Taylor3rdDerivative,dt,timescale);
 	}
 
 	/* --- Tests --- */
 
-	function cputime_errorTest(?simulatorClass:Class<Dynamic>, dt:Float = 20, timescale:Float = 1E6*365, ?additionalParams:Array<Dynamic>, name:String = "Cputime vs Energy Error"):Array<Dynamic>{
+	function cputime_errorTest(){
+		var name = "CPU Time vs Energy Error";
+		var timescale:Float = 1E6*365;
+		var timescaleYears = Math.round(timescale/365);
+		var startDt;
+		var endDt;
+		var stepDt;
+		Console.printTitle('$timescaleYears  years');
+		//Leapfrog
+		var error = new Array<Dynamic>(); error.push("lf error");
+		var cputime = new Array<Dynamic>(); cputime.push("lf cputime");
+		var dtArray = new Array<Dynamic>(); dtArray.push("lf dtArray");
+		var aArray = new Array<Dynamic>(); aArray.push("lf a");
+		startDt = 5;
+		endDt = 135;
+		stepDt = 5;
+		var dt = startDt;
+		while(dt<=endDt){
+			var r = cputime_errorSingleTest(simulator.Leapfrog, dt, timescale, [], name);
+			error.push(r[0]);
+			cputime.push(r[2]);
+			dtArray.push(dt);
+			aArray.push(r[3]);
+			dt+=stepDt;
+		}
+		saveGridData([error, cputime, dtArray, aArray], 'leapfrog.$timescaleYears.csv', name, true);
+		//Hermite
+		var error = new Array<Dynamic>(); error.push("her error");
+		var cputime = new Array<Dynamic>(); cputime.push("her cputime");
+		var dtArray = new Array<Dynamic>(); dtArray.push("her dtArray");
+		var aArray = new Array<Dynamic>(); aArray.push("her a");
+		var dt = startDt;
+		startDt = 20;
+		endDt = 80;
+		stepDt = 5;
+		dt = startDt;
+		while(dt<=endDt){
+			var r = cputime_errorSingleTest(simulator.Hermite4thOrder, dt, timescale, [], name);
+			error.push(r[1]);
+			cputime.push(r[2]);
+			dtArray.push(dt);
+			aArray.push(r[3]);
+			dt+=stepDt;
+		}
+		saveGridData([error, cputime, dtArray, aArray], 'hermite.$timescaleYears.csv', name, true);
+	}
+
+	function cputime_errorSingleTest(?simulatorClass:Class<Dynamic>, dt:Float = 20, timescale:Float = 1E6*365, ?additionalParams:Array<Dynamic>, name:String = "Cputime vs Energy Error"):Array<Dynamic>{
 		if(simulatorClass==null)simulatorClass = simulator.Leapfrog;
 		if(additionalParams==null)additionalParams = [];
 		
@@ -144,7 +128,11 @@ class Main {
 		renderer.centerBody = exp.simulator.bodies[0];
 		visualize(exp);
 
-		return [Math.abs(energyChangeAvg), Math.abs(energyChange[energyChange.length-1]), exp.totalCPUTime];
+		return [Math.abs(energyChangeAvg), 
+				Math.abs(energyChange[energyChange.length-1]), 
+				exp.totalCPUTime, 
+				Math.abs(exp.semiMajorErrorArray[exp.semiMajorErrorArray.length-1]),
+				exp.semiMajorErrorAverageAbs];
 	}
 
 	function multiLevelMapTest(){
@@ -226,9 +214,9 @@ class Main {
 
 		var sun = exp.addBody(SolarBodyData.sun);
 		//var mercury = exp.addBody(SolarBodyData.mercury);
-		//var venus = exp.addBody(SolarBodyData.venus);
-		var earth = exp.addBody(SolarBodyData.earth);
-		var mars = exp.addBody(SolarBodyData.mars);
+		//var venus = exp.addsBody(SolarBodyData.venus);
+		//var earth = exp.addBody(SolarBodyData.earth);
+		//var mars = exp.addBody(SolarBodyData.mars);
 		var jupiter = exp.addBody(SolarBodyData.jupiter);
 		var saturn = exp.addBody(SolarBodyData.saturn);
 		var uranus = exp.addBody(SolarBodyData.uranus);
@@ -240,7 +228,7 @@ class Main {
 		exp.runtimeCallback = function(exp){
 			//get vars
 			time.push(exp.simulator.time);
-			energyChange.push(exp.energyChange);
+			energyChange.push(Math.abs(exp.energyChange));
 			printProgressAndTimeRemaining(exp);
 		}
 
@@ -334,6 +322,65 @@ class Main {
 /*		renderer.reset();
 		renderer.centerBody = exp.simulator.bodies[0];
 		visualize(exp);*/
+	}
+
+	function benchmarkEnergyConservationTest(?simulatorClass:Class<Dynamic>){
+		if(simulatorClass==null)simulatorClass = simulator.Leapfrog;
+		var name = "Benchmark Energy Conservation";
+		var dt = 1;
+		var timescale = 20000;
+
+		Console.printTitle(name, false);
+		Console.newLine();
+
+		saveInfo({
+			name:name,
+			dt: dt,
+			timescale: timescale,
+			units: units,
+			buildDate: Build.date(),
+			git: Git.lastCommit(),
+			gitHash: Git.lastCommitHash(),
+		}, 'info.json', name, true);
+
+		var exp = new Experiment(simulatorClass, [G, dt/8, 0.02]);
+		exp.timescale = timescale;
+		exp.analysisTimeInterval = 0;
+		exp.runtimeCallbackTimeInterval = 3;
+
+		Console.printInfo(exp.name, false);
+		Console.newLine();
+
+		var sun = exp.addBody(SolarBodyData.sun);
+		var planet = exp.addBody({
+			name: 'planet',
+			position: new Vec3(2, 0, 0),
+			velocity: new Vec3(0, 0, 0.004),
+			mass: SolarBodyData.earth.mass
+		});
+		exp.zeroDift();
+
+		var time = new Array<Dynamic>();time.push('${exp.name} time');
+		var energyChange = new Array<Dynamic>();energyChange.push('${exp.name} error');
+		exp.runtimeCallback = function(exp){
+			//trace(exp.eccentricityArray);
+			renderer.render();
+			time.push(exp.time);
+			energyChange.push(Math.abs(exp.energyChange));
+			printProgressAndTimeRemaining;
+		}
+
+		exp.performAnalysis();
+		saveGridData([time, energyChange], '${exp.name}_energyChange.csv', name, true);
+		//
+		//realtime draw
+		//drawing
+		renderer.reset();
+		renderer.addBody(sun, 0.5);
+		renderer.addBody(planet, 0.5);
+		renderer.reset();
+		renderer.centerBody = exp.simulator.bodies[0];
+		visualize(exp);
 	}
 
 	function singleDVTest(d, v, dt:Float = 30, testCount:Int = 5, name = "VEMJSUN Perturbation Stability Single"){
