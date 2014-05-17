@@ -21,7 +21,6 @@ class SemiImplicitEulerMethod extends Simulator {
 		for (i in 0...bodyCount){
 			//pairwise
 			for (j in i+1...bodyCount) {
-	
 				position.difference(i, j, r);
 				dSq  = r.lengthSquared();
 				fc   = G / dSq;
