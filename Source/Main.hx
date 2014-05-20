@@ -10,7 +10,7 @@ import sysUtils.compileTime.*;
 import sysUtils.*;
 
 class Main {
-	var renderer:BasicRenderer = new BasicRenderer(100);
+	var renderer:BasicRenderer = new BasicRenderer(2);
 
 	var units:Dynamic = {
 		time: "days",
@@ -24,17 +24,225 @@ class Main {
 	/* ------------------- */
 
 	public function new () {
-		var dt = 80;
-		var timescale = 1E6*365;
-		integratorEnergyTest(simulator.Leapfrog,dt,timescale);
-		integratorEnergyTest(simulator.Hermite4thOrder,dt,timescale);
-		integratorEnergyTest(simulator.SemiImplicitEulerMethod,dt,timescale);
-		integratorEnergyTest(simulator.Taylor2ndDerivative,dt,timescale);
-		integratorEnergyTest(simulator.Taylor3rdDerivative,dt,timescale);
+		//25 runs
+		//perturbationMapTest([50, 50, 300], [10,1,10], 20, 5, "Globular Custer VEMJSUN PerturbationMapTest");
+		//50 runs
+		// perturbationMapTest([500, 100, 1500], [0.5,1,0.5], 20, 5, "Open Custer VEMJSUN PerturbationMapTest");
+		//60 runs
+		//perturbationMapTest([0, 25, 300], [30,1,30], 20, 5, "Solar Neighbourhood VEMJSUN PerturbationMapTest");
+
+		// isolatedStabilityTest(simulator.Leapfrog, 96, 1E6*365.0, 1);
+
+		getAnExamplePerturbation(100, 2, 0.5*SolarBodyData.sun.mass, 20, 21987*365, 1, 1000);
+		//exit();
 	}
 
-	/* --- Tests --- */
+	@:noStack
+	function getAnExamplePerturbation(d_au:Float, v_kms:Float, mass:Float, dt:Float, timescale:Float, semiMajorErrorThreshold:Null<Float>, ri:Float = 10000){
+		var d:Float = d_au;
+		var exp:Experiment;
+		var v:Float = v_kms*Constants.secondsInDay/(Constants.AU/1000);//to AU/day
+		var f = Math.sqrt(ri*ri + d*d);
 
+		Console.printConcern('Target closest approach: $d AU, velocity: $v_kms km/s');
+		//estimate how long it'll take star to reach its target unperturbed
+		Console.printStatement('The star should take ~ ${Math.round((f/v)/365.0)} years to reach closest approach');
+
+			exp = new Experiment(simulator.Leapfrog, [G, dt]);
+			exp.timescale = timescale;
+			exp.analysisTimeInterval = 5000*365;
+			exp.runtimeCallbackTimeInterval = 1;
+
+			//Add solar system
+			var sun = exp.addBody(SolarBodyData.sun);
+			var venus = exp.addBody(SolarBodyData.venus);
+			var earth = exp.addBody(SolarBodyData.earth);
+			var mars = exp.addBody(SolarBodyData.mars);
+			var jupiter = exp.addBody(SolarBodyData.jupiter);
+			var saturn = exp.addBody(SolarBodyData.saturn);
+			var uranus = exp.addBody(SolarBodyData.uranus);
+			var neptune = exp.addBody(SolarBodyData.neptune);
+			exp.zeroDift();//counter drift
+
+			//Add perturbing star
+			//pick a random point on sphere of radius d, closet approach, http://mathworld.wolfram.com/SpherePointPicking.html
+			var theta = Math.random()*2*Math.PI;
+			var phi = Math.acos(2*Math.random()-1);
+			var D = new Vec3(d*Math.cos(theta)*Math.sin(phi),
+							 d*Math.sin(theta)*Math.sin(phi),
+							 d*Math.cos(phi));
+			D += sun.p;
+			//find vector perpendicular to D to project forward with
+			var perp_D = new Vec3(Math.cos(theta)*Math.sin(phi+Math.PI*.5),
+							 	  Math.sin(theta)*Math.sin(phi+Math.PI*.5),
+							      Math.cos(phi+Math.PI*.5));
+			//find starting position of star by projecting forward
+			var P = D.clone();
+			P.addProduct(perp_D, f);
+			//set velocity to point towards D, along perp_D
+			var V = perp_D.clone();
+			V *= -1*v;
+
+			//add star to experiment
+			var nearbyStar = exp.addBody({
+				name: 'nearbyStar',
+				position: P,	//AU	
+				velocity: V,
+				mass: mass
+			});
+			exp.ignoredBodies.push(nearbyStar);
+
+			//runtime logic
+			var firstApproachCompleted:Bool = false;
+			var last_r:Float = Vec3.distance(nearbyStar.p, sun.p);
+			var passingVelocity:Float = 0;
+			var planetsAdded = false;
+
+			var sunX = new Array<Dynamic>();//sunX.push('sunX');
+			var sunY = new Array<Dynamic>();//sunY.push('sunY');
+			var sunZ = new Array<Dynamic>();//sunZ.push('sunZ');
+			var neighbourX = new Array<Dynamic>();//neighbourX.push('neighbourX');
+			var neighbourY = new Array<Dynamic>();//neighbourY.push('neighbourY');
+			var neighbourZ = new Array<Dynamic>();//neighbourZ.push('neighbourZ');
+			var venusX = new Array<Dynamic>();//venusX.push('venusX');
+			var venusY = new Array<Dynamic>();//venusY.push('venusY');
+			var venusZ = new Array<Dynamic>();//venusZ.push('venusZ');
+			var earthX = new Array<Dynamic>();//earthX.push('earthX');
+			var earthY = new Array<Dynamic>();//earthY.push('earthY');
+			var earthZ = new Array<Dynamic>();//earthZ.push('earthZ');
+			var marsX = new Array<Dynamic>();//marsX.push('marsX');
+			var marsY = new Array<Dynamic>();//marsY.push('marsY');
+			var marsZ = new Array<Dynamic>();//marsZ.push('marsZ');
+			var jupiterX = new Array<Dynamic>();//jupiterX.push('jupiterX');
+			var jupiterY = new Array<Dynamic>();//jupiterY.push('jupiterY');
+			var jupiterZ = new Array<Dynamic>();//jupiterZ.push('jupiterZ');
+			var saturnX = new Array<Dynamic>();//saturnX.push('saturnX');
+			var saturnY = new Array<Dynamic>();//saturnY.push('saturnY');
+			var saturnZ = new Array<Dynamic>();//saturnZ.push('saturnZ');
+			var uranusX = new Array<Dynamic>();//uranusX.push('uranusX');
+			var uranusY = new Array<Dynamic>();//uranusY.push('uranusY');
+			var uranusZ = new Array<Dynamic>();//uranusZ.push('uranusZ');
+			var neptuneX = new Array<Dynamic>();//neptuneX.push('neptuneX');
+			var neptuneY = new Array<Dynamic>();//neptuneY.push('neptuneY');
+			var neptuneZ = new Array<Dynamic>();//neptuneZ.push('neptuneZ'); 
+
+			var offset = sun.p;
+			function pushPoints3(){
+				uranusX.push(uranus.x-offset.x);
+				uranusY.push(uranus.z-offset.z);
+				uranusZ.push(uranus.y-offset.y);
+				neptuneX.push(neptune.x-offset.x);
+				neptuneY.push(neptune.z-offset.z);
+				neptuneZ.push(neptune.y-offset.y);
+				neighbourX.push(nearbyStar.x-offset.x);
+				neighbourY.push(nearbyStar.z-offset.z);
+				neighbourZ.push(nearbyStar.y-offset.y);
+			}
+			function pushPoints2(){
+				marsX.push(mars.x-offset.x);
+				marsY.push(mars.z-offset.z);
+				marsZ.push(mars.y-offset.y);
+				jupiterX.push(jupiter.x-offset.x);
+				jupiterY.push(jupiter.z-offset.z);
+				jupiterZ.push(jupiter.y-offset.y);
+				saturnX.push(saturn.x-offset.x);
+				saturnY.push(saturn.z-offset.z);
+				saturnZ.push(saturn.y-offset.y);
+				pushPoints3();
+			}
+			function pushPoints(){
+				sunX.push(0);
+				sunY.push(0);
+				sunZ.push(0);
+				venusX.push(venus.x-offset.x);
+				venusY.push(venus.z-offset.z);
+				venusZ.push(venus.y-offset.y);
+				earthX.push(earth.x-offset.x);
+				earthY.push(earth.z-offset.z);
+				earthZ.push(earth.y-offset.y);
+				pushPoints2();
+			}
+
+			exp.runtimeCallback = function(exp){
+				//calculate distance to sun
+				var r = Vec3.distance(nearbyStar.p, sun.p);//AU
+				if(r<d_au){
+					//record coordinates
+					if(!planetsAdded){
+						addPlanetsToRenderer(exp); 
+						renderer.centerBody = exp.simulator.bodies[0];
+						planetsAdded = true;
+					}
+				}
+				if(planetsAdded)pushPoints();
+				//end simulation
+				if(planetsAdded && r > d_au*1.5){
+					planetsAdded = false;
+					exp.time = exp.timeEnd;
+				}
+
+				//wait until the star has passed the sun at its closest point before starting timescale
+				if(!firstApproachCompleted){				
+					// trace('$r, $last_r');
+					if(r>last_r){//receding
+						exp.timeEnd = exp.time+timescale;//extend time another timescale
+						passingVelocity = nearbyStar.v.length()*(Constants.AU/1000)/Constants.secondsInDay; //in km/s
+						Console.newLine();
+						Console.printStatement('First approach completed, r: ${Math.round(r)} AU, time: ${Math.round(exp.time/365.0)} years, end time: ${Math.round(exp.timeEnd/365.0)} years, passing velocity: $passingVelocity km/s');
+						firstApproachCompleted = true;
+					}
+					last_r = r;
+				}
+
+				printProgressAndTimeRemaining(exp);
+				renderer.render();
+			}
+			
+			//execute
+			var isStable = exp.performStabilityTest(semiMajorErrorThreshold);
+
+			//handle result
+			Console.newLine();
+			if(isStable){
+				Console.printSuccess('Stable');
+				Console.printStatement('Average semi-major error: ${exp.semiMajorErrorAverageAbs}');
+				printBasicSummary(exp);
+			}else{
+				Console.printFatalConcern('System unstable at time ${exp.time/365} years');
+			}
+
+			Console.newLine();
+
+
+		//Save data
+		saveGridData([sunX, sunY, sunZ], 'sun.txt', 'Example Perturbation', true);
+		saveGridData([venusX, venusY, venusZ], 'venus.txt', 'Example Perturbation', true);
+		saveGridData([earthX, earthY, earthZ], 'earth.txt', 'Example Perturbation', true);
+		saveGridData([marsX, marsY, marsZ], 'mars.txt', 'Example Perturbation', true);
+		saveGridData([jupiterX, jupiterY, jupiterZ], 'jupiter.txt', 'Example Perturbation', true);
+		saveGridData([saturnX, saturnY, saturnZ], 'saturn.txt', 'Example Perturbation', true);
+		saveGridData([uranusX, uranusY, uranusZ], 'uranus.txt', 'Example Perturbation', true);
+		saveGridData([neptuneX, neptuneY, neptuneZ], 'neptune.txt', 'Example Perturbation', true);
+		saveGridData([neighbourX, neighbourY, neighbourZ], 'neighbour.txt', 'Example Perturbation', true);
+
+		//Debug visualization
+		//center on sun
+		//renderer.reset();
+		//renderer.centerBody = exp.simulator.bodies[0];
+		//visualize(exp);
+	}
+
+
+
+
+
+
+
+
+
+
+
+	/* --- Tests --- */
 	function cputime_errorTest(){
 		var name = "CPU Time vs Energy Error";
 		var timescale:Float = 1E6*365;
@@ -151,17 +359,17 @@ class Main {
 
 		var name:String;
 		name='bottom-left 4x4';
-		//pertubationMapTest(conditions(0, 1000, 4), conditions(0,5,4), dt, testCount, 'VEMJSUN Stability Map $name');
+		//perturbationMapTest(conditions(0, 1000, 4), conditions(0,5,4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		name='top-right 2x2';
-		//pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
+		//perturbationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		//Buggy:
 		name='top-left 2x2';
-		//pertubationMapTest(nextConditions(1000, 2, -(1000/(4-1)), 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
+		//perturbationMapTest(nextConditions(1000, 2, -(1000/(4-1)), 1000, 4), nextConditions(5, 2, 5, 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
 
 		name='bottom-right 2x2';
-		pertubationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, -5/(4-1), 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
+		perturbationMapTest(nextConditions(1000, 2, 1000, 1000, 4), nextConditions(5, 2, -5/(4-1), 5, 4), dt, testCount, 'VEMJSUN Stability Map $name');
 	}
 
 	function taylor1VsSemiEulerEnergyTest(){
@@ -214,9 +422,9 @@ class Main {
 
 		var sun = exp.addBody(SolarBodyData.sun);
 		//var mercury = exp.addBody(SolarBodyData.mercury);
-		//var venus = exp.addsBody(SolarBodyData.venus);
-		//var earth = exp.addBody(SolarBodyData.earth);
-		//var mars = exp.addBody(SolarBodyData.mars);
+		var venus = exp.addBody(SolarBodyData.venus);
+		var earth = exp.addBody(SolarBodyData.earth);
+		var mars = exp.addBody(SolarBodyData.mars);
 		var jupiter = exp.addBody(SolarBodyData.jupiter);
 		var saturn = exp.addBody(SolarBodyData.saturn);
 		var uranus = exp.addBody(SolarBodyData.uranus);
@@ -405,11 +613,12 @@ class Main {
 		}, '$d,$v-dt=$dt, x$testCount.json', name, true);
 	}
 
-	function pertubationMapTest(dConditions:Array<Float>, vConditions:Array<Float>, dt:Float = 96, testCount:Int = 10, name:String = "Perturbation Stability Map"){
+	function perturbationMapTest(dConditions:Array<Float>, vConditions:Array<Float>, dt:Float = 96, testCount:Int = 10, name:String = "Perturbation Stability Map"){
 		//Main parameters
 		var timescale:Float = 1E6*365.0;
 		var ri:Float        = 10000;//AU, suitably distant starting point so as not to significantly interact with system
 		var semiMajorErrorThreshold:Null<Float> = 1;//1 = factor 2 change
+		var neighborStarMass:Float = 0.5*SolarBodyData.sun.mass;
 
 		//Build perturbation stability map
 		//iterate over range of closest approaches and initial velocities 
@@ -466,7 +675,7 @@ class Main {
 			v_kms = vStart;
 			row = 0;
 			while(v_kms<=vEnd+vStep*.5){
-				var result = perturbationStabilityTest(d, v_kms, 0.5*SolarBodyData.sun.mass, dt, timescale, semiMajorErrorThreshold, testCount, ri);
+				var result = perturbationStabilityTest(d, v_kms, neighborStarMass, dt, timescale, semiMajorErrorThreshold, testCount, ri);
 
 				var stableFraction = result[0];
 				var averageSemiMajorError = result[1];
@@ -619,8 +828,8 @@ class Main {
 		instabilityAfterTimeAvg = instabilityAfterTimeSum/(testCount - stableCount);
 		//Debug visualization
 		//center on sun
-		//renderer.centerBody = exp.simulator.bodies[0];
-		//visualize(exp);
+		renderer.centerBody = exp.simulator.bodies[0];
+		visualize(exp);
 
 		return [stableFraction, semiMajorErrorAvg, passingVelocityAvg, instabilityAfterTimeAvg];
 	}
@@ -646,9 +855,9 @@ class Main {
 		//Add solar system
 		var sun = exp.addBody(SolarBodyData.sun);
 		//var mercury = exp.addBody(SolarBodyData.mercury);
-		var venus = exp.addBody(SolarBodyData.venus);
-		var earth = exp.addBody(SolarBodyData.earth);
-		var mars = exp.addBody(SolarBodyData.mars);
+		//var venus = exp.addBody(SolarBodyData.venus);
+		//var earth = exp.addBody(SolarBodyData.earth);
+		//var mars = exp.addBody(SolarBodyData.mars);
 		var jupiter = exp.addBody(SolarBodyData.jupiter);
 		var saturn = exp.addBody(SolarBodyData.saturn);
 		var uranus = exp.addBody(SolarBodyData.uranus);
@@ -710,8 +919,11 @@ class Main {
 		var neptune = exp.addBody(SolarBodyData.neptune);
 	}*/
 
-	function visualize(exp:Experiment, iterations:Int = 1){
+	function addPlanetsToRenderer(exp:Experiment)
 		for (b in exp.simulator.bodies)renderer.addBody(b, 0.5, 0xFFFFFF);
+	
+	function visualize(exp:Experiment, iterations:Int = 1){
+		addPlanetsToRenderer(exp);
 		renderer.preRenderCallback = inline function() {
 			for (i in 0...iterations)
 				exp.simulator.step();	

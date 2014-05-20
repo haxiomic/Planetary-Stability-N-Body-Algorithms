@@ -78,16 +78,31 @@ VEMJSUN Stability (10^6 years)
 
 -------------
 Draw stability maps 
-	imagesc(stableFraction); colormap(bone);set(gca,'YDir','normal');caxis([0 1]);
-	imagesc(semiMajorError); colormap(flipud(hot));set(gca,'YDir','normal');caxis([0 1]);
+	imagesc(transpose(stableFraction)); colormap(bone);set(gca,'YDir','normal');caxis([0 1]);
+	imagesc(transpose(semiMajorError)); colormap(semiMajorChangeCmap);set(gca,'YDir','normal');caxis([0 1]);
+
+	set(gca,'XTick',1:5:26)
+	set(gca,'XTickLabel',{0:1:5})
+	set(gca,'YTick',1:2:11)
+	set(gca,'YTickLabel',{0:200:1000})
+
+	xlabel('Initial Velocity (km/s)')
+	ylabel('Approach Distance (AU)')
+
+	set(gca, 'PlotBoxAspectRatio', [1,1,1])
+	set(gca, 'DataAspectRatio', [1,1,1])
+
+
+
+-- OLD
 	% axis labels
 	set(gca,'XTick',1:11)
 	set(gca,'XTickLabel',{0:100:1000})
 	set(gca,'YTick',1:5:26)
 	set(gca,'YTickLabel',{0:1:5})
 
-	xlabel('(AU)')
-	ylabel('(km/s)')
+	xlabel('Approach Distance (AU)')
+	ylabel('Inital Velocity (km/s)')
 
 	set(gca, 'PlotBoxAspectRatio', [1,1,1])
 	%set(gca, 'DataAspectRatio', [1,1,1])
@@ -105,4 +120,33 @@ Draw stability maps
 	set(gca, 'PlotBoxAspectRatio', [1,1,1])
 	xlabel('(AU)')
 	ylabel('(km/s)')
+
+
+
+--------------
+%Plot example perturbation
+
+figure;
+
+txtFiles = dir('*.txt'); 
+numfiles = length(txtFiles);
+
+for k = 1:numfiles 
+	[path,varname,ext] = fileparts(txtFiles(k).name);
+	eval([varname '= importdata(txtFiles(k).name);']);
+end
+
+clearvars k txtFiles numfiles varname path ext;
+
+plot3(sun(:,1), sun(:,2), sun(:,3));hold on;
+plot3(venus(:,1), venus(:,2), venus(:,3));hold on;
+plot3(earth(:,1), earth(:,2), earth(:,3));hold on;
+plot3(mars(:,1), mars(:,2), mars(:,3));hold on;
+plot3(jupiter(:,1), jupiter(:,2), jupiter(:,3));hold on;
+plot3(saturn(:,1), saturn(:,2), saturn(:,3));hold on;
+plot3(uranus(:,1), uranus(:,2), uranus(:,3));hold on;
+plot3(neptune(:,1), neptune(:,2), neptune(:,3));hold on;
+plot3(neighbour(:,1), neighbour(:,2), neighbour(:,3));hold on;
+
+set(gca, 'DataAspectRatio', [1,1,1]);
 

@@ -103,7 +103,7 @@ class LeapfrogAdaptive extends Simulator{
 
 		//Order
 		if(reorder)orderedIndicies.sort(inline function(i:Int, j:Int):Int 
-			return stepSize[i] - stepSize[j];//a-b => smallest to largest
+			return stepSize[i] - stepSize[j]//a-b => smallest to largest
 		);
 
 		//Pairwise kick, from smallest to largest step size
