@@ -33,8 +33,11 @@ class Main {
 
 		// isolatedStabilityTest(simulator.Leapfrog, 96, 1E6*365.0, 1);
 
-		getAnExamplePerturbation(100, 2, 0.5*SolarBodyData.sun.mass, 20, 21987*365, 1, 1000);
+		//getAnExamplePerturbation(100, 2, 0.5*SolarBodyData.sun.mass, 20, 21987*365, 1, 1000);
 		//exit();
+
+		//integratorEnergyTest(simulator.LeapfrogAdaptive, 80, 1E6*365, )
+		leapfrogAdaptiveTest();
 	}
 
 	@:noStack
@@ -394,13 +397,9 @@ class Main {
 	function leapfrogAdaptiveTest(){
 		var name = "Leapfrog vs LeapfrogAdaptive";
 		var timescale:Float;
-		timescale = 1E5*365;
-		integratorEnergyTest(Leapfrog, 11, timescale, null, name);
-		integratorEnergyTest(LeapfrogAdaptive, 5, timescale, [0.04], name);
-
 		timescale = 1E6*365;
-		integratorEnergyTest(Leapfrog, 11, timescale, null, name);
-		integratorEnergyTest(LeapfrogAdaptive, 5, timescale, [0.04], name);
+		integratorEnergyTest(Leapfrog, 80, timescale, null, name);
+		integratorEnergyTest(LeapfrogAdaptive, 100, timescale, [0.03], name);
 	}
 
 	function integratorEnergyTest(?simulatorClass:Class<Dynamic>, dt:Float = 20, timescale:Float = 1E6*365, ?additionalParams:Array<Dynamic>, name:String = "Integrator Energy Conservation"){
@@ -422,9 +421,9 @@ class Main {
 
 		var sun = exp.addBody(SolarBodyData.sun);
 		//var mercury = exp.addBody(SolarBodyData.mercury);
-		var venus = exp.addBody(SolarBodyData.venus);
-		var earth = exp.addBody(SolarBodyData.earth);
-		var mars = exp.addBody(SolarBodyData.mars);
+		//var venus = exp.addBody(SolarBodyData.venus);
+		//var earth = exp.addBody(SolarBodyData.earth);
+		//var mars = exp.addBody(SolarBodyData.mars);
 		var jupiter = exp.addBody(SolarBodyData.jupiter);
 		var saturn = exp.addBody(SolarBodyData.saturn);
 		var uranus = exp.addBody(SolarBodyData.uranus);
