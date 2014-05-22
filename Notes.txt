@@ -10,6 +10,8 @@ https://code.google.com/p/hattrick-nbody/source/browse/trunk/src/Planets.cc
 
  -- BUGS --
 
+- Crazy issues where the array pushes need to be split into three functions because there can't be too many all in one anonymous function.
+
 - Order matters for abstract type '@:from's - ie, switch dynamic and TVec3 in AVec and you'll find all TVec3s are registered as dynamics not TVec3
 
 
